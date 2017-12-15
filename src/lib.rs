@@ -4,7 +4,7 @@ extern crate serde;
 extern crate serde_derive;
 
 use mediawiki_parser::ast::Element;
-
+use mediawiki_parser::transformations::TResult;
 
 /// Structures for configuration of transformations.
 pub mod settings;
@@ -12,6 +12,6 @@ pub mod settings;
 mod transformations;
 
 /// Applies all MFNF-Specific transformations.
-pub fn apply_transformations(root: Element, settings: &settings::Settings) -> Element {
-    root
+pub fn apply_transformations(root: Element, settings: &settings::Settings) -> TResult {
+    transformations::normalize_template_names(root, settings)
 }

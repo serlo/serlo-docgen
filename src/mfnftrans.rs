@@ -66,8 +66,15 @@ fn main() {
     }
 
 
-    let mut root = serde_yaml::from_str(&input).expect("Could not parse input file!");
-    root = mfnf_transformations::apply_transformations(root, &config);
-    println!("{}", serde_yaml::to_string(&root).expect("Could not serialize output!"));
-
+    let root = serde_yaml::from_str(&input).expect("Could not parse input file!");
+    let result = mfnf_transformations::apply_transformations(root, &config);
+    match result {
+        Ok(e) => {
+            println!("{}", serde_yaml::to_string(&e).expect("Could not serialize output!"));
+        },
+        Err(e) => {
+            eprintln!("{}", e);
+            println!("{}", serde_yaml::to_string(&e).expect("Could not serialize error!"));
+        }
+    };
 }
