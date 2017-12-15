@@ -44,6 +44,9 @@ pub fn normalize_template_names(mut root: Element, settings: &Settings) -> TResu
             }
 
         },
+        &mut Element::TemplateArgument { ref mut name, .. } => {
+            name.to_lowercase();
+        }
         _ => (),
     };
     recurse_inplace(&normalize_template_names, root, settings)
