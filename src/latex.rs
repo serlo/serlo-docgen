@@ -36,6 +36,8 @@ pub fn export_article<'a>(root: &'a Element,
         // Node elements
         &Element::Heading { .. } => export_heading(root, path, settings, out)?,
         &Element::Formatted { .. } => export_formatted(root, path, settings, out)?,
+        &Element::Paragraph { .. } => export_paragraph(root, path, settings, out)?,
+        &Element::Template { .. } => export_template(root, path, settings, out)?,
 
         // Leaf Elemenfs
         &Element::Text { .. } => export_text(root, out)?,
@@ -47,13 +49,31 @@ pub fn export_article<'a>(root: &'a Element,
     Ok(())
 }
 
+node_template! {
+    fn export_template(root, path, settings, out):
+
+    &Element::Template { ref name, ref content, .. } => {
+        write!(out, "\nMISSING TEMPLATE: ")?;
+        traverse_vec(export_article, name, path, settings, out)?;
+        write!(out, "\n\n")?;
+    }
+}
+
+node_template! {
+    fn export_paragraph(root, path, settings, out):
+
+    &Element::Paragraph { ref content, .. } => {
+        traverse_vec(export_article, content, path, settings, out)?;
+        write!(out, "\\\\\n")?;
+    }
+}
 
 node_template! {
     fn export_heading(root, path, settings, out):
 
     &Element::Heading {ref depth, ref caption, ref content, .. } => {
 
-        write!(out, "\n\n\\")?;
+        write!(out, "\\")?;
 
         for _ in 2..*depth {
             write!(out, "sub")?;
