@@ -1,11 +1,11 @@
 [package]
-name = "mfnf_transformations"
+name = "mfnf_export"
 version = "0.1.0"
 authors = ["Valentin Roland <valentin@vroland.de>"]
 
 [[bin]]
-name = "mfnftrans"
-path = "src/mfnftrans.rs"
+name = "mfnf_ex"
+path = "src/mfnf_ex.rs"
 doc = true
 
 [dependencies]
