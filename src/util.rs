@@ -2,35 +2,37 @@ use std::io;
 use settings::Settings;
 use mediawiki_parser::ast::*;
 
-
-const LATEX_SPECIAL_CHARS: [[&str; 2]; 18] = [
-    ["$",  "\\$"],
-    ["%",  "\\%"],
-    ["&",  "\\&"],
-    ["#",  "\\#"],
-    ["_",  "\\_"],
-    ["{",  "\\{"],
-    ["}",  "\\}"],
-    ["[",  "{[}"],
-    ["]",  "{]}"],
-    ["\"",  "{''}"],
-    ["\\", "\\textbackslash{}"],
-    ["~",  "\\textasciitilde{}"],
-    ["<",  "\\textless{}"],
-    [">",  "\\textgreater{}"],
-    ["^",  "\\textasciicircum{}"],
-    ["`",  "{}`"],   // avoid ?` and !`
-    ["\n", "\\\\"],
-    ["↯",  "\\Lightning{}"],
-];
-
 /// Escape LaTeX-Specific symbols
 pub fn escape_latex(input: &str) -> String {
-    let mut res = String::from(input);
-    for substitution in LATEX_SPECIAL_CHARS.iter() {
-        res = res.replace(substitution[0], substitution[1]);
+    let mut res = String::new();
+    for c in input.chars() {
+        let s = match c {
+            '$' => "\\$",
+            '%' => "\\%",
+            '&' => "\\&",
+            '#' => "\\#",
+            '_' => "\\_",
+            '{' => "\\{",
+            '}' => "\\}",
+            '[' => "{[}",
+            ']' => "{]}",
+            '\"' => "{''}",
+            '\\' => "\\textbackslash{}",
+            '~' => "\\textasciitilde{}",
+            '<' => "\\textless{}",
+            '>' => "\\textgreater{}",
+            '^' => "\\textasciicircum{}",
+            '`' => "{}`",   // avoid ?` and !`
+            '\n' => "\\\\",
+            '↯' => "\\Lightning{}",
+            _ => {
+                res.push(c);
+                continue
+            },
+        };
+        res.push_str(s);
     }
-    String::from(res)
+    res
 }
 
 

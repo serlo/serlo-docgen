@@ -35,6 +35,7 @@ pub fn export_article<'a>(root: &'a Element,
     match root {
         // Node elements
         &Element::Heading { .. } => export_heading(root, path, settings, out)?,
+        &Element::Formatted { .. } => export_formatted(root, path, settings, out)?,
 
         // Leaf Elemenfs
         &Element::Text { .. } => export_text(root, out)?,
@@ -73,6 +74,23 @@ node_template! {
         match markup {
             &MarkupType::NoWiki => {
                 traverse_vec(export_article, content, path, settings, out)?;
+            },
+            &MarkupType::Bold => {
+                write!(out, "\\textbf{{")?;
+                traverse_vec(export_article, content, path, settings, out)?;
+                write!(out, "}}")?;
+            },
+            &MarkupType::Italic => {
+                write!(out, "\\textit{{")?;
+                traverse_vec(export_article, content, path, settings, out)?;
+                write!(out, "}}")?;
+
+            },
+            &MarkupType::Math => {
+                write!(out, "${}$", match content.first() {
+                    Some(&Element::Text {ref text, .. }) => text,
+                    _ => "parse error!",
+                })?;
             },
             _ => (),
         }
