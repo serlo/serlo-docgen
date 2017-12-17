@@ -3,7 +3,7 @@ use mediawiki_parser::transformations::*;
 use settings::Settings;
 
 
-/// Convert template name paragraphs to lowercase text only.
+/// Convert template name paragraphs to text only.
 pub fn normalize_template_names(mut root: Element, settings: &Settings) -> TResult {
     match &mut root {
         &mut Element::Template { ref mut name, ref position, .. } => {
@@ -27,7 +27,7 @@ pub fn normalize_template_names(mut root: Element, settings: &Settings) -> TResu
                     name.push(
                         Element::Text {
                             position: position.clone(),
-                            text: text.clone().to_lowercase(),
+                            text: text.clone(),
                         }
                     );
                 },
@@ -38,15 +38,12 @@ pub fn normalize_template_names(mut root: Element, settings: &Settings) -> TResu
                             None => { position.clone() },
                         },
                         message: "MFNF Template names must be plain strings \
-                                With no markup and are case insensitive!".to_string(),
+                                With no markup!".to_string(),
                     });
                 }
             }
 
         },
-        &mut Element::TemplateArgument { ref mut name, .. } => {
-            name.to_lowercase();
-        }
         _ => (),
     };
     recurse_inplace(&normalize_template_names, root, settings)
