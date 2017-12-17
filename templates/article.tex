@@ -1,0 +1,23 @@
+\documentclass[{{document_options}}]{scrbook}
+
+% set baseline height and font size
+\changefontsizes[{{baseline_height}}pt]{{{font_size}}pt}
+% set paper geometry
+\usepackage[paperwidth={{paper_width}}mm+2*{{page_trim}}mm, 
+            paperheight={{paper_height}}mm+2*{{page_trim}}mm,
+            top={{border.[0]}}mm,
+            bottom={{border.[1]}}mm,
+            outer={{border.[2]}}mm,
+            inner={{border.[3]}}]{geometry}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[ngerman]{babel}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+
+\begin{document}
+{{content}}
+\end{document}
