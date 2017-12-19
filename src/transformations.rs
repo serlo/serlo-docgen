@@ -6,7 +6,7 @@ use util::*;
 
 /// Convert template name paragraphs to lowercase text only.
 pub fn normalize_template_names(mut root: Element, settings: &Settings) -> TResult {
-    if let &mut Element::Template { ref mut name, ref position, .. } = &mut root {
+    if let &mut Element::Template { ref mut name, ref mut content, ref position, .. } = &mut root {
 
         let new_text = match name.drain(..).next() {
             Some(Element::Paragraph { content, .. }) => {
@@ -19,6 +19,19 @@ pub fn normalize_template_names(mut root: Element, settings: &Settings) -> TResu
                     })
             }
         };
+
+        for child in content {
+            if let &mut Element::TemplateArgument { ref mut name, .. } = child {
+                let lowercase = name.to_lowercase();
+                name.clear();
+                name.push_str(&lowercase);
+            } else {
+                return Ok(Element::Error {
+                    position: position.clone(),
+                    message: "Only TemplateArguments are allowed as children of templates!".to_string(),
+                })
+            }
+        }
 
         if let Some(&Element::Text { ref position, ref text }) = new_text.first() {
             name.clear();
@@ -59,6 +72,14 @@ pub fn translate_templates(mut root: Element, settings: &Settings) -> TResult {
             if let Some(translation) = settings.translations.get(text) {
                 text.clear();
                 text.push_str(translation);
+            }
+        }
+        for child in content {
+            if let &mut Element::TemplateArgument { ref mut name, .. } = child {
+                if let Some(translation) = settings.translations.get(name) {
+                    name.clear();
+                    name.push_str(translation);
+                }
             }
         }
     }

@@ -115,7 +115,7 @@ fn main() {
     let general_settings = &targets.first().unwrap().settings;
 
     if args.dump_config {
-        println!("{}", toml::to_string(general_settings)
+        println!("{}", serde_yaml::to_string(general_settings)
             .expect("Could serialize settings!"));
         process::exit(0);
     }
