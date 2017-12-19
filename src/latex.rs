@@ -40,6 +40,11 @@ node_template! {
         // export simple environment templates
         if let Some(envs) = settings.latex_settings.environments.get(template_name) {
             let title_content = find_arg(content, "title");
+
+            write!(out, "% defined in {} at {}:{} to {}:{}\n", settings.document_title,
+                   position.start.line, position.start.col,
+                   position.end.line, position.start.col)?;
+
             for environment in envs {
                 if let Some(env_content) = find_arg(content, environment) {
 

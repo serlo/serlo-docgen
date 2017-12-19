@@ -19,6 +19,8 @@ pub struct Target<'a> {
 pub struct Settings {
     pub download_images: bool,
     pub latex_settings: LaTeXSettings,
+    /// Title of the current document
+    pub document_title: String,
 
     /// Maps a template names and template attribute names to their translations.
     /// E.g. german template names to their englisch translations.
@@ -82,6 +84,7 @@ impl Default for Settings {
         Settings {
             download_images: true,
             latex_settings: LaTeXSettings::default(),
+            document_title: s!("<no document name specified>"),
             translations: [
                 s!("beispiel", "example"),
                 s!("definition", "definition"),
