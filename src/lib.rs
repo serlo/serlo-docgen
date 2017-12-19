@@ -13,6 +13,8 @@ mod util;
 mod transformations;
 
 /// Applies all MFNF-Specific transformations.
-pub fn apply_transformations(root: Element, settings: &settings::Settings) -> TResult {
-    transformations::normalize_template_names(root, settings)
+pub fn apply_transformations(mut root: Element, settings: &settings::Settings) -> TResult {
+    root = transformations::normalize_template_names(root, settings)?;
+    root = transformations::translate_templates(root, settings)?;
+    transformations::normalize_formula(root, settings)
 }

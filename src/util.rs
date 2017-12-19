@@ -35,6 +35,21 @@ pub fn escape_latex(input: &str) -> String {
     res
 }
 
+/// Trim one pair of prefix and suffix from a string.
+pub fn trim_enclosing<'a>(input: &'a str, prefix: &str, suffix: &str) -> &'a str {
+    if input.starts_with(prefix) && input.ends_with(suffix) {
+        return &input[prefix.len()..input.len()-suffix.len()];
+    }
+    input
+}
+
+/// Remove a prefix if found.
+pub fn trim_prefix<'a>(input: &'a str, prefix: &str) -> &'a str {
+    if input.starts_with(prefix) {
+        return &input[prefix.len()..];
+    }
+    input
+}
 
 /// Function signature for export traversal.
 pub type TravFunc<'a> = fn(&'a Element,

@@ -52,10 +52,33 @@ pub fn export_article<'a>(root: &'a Element,
 node_template! {
     fn export_template(root, path, settings, out):
 
-    &Element::Template { ref name, ref content, .. } => {
-        write!(out, "\nMISSING TEMPLATE: ")?;
-        traverse_vec(export_article, name, path, settings, out)?;
-        write!(out, "\n\n")?;
+    &Element::Template { ref name, ref content, ref position } => {
+        let name = match name.first() {
+            Some(&Element::Text { ref text, .. }) => text,
+            _ => "",
+        };
+
+        match name {
+            "formula" => {
+                let mut math_text = "ERROR: Template was not transformed properly!";
+                if let Some(&Element::TemplateArgument { ref value, .. }) = content.first() {
+                    if let Some(&Element::Text {ref text, .. }) = value.first() {
+                        math_text = trim_enclosing(text.trim(),
+                                                   "\\begin{align}",
+                                                   "\\end{align}");
+                        math_text = trim_enclosing(math_text,
+                                                   "\\begin{align*}",
+                                                   "\\end{align*}").trim();
+                    };
+                };
+                write!(out, "\n\\begin{{align*}}\n{}\n\\end{{align*}}\n", math_text)?;
+            },
+            _ => {
+                write!(out, "MISSING TEMPLATE: {} ({}:{} to {}:{})\n\n",
+                name, position.start.line, position.start.col,
+                position.end.line, position.end.col)?;
+            }
+        };
     }
 }
 
@@ -64,7 +87,7 @@ node_template! {
 
     &Element::Paragraph { ref content, .. } => {
         traverse_vec(export_article, content, path, settings, out)?;
-        write!(out, "\\\\\n")?;
+        write!(out, "\\\\\n\n")?;
     }
 }
 
