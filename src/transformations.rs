@@ -22,7 +22,7 @@ pub fn normalize_template_names(mut root: Element, settings: &Settings) -> TResu
 
         for child in content {
             if let &mut Element::TemplateArgument { ref mut name, .. } = child {
-                let lowercase = name.to_lowercase();
+                let lowercase = name.trim().to_lowercase();
                 name.clear();
                 name.push_str(&lowercase);
             } else {
@@ -39,10 +39,10 @@ pub fn normalize_template_names(mut root: Element, settings: &Settings) -> TResu
                 Element::Text {
                     position: position.clone(),
                     text: if text.starts_with("#") {
-                                text.clone()
+                                String::from(text.trim())
                             } else {
                                 // convert to lowercase and remove prefixes
-                                let mut temp_text = &text.to_lowercase()[..];
+                                let mut temp_text = &text.trim().to_lowercase()[..];
                                 for prefix in &settings.template_prefixes[..] {
                                     temp_text = trim_prefix(temp_text, prefix);
                                 }
@@ -84,6 +84,24 @@ pub fn translate_templates(mut root: Element, settings: &Settings) -> TResult {
         }
     }
     recurse_inplace(&translate_templates, root, settings)
+}
+
+/// Convert template attribute `title` to text only.
+pub fn normalize_template_title(mut root: Element, settings: &Settings) -> TResult {
+    if let &mut Element::TemplateArgument { ref name, ref mut value, .. } = &mut root {
+        if name == "title" {
+            if let Some(Element::Paragraph { ref mut content, .. }) = value.pop() {
+                if let Some(Element::Text { text, position  }) = content.pop() {
+                    value.clear();
+                    value.push(Element::Text {
+                        text: String::from(text.trim()),
+                        position
+                    });
+                }
+            }
+        }
+    }
+    recurse_inplace(&normalize_template_title, root, settings)
 }
 
 /// Transform a formula template argument to text-only.

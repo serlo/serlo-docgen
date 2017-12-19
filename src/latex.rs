@@ -26,39 +26,38 @@ macro_rules! node_template {
     }
 }
 
-pub fn export_article<'a>(root: &'a Element,
-                          path: &mut Vec<&'a Element>,
-                          settings: &Settings,
-                          out: &mut io::Write) -> io::Result<()> {
-
-    path.push(root);
-    match root {
-        // Node elements
-        &Element::Heading { .. } => export_heading(root, path, settings, out)?,
-        &Element::Formatted { .. } => export_formatted(root, path, settings, out)?,
-        &Element::Paragraph { .. } => export_paragraph(root, path, settings, out)?,
-        &Element::Template { .. } => export_template(root, path, settings, out)?,
-
-        // Leaf Elemenfs
-        &Element::Text { .. } => export_text(root, out)?,
-
-        // TODO: Remove when implementation for all elements exists
-        _ => traverse_with(export_article, root, path, settings, out)?,
-    };
-    path.pop();
-    Ok(())
-}
-
 node_template! {
     fn export_template(root, path, settings, out):
 
     &Element::Template { ref name, ref content, ref position } => {
-        let name = match name.first() {
-            Some(&Element::Text { ref text, .. }) => text,
-            _ => "",
+        let template_name;
+        if let Some(&Element::Text { ref text, .. }) = name.first() {
+            template_name = text;
+        } else {
+            return write_error("Template names must be text-only!", out);
         };
 
-        match name {
+        // export simple environment templates
+        if let Some(envs) = settings.latex_settings.environments.get(template_name) {
+            let title_content = find_arg(content, "title");
+            for environment in envs {
+                if let Some(env_content) = find_arg(content, environment) {
+
+                    write!(out, "\\begin{{{}}}[", environment)?;
+                    if let Some(title_content) = title_content {
+                        traverse_with(export_article, title_content, path, settings, out)?;
+                    }
+                    write!(out, "]\n")?;
+
+                    traverse_with(export_article, env_content, path, settings, out)?;
+                    write!(out, "\\end{{{}}}\n", environment)?;
+                }
+            }
+            return Ok(());
+        }
+
+        // any other template
+        match &template_name[..] {
             "formula" => {
                 let mut math_text = "ERROR: Template was not transformed properly!";
                 if let Some(&Element::TemplateArgument { ref value, .. }) = content.first() {
@@ -71,12 +70,12 @@ node_template! {
                                                    "\\end{align*}").trim();
                     };
                 };
-                write!(out, "\n\\begin{{align*}}\n{}\n\\end{{align*}}\n", math_text)?;
+                write!(out, "\\begin{{align*}}\n{}\n\\end{{align*}}\n", math_text)?;
             },
             _ => {
-                write!(out, "MISSING TEMPLATE: {} ({}:{} to {}:{})\n\n",
-                name, position.start.line, position.start.col,
-                position.end.line, position.end.col)?;
+                write_error(&format!("MISSING TEMPLATE: {} ({}:{} to {}:{})",
+                                     template_name, position.start.line, position.start.col,
+                                     position.end.line, position.end.col), out)?;
             }
         };
     }
@@ -87,7 +86,7 @@ node_template! {
 
     &Element::Paragraph { ref content, .. } => {
         traverse_vec(export_article, content, path, settings, out)?;
-        write!(out, "\\\\\n\n")?;
+        write!(out, "\\\\\n")?;
     }
 }
 
@@ -147,5 +146,33 @@ fn export_text(root: &Element, out: &mut io::Write) -> io::Result<()> {
         },
         _ => unreachable!(),
     }
+    Ok(())
+}
+
+
+fn write_error(message: &str, out: &mut io::Write) -> io::Result<()> {
+    write!(out, "\\begin{{error}}\n{}\n\\end{{error}}\n", message)
+}
+
+pub fn export_article<'a>(root: &'a Element,
+                          path: &mut Vec<&'a Element>,
+                          settings: &Settings,
+                          out: &mut io::Write) -> io::Result<()> {
+
+    path.push(root);
+    match root {
+        // Node elements
+        &Element::Heading { .. } => export_heading(root, path, settings, out)?,
+        &Element::Formatted { .. } => export_formatted(root, path, settings, out)?,
+        &Element::Paragraph { .. } => export_paragraph(root, path, settings, out)?,
+        &Element::Template { .. } => export_template(root, path, settings, out)?,
+
+        // Leaf Elemenfs
+        &Element::Text { .. } => export_text(root, out)?,
+
+        // TODO: Remove when implementation for all elements exists
+        _ => traverse_with(export_article, root, path, settings, out)?,
+    };
+    path.pop();
     Ok(())
 }

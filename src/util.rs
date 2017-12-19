@@ -51,6 +51,18 @@ pub fn trim_prefix<'a>(input: &'a str, prefix: &str) -> &'a str {
     input
 }
 
+/// Returns the template argument with a given name from a list.
+pub fn find_arg<'a>(content: &'a Vec<Element>, arg_name: &str) -> Option<&'a Element> {
+    for child in content {
+        if let &Element::TemplateArgument { ref name, .. } = child {
+            if name == arg_name {
+                return Some(child);
+            }
+        }
+    }
+    None
+}
+
 /// Function signature for export traversal.
 pub type TravFunc<'a> = fn(&'a Element,
                            &mut Vec<&'a Element>,
