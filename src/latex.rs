@@ -102,7 +102,7 @@ node_template! {
         // render paragraph content
         let mut par_content = vec![];
         traverse_vec(export_article, content, path, settings, &mut par_content)?;
-        let mut par_string = str::from_utf8(&par_content).unwrap().trim().to_string();
+        let par_string = str::from_utf8(&par_content).unwrap().trim_right().to_string();
 
         // trim and indent output string
         let trimmed = indent_and_trim(&par_string,
@@ -163,7 +163,7 @@ node_template! {
 }
 
 node_template! {
-    fn export_text(root, path, settings, out):
+    fn export_text(root, _path, _settings, out):
 
     &Element::Text { ref text, .. } => {
         write!(out, "{}", &escape_latex(text))?;

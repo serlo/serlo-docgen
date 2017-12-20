@@ -53,17 +53,23 @@ pub fn trim_prefix<'a>(input: &'a str, prefix: &str) -> &'a str {
 
 /// Indent and trim a string.
 pub fn indent_and_trim<'a>(input: &'a str, depth: usize, max_line_width: usize) -> String {
-    let indent_str = format!("{:depth$}", "", depth=depth);
+    const COMMENT_PREFIX: &str = "% ";
+
     let mut lines = vec![];
     for line in input.split("\n") {
-        let mut current_line = indent_str.clone();
+        let comment = line.trim().starts_with(COMMENT_PREFIX.trim());
+        let start_string = format!("{:depth$}", "", depth=depth);
+        let mut current_line = start_string.clone();
 
         if line.trim().len() > max_line_width {
 
             for word in line.split(" ") {
                 if current_line.trim().len() + word.len() + 1 > max_line_width {
                     lines.push(current_line);
-                    current_line = indent_str.clone();
+                    current_line = start_string.clone();
+                    if comment {
+                        current_line.push_str(COMMENT_PREFIX);
+                    }
                 }
 
                 current_line.push_str(word);
