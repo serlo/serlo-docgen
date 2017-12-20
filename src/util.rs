@@ -51,6 +51,33 @@ pub fn trim_prefix<'a>(input: &'a str, prefix: &str) -> &'a str {
     input
 }
 
+/// Indent and trim a string.
+pub fn indent_and_trim<'a>(input: &'a str, depth: usize, max_line_width: usize) -> String {
+    let indent_str = format!("{:depth$}", "", depth=depth);
+    let mut lines = vec![];
+    for line in input.split("\n") {
+        let mut current_line = indent_str.clone();
+
+        if line.trim().len() > max_line_width {
+
+            for word in line.split(" ") {
+                if current_line.trim().len() + word.len() + 1 > max_line_width {
+                    lines.push(current_line);
+                    current_line = indent_str.clone();
+                }
+
+                current_line.push_str(word);
+                current_line.push_str(" ");
+            }
+            lines.push(current_line);
+        } else {
+            current_line.push_str(line);
+            lines.push(current_line);
+        }
+    }
+    lines.join("\n")
+}
+
 /// Returns the template argument with a given name from a list.
 pub fn find_arg<'a>(content: &'a Vec<Element>, arg_name: &str) -> Option<&'a Element> {
     for child in content {

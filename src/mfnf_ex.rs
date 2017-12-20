@@ -4,7 +4,7 @@ extern crate argparse;
 extern crate mfnf_export;
 extern crate toml;
 
-use std::io;
+use std::str;
 use std::process;
 use mfnf_export::settings::*;
 use mfnf_export::latex;
@@ -138,8 +138,10 @@ fn main() {
     match result {
         Ok(ref e) => {
             for target in &targets[..] {
-               (target.export_func)(&e, &mut path, &target.settings, &mut io::stdout())
+                let mut result = vec![];
+                (target.export_func)(&e, &mut path, &target.settings, &mut result)
                 .expect("Could not output export!");
+                println!("{}", str::from_utf8(&result).unwrap());
             };
         },
         Err(ref e) => {

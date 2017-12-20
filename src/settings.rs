@@ -48,6 +48,10 @@ pub struct LaTeXSettings {
     pub border: [f32; 4],
     /// Document class options.
     pub document_options: String,
+    /// Indentation depth for template content.
+    pub indentation_depth: usize,
+    /// Maximum line widht (without indentation).
+    pub max_line_width: usize,
 
     /// Templates which can be exported as an environment.
     /// The template may have a `title` attribute and a content
@@ -119,6 +123,8 @@ impl Default for LaTeXSettings {
             font_size: 9.,
             baseline_height: 12.,
             border: [20.5, 32.6, 22., 18.5],
+            indentation_depth: 4,
+            max_line_width: 80,
             document_options: String::from("tocflat, listof=chapterentry"),
             environments: [
                 (s!("definition"),          vec![s!("definition")]),

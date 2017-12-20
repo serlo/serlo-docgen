@@ -1,4 +1,5 @@
 use std::io;
+use std::str;
 use settings::Settings;
 use mediawiki_parser::ast::*;
 use util::*;
@@ -34,7 +35,7 @@ node_template! {
         if let Some(&Element::Text { ref text, .. }) = name.first() {
             template_name = text;
         } else {
-            return write_error("Template names must be text-only!", out);
+            return write_error("Template names must be text-only!", settings, out);
         };
 
         // export simple environment templates
@@ -47,7 +48,7 @@ node_template! {
 
             for environment in envs {
                 if let Some(env_content) = find_arg(content, environment) {
-
+                    path.push(env_content);
                     write!(out, "\\begin{{{}}}[", environment)?;
                     if let Some(title_content) = title_content {
                         traverse_with(export_article, title_content, path, settings, out)?;
@@ -56,6 +57,7 @@ node_template! {
 
                     traverse_with(export_article, env_content, path, settings, out)?;
                     write!(out, "\\end{{{}}}\n", environment)?;
+                    path.pop();
                 }
             }
             return Ok(());
@@ -75,12 +77,18 @@ node_template! {
                                                    "\\end{align*}").trim();
                     };
                 };
-                write!(out, "\\begin{{align*}}\n{}\n\\end{{align*}}\n", math_text)?;
+                let indent = settings.latex_settings.indentation_depth;
+                let width = settings.latex_settings.max_line_width;
+                writeln!(out, "{}", "\\begin{align*}")?;
+                writeln!(out, "{}", indent_and_trim(math_text, indent, width))?;
+                writeln!(out, "{}", "\\end{align*}")?;
             },
             _ => {
-                write_error(&format!("MISSING TEMPLATE: {} ({}:{} to {}:{})",
-                                     template_name, position.start.line, position.start.col,
-                                     position.end.line, position.end.col), out)?;
+                let message = format!("MISSING TEMPLATE: {}\n{} at {}:{} to {}:{}",
+                                      template_name, settings.document_title,
+                                      position.start.line, position.start.col,
+                                      position.end.line, position.end.col);
+                write_error(&message, settings, out)?;
             }
         };
     }
@@ -90,8 +98,18 @@ node_template! {
     fn export_paragraph(root, path, settings, out):
 
     &Element::Paragraph { ref content, .. } => {
-        traverse_vec(export_article, content, path, settings, out)?;
-        write!(out, "\\\\\n")?;
+
+        // render paragraph content
+        let mut par_content = vec![];
+        traverse_vec(export_article, content, path, settings, &mut par_content)?;
+        let mut par_string = str::from_utf8(&par_content).unwrap().trim().to_string();
+
+        // trim and indent output string
+        let trimmed = indent_and_trim(&par_string,
+            settings.latex_settings.indentation_depth,
+            settings.latex_settings.max_line_width);
+        writeln!(out, "{}\n", &trimmed)?;
+
     }
 }
 
@@ -144,19 +162,24 @@ node_template! {
     }
 }
 
-fn export_text(root: &Element, out: &mut io::Write) -> io::Result<()> {
-    match root {
-        &Element::Text { ref text, .. } => {
-            write!(out, "{}", escape_latex(text))?;
-        },
-        _ => unreachable!(),
+node_template! {
+    fn export_text(root, path, settings, out):
+
+    &Element::Text { ref text, .. } => {
+        write!(out, "{}", &escape_latex(text))?;
     }
-    Ok(())
 }
 
 
-fn write_error(message: &str, out: &mut io::Write) -> io::Result<()> {
-    write!(out, "\\begin{{error}}\n{}\n\\end{{error}}\n", message)
+fn write_error(message: &str,
+               settings: &Settings,
+               out: &mut io::Write) -> io::Result<()> {
+
+    let indent = settings.latex_settings.indentation_depth;
+    let width = settings.latex_settings.max_line_width;
+    writeln!(out, "\\begin{{error}}")?;
+    writeln!(out, "{}", indent_and_trim(message, indent, width))?;
+    writeln!(out, "\\end{{error}}")
 }
 
 pub fn export_article<'a>(root: &'a Element,
@@ -173,7 +196,7 @@ pub fn export_article<'a>(root: &'a Element,
         &Element::Template { .. } => export_template(root, path, settings, out)?,
 
         // Leaf Elemenfs
-        &Element::Text { .. } => export_text(root, out)?,
+        &Element::Text { .. } => export_text(root, path, settings, out)?,
 
         // TODO: Remove when implementation for all elements exists
         _ => traverse_with(export_article, root, path, settings, out)?,
