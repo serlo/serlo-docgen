@@ -7,7 +7,8 @@ extern crate toml;
 use std::str;
 use std::process;
 use mfnf_export::settings::*;
-use mfnf_export::latex;
+use mfnf_export::{latex, deps};
+
 use mediawiki_parser::util::{read_file, read_stdin};
 use argparse::{ArgumentParser, StoreTrue, Store, Collect};
 
@@ -91,6 +92,14 @@ fn build_targets(args: &Args) -> Vec<Target> {
                     output_path: "./export/latex/".to_string(),
                     settings: settings.clone(),
                     export_func: latex::export_article,
+                });
+            },
+            "deps" => {
+                result.push(Target {
+                    name: target_name.to_string(),
+                    output_path: "./export/deps/".to_string(),
+                    settings: settings.clone(),
+                    export_func: deps::collect_article_deps,
                 });
             },
             _ => {

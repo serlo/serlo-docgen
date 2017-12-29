@@ -96,6 +96,25 @@ pub fn find_arg<'a>(content: &'a Vec<Element>, arg_name: &str) -> Option<&'a Ele
     None
 }
 
+
+/// Extract plain text (Paragraph and Text nodes) from a list of nodes and concatenate it.
+pub fn extract_plain_text(content: &Vec<Element>) -> String {
+    let mut result = String::new();
+    for root in content {
+        match root {
+            &Element::Text { ref text, .. } => {
+                result.push_str(text);
+            },
+            &Element::Paragraph { ref content, .. } => {
+                result.push_str(&extract_plain_text(content));
+            },
+            _ => (),
+        };
+    }
+    result
+}
+
+
 /// Function signature for export traversal.
 pub type TravFunc<'a> = fn(&'a Element,
                            &mut Vec<&'a Element>,

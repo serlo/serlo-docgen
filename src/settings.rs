@@ -33,7 +33,7 @@ pub struct Settings {
 /// General MFNF transformation settings for all targets.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LaTeXSettings {
-    pub mode: LaTeXMode,
+
     /// Page trim in mm.
     pub page_trim: f32,
     /// Paper width in mm.
@@ -61,18 +61,16 @@ pub struct LaTeXSettings {
     pub environments: HashMap<String, Vec<String>>,
 }
 
-/// The export configuration
+
+/// Settings for article dependencies target.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum LaTeXMode {
-    /// All articles, no filters applied.
-    Complete,
-    /// Digital print version, reasonably sized.
-    PrintDigital,
-    /// Print version with special extras for print, (like page trim, etc).
-    PrintSpecials,
-    /// A minimal version, with only the most important content.
-    Minimal,
+pub struct DepSettings {
+    /// File extensions indicaing images.
+    pub image_extensions: Vec<String>,
+    /// Path prefix for images.
+    pub image_path: String,
 }
+
 
 macro_rules! s {
     ($str:expr) => {
@@ -116,7 +114,6 @@ impl Default for Settings {
 impl Default for LaTeXSettings {
     fn default() -> Self {
         LaTeXSettings {
-            mode: LaTeXMode::Complete,
             page_trim: 0.,
             page_width: 155.,
             page_height: 235.,

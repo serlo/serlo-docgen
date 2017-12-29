@@ -8,7 +8,9 @@ use mediawiki_parser::transformations::TResult;
 
 /// Structures for configuration of transformations.
 pub mod settings;
+
 pub mod latex;
+pub mod deps;
 mod util;
 mod transformations;
 
