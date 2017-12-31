@@ -114,6 +114,10 @@ pub fn extract_plain_text(content: &Vec<Element>) -> String {
     result
 }
 
+/// Convert a filename to a make-friedly format.
+pub fn filename_to_make(input: &str) -> String {
+    input.replace(" ", "_").replace(":", "@COLON@")
+}
 
 /// Function signature for export traversal.
 pub type TravFunc<'a> = fn(&'a Element,

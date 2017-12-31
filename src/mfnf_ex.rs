@@ -20,6 +20,7 @@ struct Args {
     pub dump_config: bool,
     pub input_file: String,
     pub config_file: String,
+    pub doc_title: String,
     pub targets: Vec<String>,
 }
 
@@ -30,6 +31,7 @@ impl Default for Args {
             dump_config: false,
             input_file: String::new(),
             config_file: String::new(),
+            doc_title: "<no document name specified>".to_string(),
             targets: vec![],
         }
     }
@@ -52,6 +54,11 @@ fn parse_args() -> Args {
             &["-i", "--input"],
             Store,
             "Path to the input file",
+        );
+        ap.refer(&mut args.doc_title).add_option(
+            &["-t",  "--title"],
+            Store,
+            "Title of the input document",
         );
         ap.refer(&mut args.dump_config).add_option(
             &["-d", "--dump-settings"],
@@ -76,13 +83,15 @@ fn parse_args() -> Args {
 fn build_targets(args: &Args) -> Vec<Target> {
     let mut result = vec![];
 
-    let settings = if args.config_file.is_empty() {
+    let mut settings = if args.config_file.is_empty() {
         Settings::default()
     } else {
         let config_source = read_file(&args.config_file);
         toml::from_str(&config_source)
             .expect("Could not parse settings file!")
     };
+
+    settings.document_title = args.doc_title.clone();
 
     for target_name in &args.targets {
         match &target_name[..] {

@@ -19,6 +19,8 @@ pub struct Target<'a> {
 pub struct Settings {
     pub download_images: bool,
     pub latex_settings: LaTeXSettings,
+    pub deps_settings: DepSettings,
+
     /// Title of the current document
     pub document_title: String,
 
@@ -86,6 +88,7 @@ impl Default for Settings {
         Settings {
             download_images: true,
             latex_settings: LaTeXSettings::default(),
+            deps_settings: DepSettings::default(),
             document_title: s!("<no document name specified>"),
             translations: [
                 s!("beispiel", "example"),
@@ -150,3 +153,19 @@ impl Default for LaTeXSettings {
     }
 }
 
+impl Default for DepSettings {
+    fn default() -> Self {
+        DepSettings {
+            image_extensions: vec![
+                s!("jpg"),
+                s!("jpeg"),
+                s!("png"),
+                s!("gif"),
+                s!("svg"),
+                s!("eps"),
+                s!("pdf"),
+            ],
+            image_path: s!("images"),
+        }
+    }
+}
