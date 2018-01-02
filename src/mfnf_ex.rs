@@ -7,7 +7,7 @@ extern crate toml;
 use std::str;
 use std::process;
 use mfnf_export::settings::*;
-use mfnf_export::{latex, deps};
+use mfnf_export::{latex, deps, sections};
 
 use mediawiki_parser::util::{read_file, read_stdin};
 use argparse::{ArgumentParser, StoreTrue, Store, Collect};
@@ -111,6 +111,14 @@ fn build_targets(args: &Args) -> Vec<Target> {
                     export_func: deps::collect_article_deps,
                 });
             },
+            "sections" => {
+                result.push(Target {
+                    name: target_name.to_string(),
+                    output_path: "./export/sections/".to_string(),
+                    settings:  settings.clone(),
+                    export_func: sections::collect_sections,
+                });
+            }
             _ => {
                 eprintln!("unsupported target: `{}`", target_name);
             }

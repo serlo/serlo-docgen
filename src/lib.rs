@@ -11,6 +11,7 @@ pub mod settings;
 
 pub mod latex;
 pub mod deps;
+pub mod sections;
 mod util;
 mod transformations;
 
