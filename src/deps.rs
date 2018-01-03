@@ -1,5 +1,4 @@
 use std::io;
-use std::str;
 use settings::Settings;
 use mediawiki_parser::ast::*;
 use util::*;
@@ -22,7 +21,7 @@ pub fn collect_article_deps<'a>(root: &'a Element,
                 writeln!(out, "{}", &filename_to_make(&ipath))?;
             }
         },
-        _ => traverse_with(collect_article_deps, root, path, settings, out)?,
+        _ => traverse_with(&collect_article_deps, root, path, settings, out)?,
     };
 
     Ok(())

@@ -100,7 +100,7 @@ fn build_targets(args: &Args) -> Vec<Target> {
                     name: target_name.to_string(),
                     output_path: "./export/latex/".to_string(),
                     settings: settings.clone(),
-                    export_func: latex::export_article,
+                    export_func: &latex::export_article,
                 });
             },
             "deps" => {
@@ -108,7 +108,7 @@ fn build_targets(args: &Args) -> Vec<Target> {
                     name: target_name.to_string(),
                     output_path: "./export/deps/".to_string(),
                     settings: settings.clone(),
-                    export_func: deps::collect_article_deps,
+                    export_func: &deps::collect_article_deps,
                 });
             },
             "sections" => {
@@ -116,7 +116,7 @@ fn build_targets(args: &Args) -> Vec<Target> {
                     name: target_name.to_string(),
                     output_path: "./export/sections/".to_string(),
                     settings:  settings.clone(),
-                    export_func: sections::collect_sections,
+                    export_func: &sections::collect_sections,
                 });
             }
             _ => {

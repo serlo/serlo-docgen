@@ -1,5 +1,4 @@
 use std::io;
-use settings::Settings;
 use mediawiki_parser::ast::*;
 
 /// Escape LaTeX-Specific symbols
@@ -120,16 +119,16 @@ pub fn filename_to_make(input: &str) -> String {
 }
 
 /// Function signature for export traversal.
-pub type TravFunc<'a> = fn(&'a Element,
+pub type TravFunc<'a, S> = Fn(&'a Element,
                            &mut Vec<&'a Element>,
-                           &Settings,
+                           S,
                            &mut io::Write) -> io::Result<()>;
 
 /// Traverse a list of subtrees with a given function.
-pub fn traverse_vec<'a>(func: TravFunc<'a>,
+pub fn traverse_vec<'a, S: Copy>(func: &TravFunc<'a, S>,
                     content: &'a Vec<Element>,
                     path: &mut Vec<&'a Element>,
-                    settings: &Settings,
+                    settings: S,
                     out: &mut io::Write) -> io::Result<()> {
 
     for elem in &content[..] {
@@ -138,11 +137,20 @@ pub fn traverse_vec<'a>(func: TravFunc<'a>,
     Ok(())
 }
 
+/// List element variant names.
+pub fn get_path_names<'a>(path: &Vec<&'a Element>) -> Vec<&'a str> {
+    let mut names = vec![];
+    for elem in path {
+        names.push(elem.get_variant_name());
+    }
+    names
+}
+
 /// Traverse a syntax tree depth-first with a given function.
-pub fn traverse_with<'a>(func: TravFunc<'a>,
+pub fn traverse_with<'a, S: Copy>(func: &TravFunc<'a, S>,
                          root: &'a Element,
                          path: &mut Vec<&'a Element>,
-                         settings: &Settings,
+                         settings: S,
                          out: &mut io::Write) -> io::Result<()> {
 
     let vec_func = traverse_vec;

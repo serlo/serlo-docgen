@@ -51,11 +51,11 @@ node_template! {
                     path.push(env_content);
                     write!(out, "\\begin{{{}}}[", environment)?;
                     if let Some(title_content) = title_content {
-                        traverse_with(export_article, title_content, path, settings, out)?;
+                        traverse_with(&export_article, title_content, path, settings, out)?;
                     }
                     write!(out, "]\n")?;
 
-                    traverse_with(export_article, env_content, path, settings, out)?;
+                    traverse_with(&export_article, env_content, path, settings, out)?;
                     write!(out, "\\end{{{}}}\n", environment)?;
                     path.pop();
                 }
@@ -101,7 +101,7 @@ node_template! {
 
         // render paragraph content
         let mut par_content = vec![];
-        traverse_vec(export_article, content, path, settings, &mut par_content)?;
+        traverse_vec(&export_article, content, path, settings, &mut par_content)?;
         let par_string = str::from_utf8(&par_content).unwrap().trim_right().to_string();
 
         // trim and indent output string
@@ -125,10 +125,10 @@ node_template! {
         }
 
         write!(out, "section{{")?;
-        traverse_vec(export_article, caption, path, settings, out)?;
+        traverse_vec(&export_article, caption, path, settings, out)?;
         write!(out, "}}\n\n")?;
 
-        traverse_vec(export_article, content, path, settings, out)?;
+        traverse_vec(&export_article, content, path, settings, out)?;
     }
 }
 
@@ -138,16 +138,16 @@ node_template! {
     &Element::Formatted { ref markup, ref content, .. } => {
         match markup {
             &MarkupType::NoWiki => {
-                traverse_vec(export_article, content, path, settings, out)?;
+                traverse_vec(&export_article, content, path, settings, out)?;
             },
             &MarkupType::Bold => {
                 write!(out, "\\textbf{{")?;
-                traverse_vec(export_article, content, path, settings, out)?;
+                traverse_vec(&export_article, content, path, settings, out)?;
                 write!(out, "}}")?;
             },
             &MarkupType::Italic => {
                 write!(out, "\\textit{{")?;
-                traverse_vec(export_article, content, path, settings, out)?;
+                traverse_vec(&export_article, content, path, settings, out)?;
                 write!(out, "}}")?;
 
             },
@@ -199,7 +199,7 @@ pub fn export_article<'a>(root: &'a Element,
         &Element::Text { .. } => export_text(root, path, settings, out)?,
 
         // TODO: Remove when implementation for all elements exists
-        _ => traverse_with(export_article, root, path, settings, out)?,
+        _ => traverse_with(&export_article, root, path, settings, out)?,
     };
     path.pop();
     Ok(())

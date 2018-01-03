@@ -11,7 +11,7 @@ pub struct Target<'a> {
     /// The path to write output files to.
     pub output_path: String,
     /// A function to call for export.
-    pub export_func: TravFunc<'a>,
+    pub export_func: &'a TravFunc<'a, &'a Settings>,
 }
 
 /// General MFNF transformation settings for all targets.
