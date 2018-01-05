@@ -2,7 +2,9 @@ use std::io;
 use std::str;
 use settings::Settings;
 use mediawiki_parser::ast::*;
+use mediawiki_parser::transformations::*;
 use util::*;
+use serde_yaml;
 
 /// Write all section names encountered to an output file.
 pub fn collect_section_names<'a>(root: &'a Element,
@@ -58,16 +60,76 @@ pub fn collect_sections<'a>(root: &'a Element,
         }
 
         if !start.is_empty() && !end.is_empty() {
-            eprintln!("get_intermediary for {}", section);
             let inter = get_intermediary(&start, &end);
-        } else {
-
+            writeln!(out, "intermediary for {}:\n{}", section,
+                serde_yaml::to_string(&inter).unwrap())?;
         }
     }
     Ok(())
 }
 
-fn get_intermediary<'a>(start: &Vec<&'a Element>, end: &Vec<&'a Element>) -> Vec<&'a Element> {
+/// Paramters for section filtering transformation.
+struct SectionFilter<'a> {
+    begin: &'a Vec<&'a Element>,
+    end: &'a Vec<&'a Element>,
+}
+
+enum FilterState {
+    Pre,
+    Inter,
+    Post
+}
+
+/// Recursively trim a subtree to only contain the elements
+/// enclosed by the section paths in SectionFilter.
+fn filter_section_element(root: &Element,
+                          path: &Vec<&Element>,
+                          settings: &SectionFilter) -> TResult {
+
+    recurse_clone_template(&filter_section_element,
+                           root, path, settings,
+                           &filter_section_subtree)
+}
+
+
+/// Recursively trim a list of elments to only contain the elements
+/// enclosed by the section paths in SectionFilter.
+fn filter_section_subtree<'a, 'b>(func: &TFunc<&'a SectionFilter<'b>>,
+                                  content: &Vec<Element>,
+                                  path: &Vec<&Element>,
+                                  settings: &'a SectionFilter<'b>) -> TListResult {
+    let mut result = vec![];
+    let mut state = FilterState::Pre;
+    for child in content {
+        if settings.begin.contains(&child) {
+            state = FilterState::Inter;
+            // ignore the starting section tag
+            if !(Some(&child) == settings.begin.last()) {
+                result.push(func(&child, path, settings)
+                    .expect("error in section filter"));
+            }
+            continue;
+        }
+        if settings.end.contains(&child) {
+            state = FilterState::Post;
+            // ignore the ending section tag
+            if !(Some(&child) == settings.end.last()) {
+                result.push(func(&child, path, settings)
+                    .expect("error in section filter"));
+            }
+            break;
+        }
+        match state {
+            FilterState::Inter => result.push(child.clone()),
+            _ => (),
+        }
+    }
+    Ok(result)
+}
+
+/// Get the children of the lowest common element of two section paths.
+/// Child nodes before and after the section tag are discarded.
+fn get_intermediary<'a>(start: &Vec<&'a Element>, end: &Vec<&'a Element>) -> Vec<Element> {
     // lowest common node
     let mut common = None;
     for ps in start.iter().rev() {
@@ -85,8 +147,10 @@ fn get_intermediary<'a>(start: &Vec<&'a Element>, end: &Vec<&'a Element>) -> Vec
         return vec![];
     }
     let common = common.unwrap();
-    eprintln!("lowest common: {}", common.get_variant_name());
-    vec![]
+    let section_filter = SectionFilter { begin: start, end };
+    let filtered = filter_section_element(&common, &vec![], &section_filter)
+        .expect("error in section filter");
+    extract_content(filtered).unwrap_or(vec![])
 }
 
 /// Parameters for session finding.
@@ -117,4 +181,44 @@ fn find_section<'a>(root: &'a Element,
     traverse_with(&find_section, root, path, settings, out)?;
     path.pop();
     Ok(())
+}
+
+/// Extract all child nodes from an elment in a list.
+/// If an element has multiple fields, they are concatenated
+/// in a semantically useful order.
+fn extract_content<'a>(root: Element) -> Option<Vec<Element>> {
+    match root {
+        Element::Document { content, .. } => Some(content),
+        Element::Heading { mut caption, mut content, .. } => {
+            caption.append(&mut content);
+            Some(caption)
+        },
+        Element::Formatted { content, .. } => Some(content),
+        Element::Paragraph { content, .. } => Some(content),
+        Element::Template { mut name, mut content, .. } => {
+            name.append(&mut content);
+            Some(name)
+        },
+        Element::TemplateArgument { value, .. } => Some(value),
+        Element::InternalReference { mut target, options, mut caption, .. } => {
+            for mut option in options {
+                target.append(&mut option);
+            }
+            target.append(&mut caption);
+            Some(target)
+        },
+        Element::ExternalReference { caption, .. } => Some(caption),
+        Element::ListItem { content, .. } => Some(content),
+        Element::List { content, .. } => Some(content),
+        Element::Table { mut caption, mut rows, .. } => {
+            caption.append(&mut rows);
+            Some(caption)
+        }
+        Element::TableRow { cells, .. } => Some(cells),
+        Element::TableCell { content, .. } => Some(content),
+        Element::HtmlTag { content, .. } => Some(content),
+        Element::Text { .. } => None,
+        Element::Comment { .. } => None,
+        Element::Error { .. } => None,
+    }
 }
