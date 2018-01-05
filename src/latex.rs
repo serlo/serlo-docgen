@@ -2,6 +2,7 @@ use std::io;
 use std::str;
 use settings::Settings;
 use mediawiki_parser::ast::*;
+use mediawiki_parser::transformations::*;
 use util::*;
 
 
@@ -51,11 +52,11 @@ node_template! {
                     path.push(env_content);
                     write!(out, "\\begin{{{}}}[", environment)?;
                     if let Some(title_content) = title_content {
-                        traverse_with(&export_article, title_content, path, settings, out)?;
+                        traverse_with(&traverse_article, title_content, path, settings, out)?;
                     }
                     write!(out, "]\n")?;
 
-                    traverse_with(&export_article, env_content, path, settings, out)?;
+                    traverse_with(&traverse_article, env_content, path, settings, out)?;
                     write!(out, "\\end{{{}}}\n", environment)?;
                     path.pop();
                 }
@@ -101,7 +102,7 @@ node_template! {
 
         // render paragraph content
         let mut par_content = vec![];
-        traverse_vec(&export_article, content, path, settings, &mut par_content)?;
+        traverse_vec(&traverse_article, content, path, settings, &mut par_content)?;
         let par_string = str::from_utf8(&par_content).unwrap().trim_right().to_string();
 
         // trim and indent output string
@@ -125,10 +126,10 @@ node_template! {
         }
 
         write!(out, "section{{")?;
-        traverse_vec(&export_article, caption, path, settings, out)?;
+        traverse_vec(&traverse_article, caption, path, settings, out)?;
         write!(out, "}}\n\n")?;
 
-        traverse_vec(&export_article, content, path, settings, out)?;
+        traverse_vec(&traverse_article, content, path, settings, out)?;
     }
 }
 
@@ -138,16 +139,16 @@ node_template! {
     &Element::Formatted { ref markup, ref content, .. } => {
         match markup {
             &MarkupType::NoWiki => {
-                traverse_vec(&export_article, content, path, settings, out)?;
+                traverse_vec(&traverse_article, content, path, settings, out)?;
             },
             &MarkupType::Bold => {
                 write!(out, "\\textbf{{")?;
-                traverse_vec(&export_article, content, path, settings, out)?;
+                traverse_vec(&traverse_article, content, path, settings, out)?;
                 write!(out, "}}")?;
             },
             &MarkupType::Italic => {
                 write!(out, "\\textit{{")?;
-                traverse_vec(&export_article, content, path, settings, out)?;
+                traverse_vec(&traverse_article, content, path, settings, out)?;
                 write!(out, "}}")?;
 
             },
@@ -183,10 +184,22 @@ fn write_error(message: &str,
 }
 
 pub fn export_article<'a>(root: &'a Element,
-                          path: &mut Vec<&'a Element>,
+                          _path: &mut Vec<&'a Element>,
                           settings: &Settings,
                           out: &mut io::Write) -> io::Result<()> {
 
+    // apply latex-specific transformations
+    let mut latex_tree = root.clone();
+    latex_tree = normalize_formula(latex_tree, settings)
+        .expect("Could not appy LaTeX-Secific transformations!");
+    traverse_article(&latex_tree, &mut vec![], settings, out)
+}
+
+/// Recursively traverse the article tree. Node-Specific exports start here.
+pub fn traverse_article<'a>(root: &'a Element,
+                            path: &mut Vec<&'a Element>,
+                            settings: &Settings,
+                            out: &mut io::Write) -> io::Result<()> {
     path.push(root);
     match root {
         // Node elements
@@ -199,8 +212,44 @@ pub fn export_article<'a>(root: &'a Element,
         &Element::Text { .. } => export_text(root, path, settings, out)?,
 
         // TODO: Remove when implementation for all elements exists
-        _ => traverse_with(&export_article, root, path, settings, out)?,
+        _ => traverse_with(&traverse_article, root, path, settings, out)?,
     };
     path.pop();
     Ok(())
+}
+
+/// Transform a formula template argument to text-only.
+pub fn normalize_formula(mut root: Element, settings: &Settings) -> TResult {
+    if let &mut Element::Template { ref name, ref mut content, ref position, .. } = &mut root {
+        if let Some(&Element::Text {ref text, .. }) = name.first() {
+            if text == "formula" {
+                let arg_error = Element::Error {
+                    position: position.clone(),
+                    message: "Forumla templates must have exactly one anonymous argument, \
+                                which is LaTeX source code entirely enclosed in <math></math>!".to_string(),
+                };
+
+                if content.len() != 1 {
+                    return Ok(arg_error);
+                }
+                if let Some(&mut Element::TemplateArgument {ref mut value, .. }) = content.first_mut() {
+                    if value.len() != 1 {
+                        return Ok(arg_error);
+                    }
+                    if let Some(Element::Formatted { ref markup, ref mut content, .. }) = value.pop() {
+                        if content.len() != 1 || if let &MarkupType::Math = markup {false} else {true} {
+                            return Ok(arg_error);
+                        }
+                        value.clear();
+                        value.append(content);
+                    } else {
+                        return Ok(arg_error);
+                    }
+                } else {
+                    return Ok(arg_error);
+                }
+            }
+        }
+    };
+    recurse_inplace(&normalize_formula, root, settings)
 }
