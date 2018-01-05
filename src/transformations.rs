@@ -1,5 +1,6 @@
 use mediawiki_parser::ast::*;
 use mediawiki_parser::transformations::*;
+use mediawiki_parser::error::TransformationError;
 use settings::Settings;
 use util::*;
 
@@ -88,16 +89,32 @@ pub fn translate_templates(mut root: Element, settings: &Settings) -> TResult {
 
 /// Convert template attribute `title` to text only.
 pub fn normalize_template_title(mut root: Element, settings: &Settings) -> TResult {
-    if let &mut Element::TemplateArgument { ref name, ref mut value, .. } = &mut root {
+    if let &mut Element::TemplateArgument { ref name, ref mut value, ref position } = &mut root {
         if name == "title" {
-            if let Some(Element::Paragraph { ref mut content, .. }) = value.pop() {
-                if let Some(Element::Text { text, position  }) = content.pop() {
+            let mut last_value = value.pop();
+            // title is empty
+            if let None = last_value {
+                return Err(TransformationError {
+                    cause: "A template title must not be empty!".to_string(),
+                    position: position.clone(),
+                    transformation_name: "normalize_template_title".to_string(),
+                    tree: Element::TemplateArgument {
+                        name: name.clone(),
+                        value: vec![],
+                        position: position.clone(),
+                    }
+                })
+            }
+            if let Some(Element::Paragraph { ref mut content, .. }) = last_value {
+                if let Some(&Element::Text { ref text, ref position  }) = content.last() {
                     value.clear();
                     value.push(Element::Text {
                         text: String::from(text.trim()),
-                        position
+                        position: position.clone(),
                     });
                 }
+            } else {
+                value.push(last_value.unwrap());
             }
         }
     }
