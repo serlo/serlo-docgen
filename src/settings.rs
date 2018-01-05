@@ -71,6 +71,8 @@ pub struct DepSettings {
     pub image_extensions: Vec<String>,
     /// Path prefix for images.
     pub image_path: String,
+    /// Path to the section file directory.
+    pub section_path: String,
 }
 
 
@@ -166,6 +168,7 @@ impl Default for DepSettings {
                 s!("pdf"),
             ],
             image_path: s!("images"),
+            section_path: s!("sections"),
         }
     }
 }

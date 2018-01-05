@@ -14,37 +14,13 @@ pub struct Section {
     pub position: Span,
 }
 
-/// Write all section names encountered to an output file.
-pub fn collect_section_names<'a>(root: &'a Element,
-                                 path: &mut Vec<&'a Element>,
-                                 settings: &Settings,
-                                 out: &mut io::Write) -> io::Result<()> {
-
-    if let &Element::HtmlTag { ref name, ref attributes, .. } = root {
-        if name.to_lowercase() == "section"  {
-            for attr in attributes {
-                if attr.key == "begin" {
-                    writeln!(out, "{}", attr.value)?;
-                }
-            }
-        }
-    };
-    traverse_with(&collect_section_names, root, path, settings, out)?;
-    Ok(())
-}
-
 /// Collect all sections in a file and serialize them to stdout.
 pub fn collect_sections<'a>(root: &'a Element,
                             _path: &mut Vec<&'a Element>,
                             settings: &Settings,
                             out: &mut io::Write) -> io::Result<()> {
 
-    let mut sections_string = vec![];
-    collect_section_names(root, &mut vec![], settings, &mut sections_string)?;
-    let sections_string = String::from_utf8(sections_string).unwrap();
-
-    // list of section names defined in the document
-    let sections: Vec<&str> = sections_string.split("\n").collect();
+    let sections = collect_section_names(root, settings);
 
     for section in sections {
         if section.is_empty() {
@@ -52,7 +28,7 @@ pub fn collect_sections<'a>(root: &'a Element,
         }
         let mut find_settings = SectionData {
             begin: true,
-            label: section,
+            label: &section,
         };
 
         let mut start = vec![];
@@ -69,7 +45,7 @@ pub fn collect_sections<'a>(root: &'a Element,
         if !start.is_empty() && !end.is_empty() {
             let inter = get_intermediary(&start, &end);
             let section = Section {
-                title: String::from(section),
+                title: section.clone(),
                 position: Span {
                     start: inter.first().unwrap_or(root).get_position().start.clone(),
                     end: inter.last().unwrap_or(root).get_position().end.clone(),
@@ -170,6 +146,48 @@ fn get_intermediary<'a>(start: &Vec<&'a Element>, end: &Vec<&'a Element>) -> Vec
     let filtered = filter_section_element(&common, &vec![], &section_filter)
         .expect("error in section filter");
     extract_content(filtered).unwrap_or(vec![])
+}
+
+/// Collect the names of all beginning sections in a document.
+pub fn collect_section_names<'a>(root: &'a Element,
+                                 settings: &Settings) -> Vec<String> {
+
+    let mut sections_string = vec![];
+    recurse_section_names(root, &mut vec![], settings, &mut sections_string)
+        .expect("Error traversing source tree in section search!");
+    let sections_string = String::from_utf8(sections_string).unwrap();
+
+    let mut result = vec![];
+    // list of section names defined in the document
+    let sections: Vec<&str> = sections_string.split("\n").collect();
+
+    for section in sections {
+        let name = String::from(section.trim());
+        if name.is_empty() {
+            continue
+        }
+        result.push(name);
+    }
+    result
+}
+
+/// Write all section names encountered to an output file.
+fn recurse_section_names<'a>(root: &'a Element,
+                             path: &mut Vec<&'a Element>,
+                             settings: &Settings,
+                             out: &mut io::Write) -> io::Result<()> {
+
+    if let &Element::HtmlTag { ref name, ref attributes, .. } = root {
+        if name.to_lowercase() == "section"  {
+            for attr in attributes {
+                if attr.key == "begin" {
+                    writeln!(out, "{}", attr.value)?;
+                }
+            }
+        }
+    };
+    traverse_with(&recurse_section_names, root, path, settings, out)?;
+    Ok(())
 }
 
 /// Parameters for session finding.

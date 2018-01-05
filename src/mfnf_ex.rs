@@ -108,7 +108,7 @@ fn build_targets(args: &Args) -> Vec<Target> {
                     name: target_name.to_string(),
                     output_path: "./export/deps/".to_string(),
                     settings: settings.clone(),
-                    export_func: &deps::collect_article_deps,
+                    export_func: &deps::export_article_deps,
                 });
             },
             "sections" => {
