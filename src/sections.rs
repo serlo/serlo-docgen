@@ -6,6 +6,14 @@ use mediawiki_parser::transformations::*;
 use util::*;
 use serde_yaml;
 
+/// Metadata structure for document sections.
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Section {
+    pub title: String,
+    pub tree: Vec<Element>,
+    pub position: Span,
+}
+
 /// Write all section names encountered to an output file.
 pub fn collect_section_names<'a>(root: &'a Element,
                                  path: &mut Vec<&'a Element>,
@@ -25,6 +33,7 @@ pub fn collect_section_names<'a>(root: &'a Element,
     Ok(())
 }
 
+/// Collect all sections in a file and serialize them to stdout.
 pub fn collect_sections<'a>(root: &'a Element,
                             _path: &mut Vec<&'a Element>,
                             settings: &Settings,
@@ -36,8 +45,6 @@ pub fn collect_sections<'a>(root: &'a Element,
 
     // list of section names defined in the document
     let sections: Vec<&str> = sections_string.split("\n").collect();
-
-    eprintln!("sections: {:?}", &sections);
 
     for section in sections {
         if section.is_empty() {
@@ -61,24 +68,29 @@ pub fn collect_sections<'a>(root: &'a Element,
 
         if !start.is_empty() && !end.is_empty() {
             let inter = get_intermediary(&start, &end);
-            writeln!(out, "intermediary for {}:\n{}", section,
-                serde_yaml::to_string(&inter).unwrap())?;
+            let section = Section {
+                title: String::from(section),
+                position: Span {
+                    start: inter.first().unwrap_or(root).get_position().start.clone(),
+                    end: inter.last().unwrap_or(root).get_position().end.clone(),
+                },
+                tree: inter
+            };
+            writeln!(out, "{}\n", serde_yaml::to_string(&section)
+                .expect("could not serialize section!"))?;
         }
     }
     Ok(())
 }
 
 /// Paramters for section filtering transformation.
-struct SectionFilter<'a> {
-    begin: &'a Vec<&'a Element>,
-    end: &'a Vec<&'a Element>,
+#[derive(Debug, Clone)]
+struct SectionFilter<'a, 'b: 'a> {
+    pub begin: &'a Vec<&'b Element>,
+    pub end: &'a Vec<&'b Element>,
+    pub include_pre: bool,
 }
 
-enum FilterState {
-    Pre,
-    Inter,
-    Post
-}
 
 /// Recursively trim a subtree to only contain the elements
 /// enclosed by the section paths in SectionFilter.
@@ -94,35 +106,42 @@ fn filter_section_element(root: &Element,
 
 /// Recursively trim a list of elments to only contain the elements
 /// enclosed by the section paths in SectionFilter.
-fn filter_section_subtree<'a, 'b>(func: &TFunc<&'a SectionFilter<'b>>,
-                                  content: &Vec<Element>,
-                                  path: &Vec<&Element>,
-                                  settings: &'a SectionFilter<'b>) -> TListResult {
+fn filter_section_subtree<'a>(_func: &TFunc<&SectionFilter>,
+                              content: &Vec<Element>,
+                              path: &Vec<&'a Element>,
+                              settings: &SectionFilter) -> TListResult {
     let mut result = vec![];
-    let mut state = FilterState::Pre;
+    let mut found_begin = false;
+
     for child in content {
         if settings.begin.contains(&child) {
-            state = FilterState::Inter;
+
+            found_begin = true;
+
             // ignore the starting section tag
             if !(Some(&child) == settings.begin.last()) {
-                result.push(func(&child, path, settings)
+                result.push(filter_section_element(&child, path, &settings.clone())
                     .expect("error in section filter"));
             }
             continue;
         }
         if settings.end.contains(&child) {
-            state = FilterState::Post;
+
+            let mut child_settings = settings.clone();
+            child_settings.include_pre = true;
+
             // ignore the ending section tag
             if !(Some(&child) == settings.end.last()) {
-                result.push(func(&child, path, settings)
+                result.push(filter_section_element(&child, path, &child_settings)
                     .expect("error in section filter"));
             }
             break;
         }
-        match state {
-            FilterState::Inter => result.push(child.clone()),
-            _ => (),
+
+        if found_begin || settings.include_pre {
+            result.push(child.clone());
         }
+
     }
     Ok(result)
 }
@@ -147,7 +166,7 @@ fn get_intermediary<'a>(start: &Vec<&'a Element>, end: &Vec<&'a Element>) -> Vec
         return vec![];
     }
     let common = common.unwrap();
-    let section_filter = SectionFilter { begin: start, end };
+    let section_filter = SectionFilter { begin: start, end, include_pre: false };
     let filtered = filter_section_element(&common, &vec![], &section_filter)
         .expect("error in section filter");
     extract_content(filtered).unwrap_or(vec![])
