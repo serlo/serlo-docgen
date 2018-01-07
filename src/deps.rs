@@ -3,7 +3,8 @@ use settings::Settings;
 use mediawiki_parser::ast::*;
 use util::*;
 use std::path;
-use sections::collect_section_names;
+
+const INCLUSION_PREFIX: &'static str = "#lst:";
 
 
 pub fn export_article_deps<'a>(root: &'a Element,
@@ -12,21 +13,37 @@ pub fn export_article_deps<'a>(root: &'a Element,
                                out: &mut io::Write) -> io::Result<()> {
 
     collect_article_deps(root, path, settings, out)?;
+    collect_included_section(root, path, settings, out)
+}
 
-    let sections = collect_section_names(root, settings);
-    for section in sections {
-        let spath = path::Path::new(&settings.deps_settings.section_path)
-            .join(&section);
-        let spath = String::from(spath.to_string_lossy());
-        writeln!(out, "{}", &filename_to_make(&spath))?;
-    }
+pub fn collect_included_section<'a>(root: &'a Element,
+                                    path: &mut Vec<&'a Element>,
+                                    settings: &Settings,
+                                    out: &mut io::Write) -> io::Result<()> {
+
+    match root {
+        &Element::Template { ref name, ref content, .. } => {
+            let name = extract_plain_text(name);
+
+            if name.starts_with(INCLUSION_PREFIX) {
+                if let Some(&Element::TemplateArgument { ref value, .. }) = content.last() {
+                    let ipath = path::Path::new(&settings.deps_settings.section_path)
+                        .join(&name[INCLUSION_PREFIX.len()..])
+                        .join(&extract_plain_text(value));
+                    let ipath = String::from(ipath.to_string_lossy());
+                    writeln!(out, "{}", &filename_to_make(&ipath))?;
+                }
+            }
+        },
+        _ => traverse_with(&collect_included_section, root, path, settings, out)?,
+    };
     Ok(())
 }
 
 fn collect_article_deps<'a>(root: &'a Element,
-                                path: &mut Vec<&'a Element>,
-                                settings: &Settings,
-                                out: &mut io::Write) -> io::Result<()> {
+                            path: &mut Vec<&'a Element>,
+                            settings: &Settings,
+                            out: &mut io::Write) -> io::Result<()> {
 
     match root {
         &Element::InternalReference { ref target, .. } => {
