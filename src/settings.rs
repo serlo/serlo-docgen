@@ -54,6 +54,8 @@ pub struct LaTeXSettings {
     pub indentation_depth: usize,
     /// Maximum line widht (without indentation).
     pub max_line_width: usize,
+    /// Width of an image in a figure as fraction of \textwidth
+    pub image_width: f32,
 
     /// Templates which can be exported as an environment.
     /// The template may have a `title` attribute and a content
@@ -127,6 +129,7 @@ impl Default for LaTeXSettings {
             border: [20.5, 32.6, 22., 18.5],
             indentation_depth: 4,
             max_line_width: 80,
+            image_width: 0.5,
             document_options: String::from("tocflat, listof=chapterentry"),
             environments: [
                 (s!("definition"),          vec![s!("definition")]),

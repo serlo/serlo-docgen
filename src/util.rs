@@ -60,7 +60,7 @@ pub fn indent_and_trim<'a>(input: &'a str, depth: usize, max_line_width: usize) 
         let start_string = format!("{:depth$}", "", depth=depth);
         let mut current_line = start_string.clone();
 
-        if line.trim().len() > max_line_width {
+        if line.trim().len() > max_line_width && line.trim().matches(" ").count() > 0 {
 
             for word in line.split(" ") {
                 if current_line.trim().len() + word.len() + 1 > max_line_width {

@@ -1,10 +1,11 @@
 use std::io;
+use std::io::Write;
 use std::str;
 use settings::Settings;
 use mediawiki_parser::ast::*;
 use mediawiki_parser::transformations::*;
 use util::*;
-
+use std::path;
 
 /// This macro contains all the boilerplate code needed for a
 /// non-leaf node.
@@ -45,7 +46,7 @@ node_template! {
 
             write!(out, "% defined in {} at {}:{} to {}:{}\n", settings.document_title,
                    position.start.line, position.start.col,
-                   position.end.line, position.start.col)?;
+                   position.end.line, position.end.col)?;
 
             for environment in envs {
                 if let Some(env_content) = find_arg(content, environment) {
@@ -94,6 +95,55 @@ node_template! {
         };
     }
 }
+
+node_template! {
+    fn export_internal_ref(root, path, settings, out):
+
+    &Element::InternalReference { ref target, ref options, ref caption, ref position } => {
+        let target_str = extract_plain_text(target);
+        let file_ext = target_str.split(".").last().unwrap_or("").to_lowercase();
+
+        write!(out, "% defined in {} at {}:{} to {}:{}\n", settings.document_title,
+                   position.start.line, position.start.col,
+                   position.end.line, position.end.col)?;
+
+        // file is an image
+        if settings.deps_settings.image_extensions.contains(&file_ext) {
+
+            let image_path = path::Path::new(&settings.deps_settings.image_path)
+                .join(target_str);
+            let image_path = filename_to_make(&String::from(image_path.to_string_lossy()));
+
+            // collect image options
+            let mut image_options = vec![];
+            for option in options {
+                image_options.push(extract_plain_text(&option).trim().to_string());
+            }
+
+            writeln!(out, "\\begin{{figure}}[h]")?;
+
+            // render caption content
+            let mut cap_content = vec![];
+            writeln!(&mut cap_content, "% image options: {:?}", &image_options)?;
+            writeln!(&mut cap_content, "\\includegraphics[{}\\textwidth]{{{}}}",
+                settings.latex_settings.image_width, &image_path)?;
+            write!(&mut cap_content, "\\caption{{")?;
+            traverse_vec(&traverse_article, caption, path, settings, &mut cap_content)?;
+            write!(&mut cap_content, "}}")?;
+
+            writeln!(out, "{}", &indent_and_trim(&str::from_utf8(&cap_content).unwrap(),
+                settings.latex_settings.indentation_depth,
+                settings.latex_settings.max_line_width))?;
+            writeln!(out, "\\end{{figure}}")?;
+
+            return Ok(())
+        }
+
+        write_error(&format!("No export function defined for target {:?}", target_str),
+                    settings, out)?;
+    }
+}
+
 
 node_template! {
     fn export_paragraph(root, path, settings, out):
@@ -207,8 +257,9 @@ pub fn traverse_article<'a>(root: &'a Element,
         &Element::Formatted { .. } => export_formatted(root, path, settings, out)?,
         &Element::Paragraph { .. } => export_paragraph(root, path, settings, out)?,
         &Element::Template { .. } => export_template(root, path, settings, out)?,
+        &Element::InternalReference { .. } => export_internal_ref(root, path, settings, out)?,
 
-        // Leaf Elemenfs
+        // Leaf Elements
         &Element::Text { .. } => export_text(root, path, settings, out)?,
 
         // TODO: Remove when implementation for all elements exists
