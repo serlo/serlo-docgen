@@ -1,0 +1,3 @@
+- Struktur für Section-Ordner:
+
+ <sectionpath>/<article_name>/<section_name>/<rev_id>.yml

@@ -4,6 +4,10 @@ use settings::Settings;
 use mediawiki_parser::ast::*;
 use mediawiki_parser::transformations::*;
 use util::*;
+use std::path;
+use std::fs::File;
+use std::io::Write;
+use std::fs::DirBuilder;
 use serde_yaml;
 
 /// Metadata structure for document sections.
@@ -14,7 +18,8 @@ pub struct Section {
     pub position: Span,
 }
 
-/// Collect all sections in a file and serialize them to stdout.
+/// Collect all sections in a file and write them to the section repository.
+/// The target path is configured in `DepSettings`.
 pub fn collect_sections<'a>(root: &'a Element,
                             _path: &mut Vec<&'a Element>,
                             settings: &Settings,
@@ -44,16 +49,26 @@ pub fn collect_sections<'a>(root: &'a Element,
 
         if !start.is_empty() && !end.is_empty() {
             let inter = get_intermediary(&start, &end);
-            let section = Section {
-                title: section.clone(),
-                position: Span {
-                    start: inter.first().unwrap_or(root).get_position().start.clone(),
-                    end: inter.last().unwrap_or(root).get_position().end.clone(),
-                },
-                tree: inter
-            };
-            writeln!(out, "{}\n", serde_yaml::to_string(&section)
-                .expect("could not serialize section!"))?;
+            let mut filename = settings.document_revision.clone();
+            filename.push('.');
+            filename.push_str(&settings.deps_settings.section_ext);
+
+            let mut path = path::Path::new(&settings.deps_settings.section_path)
+                .join(&filename_to_make(&settings.document_title))
+                .join(&filename_to_make(&section.clone()));
+
+            DirBuilder::new()
+                .recursive(true)
+                .create(&path)?;
+
+            path = path.join(&filename);
+
+            eprintln!("{:?}", &path);
+
+            let mut file = File::create(&path)?;
+            file.write_all(&serde_yaml::to_string(&inter)
+                .expect("could not serialize section!")
+                .as_bytes())?;
         }
     }
     Ok(())

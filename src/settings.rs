@@ -21,8 +21,11 @@ pub struct Settings {
     pub latex_settings: LaTeXSettings,
     pub deps_settings: DepSettings,
 
-    /// Title of the current document
+    /// Title of the current document.
     pub document_title: String,
+
+    /// Additional revision id of an article.
+    pub document_revision: String,
 
     /// Maps a template names and template attribute names to their translations.
     /// E.g. german template names to their englisch translations.
@@ -75,6 +78,12 @@ pub struct DepSettings {
     pub image_path: String,
     /// Path to the section file directory.
     pub section_path: String,
+    /// Revision number included sections (always "latest")
+    pub section_rev: String,
+    /// File extensions for section files
+    pub section_ext: String,
+    /// Template name prefix indication section inclusion
+    pub section_inclusion_prefix: String,
 }
 
 
@@ -94,6 +103,7 @@ impl Default for Settings {
             latex_settings: LaTeXSettings::default(),
             deps_settings: DepSettings::default(),
             document_title: s!("<no document name specified>"),
+            document_revision: s!("latest"),
             translations: [
                 s!("beispiel", "example"),
                 s!("definition", "definition"),
@@ -172,6 +182,9 @@ impl Default for DepSettings {
             ],
             image_path: s!("images"),
             section_path: s!("sections"),
+            section_rev: s!("latest"),
+            section_ext: s!("yml"),
+            section_inclusion_prefix: s!("#lst:"),
         }
     }
 }
