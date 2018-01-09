@@ -21,6 +21,7 @@ struct Args {
     pub input_file: String,
     pub config_file: String,
     pub doc_title: String,
+    pub doc_revision: String,
     pub targets: Vec<String>,
 }
 
@@ -32,6 +33,7 @@ impl Default for Args {
             input_file: String::new(),
             config_file: String::new(),
             doc_title: "<no document name specified>".to_string(),
+            doc_revision: "latest".to_string(),
             targets: vec![],
         }
     }
@@ -59,6 +61,11 @@ fn parse_args() -> Args {
             &["-t",  "--title"],
             Store,
             "Title of the input document",
+        );
+        ap.refer(&mut args.doc_revision).add_option(
+            &["-r", "--revision"],
+            Store,
+            "Revision ID of the input document"
         );
         ap.refer(&mut args.dump_config).add_option(
             &["-d", "--dump-settings"],
@@ -92,6 +99,7 @@ fn build_targets(args: &Args) -> Vec<Target> {
     };
 
     settings.document_title = args.doc_title.clone();
+    settings.document_revision = args.doc_revision.clone();
 
     for target_name in &args.targets {
         match &target_name[..] {
