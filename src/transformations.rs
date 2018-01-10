@@ -3,6 +3,7 @@ use mediawiki_parser::transformations::*;
 use mediawiki_parser::error::TransformationError;
 use settings::Settings;
 use util::*;
+use std::path;
 
 
 /// Convert template name paragraphs to lowercase text only.
@@ -122,3 +123,46 @@ pub fn normalize_template_title(mut root: Element, settings: &Settings) -> TResu
 }
 
 
+pub fn include_sections(mut root: Element, settings: &Settings) -> TResult {
+    if let &mut Element::Template { ref name, ref content, ref position } = &mut root {
+        let prefix = &settings.deps_settings.section_inclusion_prefix;
+        let template_name = extract_plain_text(&name);
+
+        // section transclusion
+        if template_name.to_lowercase().starts_with(prefix) {
+            let article = trim_prefix(&template_name, prefix);
+            if content.len() < 1 {
+                return Err(TransformationError {
+                    cause: "A section inclusion must specify article \
+                            name and section name!".to_string(),
+                    position: position.clone(),
+                    transformation_name: "include_sections".to_string(),
+                    tree: Element::Template {
+                        name: name.clone(),
+                        position: position.clone(),
+                        content: content.clone(),
+                    }
+                })
+            }
+
+            let section_name = extract_plain_text(content);
+            let mut section_file = settings.deps_settings.section_rev.clone();
+            section_file.push('.');
+            section_file.push_str(&settings.deps_settings.section_ext);
+
+            let path = path::Path::new(&settings.deps_settings.section_path)
+                .join(&filename_to_make(&article))
+                .join(&filename_to_make(&section_name))
+                .join(&filename_to_make(&section_file));
+
+            eprintln!("include article: {:?}", path);
+            return Ok(
+                Element::Comment {
+                    position: position.clone(),
+                    text: format!("#lst:{}|{}", article, section_name),
+                }
+            );
+        }
+    }
+    recurse_inplace(&include_sections, root, settings)
+}

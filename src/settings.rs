@@ -78,12 +78,12 @@ pub struct DepSettings {
     pub image_path: String,
     /// Path to the section file directory.
     pub section_path: String,
-    /// Revision number included sections (always "latest")
+    /// Revision number of included sections (always "latest")
     pub section_rev: String,
     /// File extensions for section files
     pub section_ext: String,
     /// Template name prefix indication section inclusion
-    pub section_inclusion_prefix: String,
+    pub section_inclusion_prefix: String
 }
 
 

@@ -107,6 +107,9 @@ pub fn extract_plain_text(content: &Vec<Element>) -> String {
             &Element::Paragraph { ref content, .. } => {
                 result.push_str(&extract_plain_text(content));
             },
+            &Element::TemplateArgument { ref value, .. } => {
+                result.push_str(&extract_plain_text(value));
+            },
             _ => (),
         };
     }
