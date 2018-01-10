@@ -44,7 +44,7 @@ node_template! {
         if let Some(envs) = settings.latex_settings.environments.get(template_name) {
             let title_content = find_arg(content, "title");
 
-            write!(out, "% defined in {} at {}:{} to {}:{}\n", settings.document_title,
+            writeln!(out, "\n% defined in {} at {}:{} to {}:{}", settings.document_title,
                    position.start.line, position.start.col,
                    position.end.line, position.end.col)?;
 
@@ -103,7 +103,7 @@ node_template! {
         let target_str = extract_plain_text(target);
         let file_ext = target_str.split(".").last().unwrap_or("").to_lowercase();
 
-        write!(out, "% defined in {} at {}:{} to {}:{}\n", settings.document_title,
+        writeln!(out, "\n% defined in {} at {}:{} to {}:{}", settings.document_title,
                    position.start.line, position.start.col,
                    position.end.line, position.end.col)?;
 
@@ -214,6 +214,15 @@ node_template! {
 }
 
 node_template! {
+    fn export_comment(root, _path, _settings, out):
+
+    &Element::Comment { ref text, .. } => {
+        writeln!(out, "% {}", text)?;
+    }
+}
+
+
+node_template! {
     fn export_text(root, _path, _settings, out):
 
     &Element::Text { ref text, .. } => {
@@ -261,6 +270,7 @@ pub fn traverse_article<'a>(root: &'a Element,
 
         // Leaf Elements
         &Element::Text { .. } => export_text(root, path, settings, out)?,
+        &Element::Comment { .. } => export_comment(root, path, settings, out)?,
 
         // TODO: Remove when implementation for all elements exists
         _ => traverse_with(&traverse_article, root, path, settings, out)?,

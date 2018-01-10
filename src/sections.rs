@@ -23,7 +23,7 @@ pub struct Section {
 pub fn collect_sections<'a>(root: &'a Element,
                             _path: &mut Vec<&'a Element>,
                             settings: &Settings,
-                            out: &mut io::Write) -> io::Result<()> {
+                            _out: &mut io::Write) -> io::Result<()> {
 
     let sections = collect_section_names(root, settings);
 
@@ -62,8 +62,6 @@ pub fn collect_sections<'a>(root: &'a Element,
                 .create(&path)?;
 
             path = path.join(&filename);
-
-            eprintln!("{:?}", &path);
 
             let mut file = File::create(&path)?;
             file.write_all(&serde_yaml::to_string(&inter)

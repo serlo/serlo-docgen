@@ -14,6 +14,9 @@ pub fn export_article_deps<'a>(root: &'a Element,
     collect_included_section(root, path, settings, out)
 }
 
+/// Collects the sections included in a document. At this stage, sections
+/// are already inlined in the AST, but a marker comment is produced
+/// for dependency extraction.
 pub fn collect_included_section<'a>(root: &'a Element,
                                     path: &mut Vec<&'a Element>,
                                     settings: &Settings,
@@ -21,14 +24,25 @@ pub fn collect_included_section<'a>(root: &'a Element,
 
     let prefix = &settings.deps_settings.section_inclusion_prefix;
     match root {
-        &Element::Template { ref name, ref content, .. } => {
-            let name = extract_plain_text(name);
+        &Element::Comment { ref text, .. } => {
+            if text.starts_with(prefix) {
+                let text = trim_prefix(text, prefix);
+                let mut fragments = text.split("|");
 
-            if name.starts_with(prefix) {
-                if let Some(&Element::TemplateArgument { ref value, .. }) = content.last() {
+                // comment must contain article and section name
+                let article = fragments.next();
+                let section = fragments.next();
+
+                if article.is_some() && section.is_some() {
+
+                    let mut section_file = settings.deps_settings.section_rev.clone();
+                    section_file.push('.');
+                    section_file.push_str(&settings.deps_settings.section_ext);
+
                     let ipath = path::Path::new(&settings.deps_settings.section_path)
-                        .join(&name[prefix.len()..])
-                        .join(&extract_plain_text(value));
+                        .join(article.unwrap())
+                        .join(section.unwrap())
+                        .join(&section_file);
                     let ipath = String::from(ipath.to_string_lossy());
                     writeln!(out, "{}", &filename_to_make(&ipath))?;
                 }
