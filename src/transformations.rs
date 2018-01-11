@@ -4,6 +4,8 @@ use mediawiki_parser::error::TransformationError;
 use settings::Settings;
 use util::*;
 use std::path;
+use std::fs::File;
+use serde_yaml;
 
 
 /// Convert template name paragraphs to lowercase text only.
@@ -157,7 +159,7 @@ pub fn include_sections(mut root: Element, settings: &Settings) -> TResult {
 
             // error returned when the section file is faulty
             let file_error = TransformationError {
-                cause: format!("section file `{}` could not be read!",
+                cause: format!("section file `{}` could not be read or parsed!",
                                &path.to_string_lossy()),
                 position: position.clone(),
                 transformation_name: "include_sections".to_string(),
@@ -168,9 +170,19 @@ pub fn include_sections(mut root: Element, settings: &Settings) -> TResult {
                 }
             };
 
-            //let section_str = File::open(&path);
+            let section_str = File::open(&path);
+            if section_str.is_err() {
+                return Err(file_error)
+            }
+
+            let section_tree: Vec<Element>
+                 = match serde_yaml::from_reader(&section_str.unwrap()) {
+                Ok(root) => root,
+                Err(_) => return Err(file_error)
+            };
 
             eprintln!("include article: {:?}", path);
+
             return Ok(
                 Element::Comment {
                     position: position.clone(),

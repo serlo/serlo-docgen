@@ -12,6 +12,9 @@ pub struct Target<'a> {
     pub output_path: String,
     /// A function to call for export.
     pub export_func: &'a TravFunc<'a, &'a Settings>,
+    /// Does this target operate on the input tree directly or with
+    /// mfnf transformations applied?
+    pub with_transformation: bool,
 }
 
 /// General MFNF transformation settings for all targets.

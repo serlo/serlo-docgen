@@ -6,10 +6,12 @@ extern crate toml;
 
 use std::str;
 use std::process;
+use std::io;
+use std::fs;
 use mfnf_export::settings::*;
 use mfnf_export::{latex, deps, sections};
 
-use mediawiki_parser::util::{read_file, read_stdin};
+use mediawiki_parser::util::{read_file};
 use argparse::{ArgumentParser, StoreTrue, Store, Collect};
 
 
@@ -109,6 +111,7 @@ fn build_targets(args: &Args) -> Vec<Target> {
                     output_path: "./export/latex/".to_string(),
                     settings: settings.clone(),
                     export_func: &latex::export_article,
+                    with_transformation: true,
                 });
             },
             "deps" => {
@@ -117,6 +120,7 @@ fn build_targets(args: &Args) -> Vec<Target> {
                     output_path: "./export/deps/".to_string(),
                     settings: settings.clone(),
                     export_func: &deps::export_article_deps,
+                    with_transformation: false,
                 });
             },
             "sections" => {
@@ -125,6 +129,7 @@ fn build_targets(args: &Args) -> Vec<Target> {
                     output_path: "./export/sections/".to_string(),
                     settings:  settings.clone(),
                     export_func: &sections::collect_sections,
+                    with_transformation: false,
                 });
             }
             _ => {
@@ -154,40 +159,44 @@ fn main() {
         process::exit(0);
     }
 
-    let input = if args.use_stdin {
-        read_stdin()
-    } else if !args.input_file.is_empty() {
-        read_file(&args.input_file)
+    let input_file = if !args.input_file.is_empty() {
+        fs::File::open(&args.input_file)
+            .expect("Could not open input file!")
     } else {
         eprintln!("No input source specified!");
         process::exit(1);
     };
 
-    root = serde_yaml::from_str(&input)
-        .expect("Could not parse input file!");
+    root = (if args.use_stdin {
+        serde_yaml::from_reader(io::stdin())
+    } else {
+        serde_yaml::from_reader(&input_file)
+    }).expect("Could not parse input!");
 
     result = mfnf_export::apply_transformations(root.clone(), general_settings);
 
-    match result {
-        Ok(ref e) => {
-            for target in &targets[..] {
-                let mut path = vec![];
-                let mut result = vec![];
-                (target.export_func)(
-                    // pull dependencies from original tree
-                    if target.name == "deps" { &root } else { &e},
-                    &mut path,
-                    &target.settings,
-                    &mut result
-                )
-                .expect("Could not output export!");
-                println!("{}", str::from_utf8(&result).unwrap());
-            };
-        },
-        Err(ref e) => {
-            eprintln!("{}", e);
-            println!("{}", serde_yaml::to_string(&e)
-                .expect("Could not serialize error!"));
-        }
+    for target in &targets[..] {
+        let mut path = vec![];
+        let mut export_result = vec![];
+        (target.export_func)(
+            // pull dependencies from original tree
+            if target.with_transformation {
+                match result {
+                    Ok(ref e) => e,
+                    Err(ref e) => {
+                        eprintln!("{}", e);
+                        println!("{}", serde_yaml::to_string(&e)
+                            .expect("Could not serialize error!"));
+                        continue;
+                    }
+                }
+            } else {
+                &root
+            },
+            &mut path,
+            &target.settings,
+            &mut export_result
+        ).expect("could not serialize target!");
+        println!("{}", str::from_utf8(&export_result).unwrap());
     }
 }

@@ -18,9 +18,10 @@ mod transformations;
 
 /// Applies all MFNF-Specific transformations.
 pub fn apply_transformations(mut root: Element, settings: &settings::Settings) -> TResult {
+    root = transformations::include_sections(root, settings)?;
     root = transformations::normalize_template_names(root, settings)?;
     root = transformations::translate_templates(root, settings)?;
     root = transformations::normalize_template_title(root, settings)?;
-    root = transformations::include_sections(root, settings)?;
+
     Ok(root)
 }
