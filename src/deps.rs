@@ -5,6 +5,8 @@ use util::*;
 use std::path;
 
 
+/// Extract dependencies from a RAW source AST. Sections are
+/// not included at this point.
 pub fn export_article_deps<'a>(root: &'a Element,
                                path: &mut Vec<&'a Element>,
                                settings: &Settings,
@@ -14,43 +16,33 @@ pub fn export_article_deps<'a>(root: &'a Element,
     collect_included_section(root, path, settings, out)
 }
 
-/// Collects the sections included in a document. At this stage, sections
-/// are already inlined in the AST, but a marker comment is produced
-/// for dependency extraction.
+/// Collects the sections included in a document.
 pub fn collect_included_section<'a>(root: &'a Element,
                                     path: &mut Vec<&'a Element>,
                                     settings: &Settings,
                                     out: &mut io::Write) -> io::Result<()> {
 
-    let prefix = &settings.deps_settings.section_inclusion_prefix;
-    match root {
-        &Element::Comment { ref text, .. } => {
-            if text.starts_with(prefix) {
-                let text = trim_prefix(text, prefix);
-                let mut fragments = text.split("|");
+    if let &Element::Template { ref name, ref content, .. } = root {
+        let prefix = &settings.deps_settings.section_inclusion_prefix;
+        let template_name = extract_plain_text(&name);
 
-                // comment must contain article and section name
-                let article = fragments.next();
-                let section = fragments.next();
+        // section transclusion
+        if template_name.to_lowercase().starts_with(prefix) {
+            let article = trim_prefix(&template_name, prefix);
 
-                if article.is_some() && section.is_some() {
+            let section_name = extract_plain_text(content);
+            let mut section_file = settings.deps_settings.section_rev.clone();
+            section_file.push('.');
+            section_file.push_str(&settings.deps_settings.section_ext);
 
-                    let mut section_file = settings.deps_settings.section_rev.clone();
-                    section_file.push('.');
-                    section_file.push_str(&settings.deps_settings.section_ext);
-
-                    let ipath = path::Path::new(&settings.deps_settings.section_path)
-                        .join(article.unwrap())
-                        .join(section.unwrap())
-                        .join(&section_file);
-                    let ipath = String::from(ipath.to_string_lossy());
-                    writeln!(out, "{}", &filename_to_make(&ipath))?;
-                }
-            }
-        },
-        _ => traverse_with(&collect_included_section, root, path, settings, out)?,
+            let path = path::Path::new(&settings.deps_settings.section_path)
+                .join(&filename_to_make(&article))
+                .join(&filename_to_make(&section_name))
+                .join(&filename_to_make(&section_file));
+            writeln!(out, "{}", &filename_to_make(&path.to_string_lossy()))?;
+        }
     };
-    Ok(())
+    traverse_with(&collect_included_section, root, path, settings, out)
 }
 
 fn collect_article_deps<'a>(root: &'a Element,

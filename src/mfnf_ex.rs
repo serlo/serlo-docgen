@@ -136,7 +136,7 @@ fn build_targets(args: &Args) -> Vec<Target> {
 }
 
 fn main() {
-
+    let root: mediawiki_parser::ast::Element;
     let result: mediawiki_parser::transformations::TResult;
     let args = parse_args();
     let targets = build_targets(&args);
@@ -163,17 +163,23 @@ fn main() {
         process::exit(1);
     };
 
-    let root = serde_yaml::from_str(&input)
+    root = serde_yaml::from_str(&input)
         .expect("Could not parse input file!");
 
-    let mut path = vec![];
-    result = mfnf_export::apply_transformations(root, general_settings);
+    result = mfnf_export::apply_transformations(root.clone(), general_settings);
 
     match result {
         Ok(ref e) => {
             for target in &targets[..] {
+                let mut path = vec![];
                 let mut result = vec![];
-                (target.export_func)(&e, &mut path, &target.settings, &mut result)
+                (target.export_func)(
+                    // pull dependencies from original tree
+                    if target.name == "deps" { &root } else { &e},
+                    &mut path,
+                    &target.settings,
+                    &mut result
+                )
                 .expect("Could not output export!");
                 println!("{}", str::from_utf8(&result).unwrap());
             };

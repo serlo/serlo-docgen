@@ -155,6 +155,21 @@ pub fn include_sections(mut root: Element, settings: &Settings) -> TResult {
                 .join(&filename_to_make(&section_name))
                 .join(&filename_to_make(&section_file));
 
+            // error returned when the section file is faulty
+            let file_error = TransformationError {
+                cause: format!("section file `{}` could not be read!",
+                               &path.to_string_lossy()),
+                position: position.clone(),
+                transformation_name: "include_sections".to_string(),
+                tree: Element::Template {
+                    name: name.clone(),
+                    position: position.clone(),
+                    content: content.clone(),
+                }
+            };
+
+            //let section_str = File::open(&path);
+
             eprintln!("include article: {:?}", path);
             return Ok(
                 Element::Comment {
