@@ -171,7 +171,7 @@ node_template! {
 
         write!(out, "\\")?;
 
-        for _ in 2..*depth {
+        for _ in 1..*depth {
             write!(out, "sub")?;
         }
 

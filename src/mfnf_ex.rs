@@ -18,7 +18,6 @@ use argparse::{ArgumentParser, StoreTrue, Store, Collect};
 /// Program options and arguments
 #[derive(Debug)]
 struct Args {
-    pub use_stdin: bool,
     pub dump_config: bool,
     pub input_file: String,
     pub config_file: String,
@@ -30,7 +29,6 @@ struct Args {
 impl Default for Args {
     fn default() -> Self {
         Args {
-            use_stdin: false,
             dump_config: false,
             input_file: String::new(),
             config_file: String::new(),
@@ -48,11 +46,6 @@ fn parse_args() -> Args {
         ap.set_description(
             "This program applies transformations specific to the \
                 \"Mathe für nicht-Freaks\"-Project to a syntax tree."
-        );
-        ap.refer(&mut args.use_stdin).add_option(
-            &["-s", "--stdin"],
-            StoreTrue,
-            "Use stdin as input file",
         );
         ap.refer(&mut args.input_file).add_option(
             &["-i", "--input"],
@@ -159,18 +152,12 @@ fn main() {
         process::exit(0);
     }
 
-    let input_file = if !args.input_file.is_empty() {
-        fs::File::open(&args.input_file)
-            .expect("Could not open input file!")
+    root = (if !args.input_file.is_empty() {
+        let file = fs::File::open(&args.input_file)
+            .expect("Could not open input file!");
+        serde_yaml::from_reader(&file)
     } else {
-        eprintln!("No input source specified!");
-        process::exit(1);
-    };
-
-    root = (if args.use_stdin {
         serde_yaml::from_reader(io::stdin())
-    } else {
-        serde_yaml::from_reader(&input_file)
     }).expect("Could not parse input!");
 
     result = mfnf_export::apply_transformations(root.clone(), general_settings);

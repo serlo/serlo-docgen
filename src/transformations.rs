@@ -208,6 +208,7 @@ pub fn include_sections_vec<'a>(
                     }
                 );
 
+                //TODO: Heading depths?
                 // recursively include sections
                 section_tree = include_sections_vec(
                     &include_sections,
@@ -221,4 +222,27 @@ pub fn include_sections_vec<'a>(
         result.push(trans(child, settings)?);
     }
     Ok(result)
+}
+
+/// Normalize heading depths by making subheadings one level deeper than their parent.
+/// The highest level of headings is assigned depth 1.
+pub fn normalize_heading_depths(
+    mut root: Element,
+    _settings: &Settings) -> TResult {
+    root = normalize_heading_depths_traverse(root, 1)?;
+    Ok(root)
+}
+
+pub fn normalize_heading_depths_traverse(
+    mut root: Element,
+    current_depth: usize) -> TResult {
+
+    let mut current_depth = current_depth;
+
+    if let &mut Element::Heading { ref mut depth, .. } = &mut root {
+        *depth = current_depth;
+        current_depth += 1;
+    }
+
+    recurse_inplace(&normalize_heading_depths_traverse, root, current_depth)
 }
