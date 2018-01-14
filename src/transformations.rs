@@ -208,8 +208,8 @@ pub fn include_sections_vec<'a>(
                     }
                 );
 
-                //TODO: Heading depths?
                 // recursively include sections
+                // heading depths are normalized in a later transformation
                 section_tree = include_sections_vec(
                     &include_sections,
                     &mut section_tree,

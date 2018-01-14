@@ -184,6 +184,62 @@ node_template! {
 }
 
 node_template! {
+    fn export_list(root, path, settings, out):
+
+    &Element::List { ref content, .. } => {
+
+        let kind = if let &Element::ListItem { ref kind, .. } =
+            content.first().unwrap_or(root) {
+                kind
+        } else {
+            return write_error("first child of list element \
+                is not a list item!", settings, out);
+        };
+
+        let envname = match kind {
+            &ListItemKind::Ordered => "enumerate",
+            &ListItemKind::Unordered => "itemize",
+            &ListItemKind::Definition => "itemize",
+            &ListItemKind::DefinitionTerm => "itemize",
+        };
+        writeln!(out, "\\begin{{{}}}", envname)?;
+
+        let mut def_term_temp = String::new();
+
+        for child in content {
+            if let &Element::ListItem { ref content, ref kind, .. } = child {
+
+                // render paragraph content
+                let mut par_content = vec![];
+                traverse_vec(&traverse_article, content, path, settings, &mut par_content)?;
+                let par_string = str::from_utf8(&par_content).unwrap().trim_right().to_string();
+
+                // definition term
+                if let &ListItemKind::DefinitionTerm = kind {
+                    def_term_temp.push_str(&par_string);
+                    continue
+                }
+
+                let item_string = if let &ListItemKind::Definition = kind {
+                    format!("\\item \\textbf{{{}}}: {}", def_term_temp, par_string)
+                } else {
+                    format!("\\item {}", par_string)
+                };
+                def_term_temp = String::new();
+
+                // trim and indent output string
+                let trimmed = indent_and_trim(&item_string,
+                    settings.latex_settings.indentation_depth,
+                    settings.latex_settings.max_line_width);
+
+                writeln!(out, "{}", &trimmed)?;
+            }
+        }
+        writeln!(out, "\\end{{{}}}\n", envname)?;
+    }
+}
+
+node_template! {
     fn export_formatted(root, path, settings, out):
 
     &Element::Formatted { ref markup, ref content, .. } => {
@@ -208,7 +264,10 @@ node_template! {
                     _ => "parse error!",
                 })?;
             },
-            _ => (),
+            _ => {
+                write_error(&format!("MarkupType not implemented: {:?}", &markup),
+                            settings, out)?;
+            }
         }
     }
 }
@@ -267,13 +326,16 @@ pub fn traverse_article<'a>(root: &'a Element,
         &Element::Paragraph { .. } => export_paragraph(root, path, settings, out)?,
         &Element::Template { .. } => export_template(root, path, settings, out)?,
         &Element::InternalReference { .. } => export_internal_ref(root, path, settings, out)?,
+        &Element::Document { .. } => traverse_with(&traverse_article, root, path, settings, out)?,
+        &Element::List { .. } => export_list(root, path, settings, out)?,
 
         // Leaf Elements
         &Element::Text { .. } => export_text(root, path, settings, out)?,
         &Element::Comment { .. } => export_comment(root, path, settings, out)?,
-
-        // TODO: Remove when implementation for all elements exists
-        _ => traverse_with(&traverse_article, root, path, settings, out)?,
+        _ => {
+            write_error(&format!("export for element `{}` not implemented!",
+                root.get_variant_name()), settings, out)?;
+        },
     };
     path.pop();
     Ok(())
