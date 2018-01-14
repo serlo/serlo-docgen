@@ -296,8 +296,9 @@ fn write_error(message: &str,
 
     let indent = settings.latex_settings.indentation_depth;
     let width = settings.latex_settings.max_line_width;
+    let message = escape_latex(message);
     writeln!(out, "\\begin{{error}}")?;
-    writeln!(out, "{}", indent_and_trim(message, indent, width))?;
+    writeln!(out, "{}", indent_and_trim(&message, indent, width))?;
     writeln!(out, "\\end{{error}}")
 }
 
