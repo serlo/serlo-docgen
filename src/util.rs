@@ -34,17 +34,19 @@ pub fn escape_latex(input: &str) -> String {
     res
 }
 
-/// Trim one pair of prefix and suffix from a string.
+/// Trim one pair of prefix and suffix from a string, ignoring input case.
 pub fn trim_enclosing<'a>(input: &'a str, prefix: &str, suffix: &str) -> &'a str {
-    if input.starts_with(prefix) && input.ends_with(suffix) {
+    let lower_input = input.to_lowercase();
+    if lower_input.starts_with(prefix) && lower_input.ends_with(suffix) {
         return &input[prefix.len()..input.len()-suffix.len()];
     }
     input
 }
 
-/// Remove a prefix if found.
+/// Remove a prefix if found, ignoring input case.
 pub fn trim_prefix<'a>(input: &'a str, prefix: &str) -> &'a str {
-    if input.starts_with(prefix) {
+    let lower_input = input.to_lowercase();
+    if lower_input.starts_with(prefix) {
         return &input[prefix.len()..];
     }
     input

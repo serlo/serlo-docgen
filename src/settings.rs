@@ -36,6 +36,9 @@ pub struct Settings {
 
     /// A list of lowercase template name prefixes which will be stripped if found.
     pub template_prefixes: Vec<String>,
+
+    /// A list of file prefixes which are ignored.
+    pub file_prefixes: Vec<String>,
 }
 
 /// General MFNF transformation settings for all targets.
@@ -109,6 +112,7 @@ impl Default for Settings {
             deps_settings: DepSettings::default(),
             document_title: s!("<no document name specified>"),
             document_revision: s!("latest"),
+            file_prefixes: vec![s!("file"), s!("datei"), s!("bild")],
             translations: [
                 s!("beispiel", "example"),
                 s!("definition", "definition"),

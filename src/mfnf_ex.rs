@@ -134,8 +134,8 @@ fn build_targets(args: &Args) -> Vec<Target> {
 }
 
 fn main() {
-    let root: mediawiki_parser::ast::Element;
-    let result: mediawiki_parser::transformations::TResult;
+    let general_root: mediawiki_parser::ast::Element;
+    let transformed_root: mediawiki_parser::ast::Element;
     let args = parse_args();
     let targets = build_targets(&args);
 
@@ -152,7 +152,7 @@ fn main() {
         process::exit(0);
     }
 
-    root = (if !args.input_file.is_empty() {
+    let root = (if !args.input_file.is_empty() {
         let file = fs::File::open(&args.input_file)
             .expect("Could not open input file!");
         serde_yaml::from_reader(&file)
@@ -160,7 +160,10 @@ fn main() {
         serde_yaml::from_reader(io::stdin())
     }).expect("Could not parse input!");
 
-    result = mfnf_export::apply_transformations(root.clone(), general_settings);
+    let temp_root = mfnf_export::apply_universal_transformations(root, general_settings);
+    general_root = handle_transformation_result(temp_root);
+    let temp_root = mfnf_export::apply_output_transformations(general_root.clone(), general_settings);
+    transformed_root = handle_transformation_result(temp_root);
 
     for target in &targets[..] {
         let mut path = vec![];
@@ -168,22 +171,26 @@ fn main() {
         (target.export_func)(
             // pull dependencies from original tree
             if target.with_transformation {
-                match result {
-                    Ok(ref e) => e,
-                    Err(ref e) => {
-                        eprintln!("{}", e);
-                        println!("{}", serde_yaml::to_string(&e)
-                            .expect("Could not serialize error!"));
-                        continue;
-                    }
-                }
+                &transformed_root
             } else {
-                &root
+                &general_root
             },
             &mut path,
             &target.settings,
             &mut export_result
         ).expect("could not serialize target!");
         println!("{}", str::from_utf8(&export_result).unwrap());
+    }
+}
+
+fn handle_transformation_result(result: mediawiki_parser::transformations::TResult) -> mediawiki_parser::ast::Element {
+    match result {
+        Ok(e) => return e,
+        Err(ref e) => {
+            eprintln!("{}", e);
+            println!("{}", serde_yaml::to_string(&e)
+                .expect("Could not serialize error!"));
+            process::exit(1);
+        }
     }
 }
