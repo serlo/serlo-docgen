@@ -1,3 +1,7 @@
+//! CLI front end for the mfnf export tool.
+//!
+//! Applies some transformations to the input tree and exports it as defined by the given target.
+
 extern crate mediawiki_parser;
 extern crate serde_yaml;
 extern crate argparse;

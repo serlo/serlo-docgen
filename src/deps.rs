@@ -1,3 +1,11 @@
+//! Implementation of the `deps` target.
+//!
+//! The `deps` target is used to export a list of article dependencies.
+//! It is applied to a syntax tree with only part of the export transformations applied.
+//! Transformations such as section inclusion or heading depth normalization are excluded,
+//! while others (e.g. tepmlate name translation, image prefix removal) are applied before
+//! this target is executed.
+
 use std::io;
 use settings::Settings;
 use mediawiki_parser::ast::*;

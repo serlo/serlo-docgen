@@ -1,3 +1,8 @@
+//! Implementation of the `latex` target.
+//!
+//! This target renders the final syntax tree to a LaTeX document body.
+//! LaTeX boilerplate like preamble or document tags have to be added afterwards.
+
 use std::io;
 use std::io::Write;
 use std::str;
