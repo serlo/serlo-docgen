@@ -130,11 +130,11 @@ node_template! {
             // render caption content
             let mut cap_content = vec![];
             writeln!(&mut cap_content, "% image options: {:?}", &image_options)?;
-            writeln!(&mut cap_content, "\\includegraphics[max width={}\\textwidth, \
+            writeln!(&mut cap_content, "\\adjincludegraphics[max width={}\\textwidth, \
                                           max height={}\\textheight]{{{}}}",
                 settings.latex_settings.image_width,
                 settings.latex_settings.image_height,
-                &image_path)?;
+                &trim_suffix(&image_path))?;
             write!(&mut cap_content, "\\caption{{")?;
             traverse_vec(&traverse_article, caption, path, settings, &mut cap_content)?;
             write!(&mut cap_content, "}}")?;

@@ -52,6 +52,15 @@ pub fn trim_prefix<'a>(input: &'a str, prefix: &str) -> &'a str {
     input
 }
 
+/// Remove file extension from string if found.
+pub fn trim_suffix<'a>(input: &'a str) -> String {
+    let chunks: Vec<&str> = input.split(".").collect();
+    if chunks.len() <= 1 {
+        return input.to_string();
+    }
+    return chunks[..chunks.len()-1].join(".");
+}
+
 /// Indent and trim a string.
 pub fn indent_and_trim<'a>(input: &'a str, depth: usize, max_line_width: usize) -> String {
     const COMMENT_PREFIX: &str = "% ";
