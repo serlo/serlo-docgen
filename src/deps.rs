@@ -20,6 +20,8 @@ pub fn export_article_deps<'a>(root: &'a Element,
                                settings: &Settings,
                                out: &mut io::Write) -> io::Result<()> {
 
+    // TODO use rule with multiple targets - one for each possible export
+    write!(out, "{}.pdf:", settings.document_revision)?;
     collect_article_deps(root, path, settings, out)?;
     collect_included_section(root, path, settings, out)
 }
@@ -47,7 +49,7 @@ pub fn collect_included_section<'a>(root: &'a Element,
                 .join(&filename_to_make(&article))
                 .join(&filename_to_make(&section_name))
                 .join(&filename_to_make(&section_file));
-            writeln!(out, "{}", &filename_to_make(&path.to_string_lossy()))?;
+            write!(out, " \\\n\t{}", &filename_to_make(&path.to_string_lossy()))?;
         }
     };
     traverse_with(&collect_included_section, root, path, settings, out)
@@ -67,7 +69,7 @@ fn collect_article_deps<'a>(root: &'a Element,
                 let ipath = path::Path::new(&settings.deps_settings.image_path)
                     .join(&target);
                 let ipath = String::from(ipath.to_string_lossy());
-                writeln!(out, "{}", &filename_to_make(&ipath))?;
+                write!(out, " \\\n\t{}", &filename_to_make(&ipath))?;
             }
         },
         _ => traverse_with(&collect_article_deps, root, path, settings, out)?,
