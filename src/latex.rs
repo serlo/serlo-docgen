@@ -116,8 +116,12 @@ node_template! {
         if settings.deps_settings.image_extensions.contains(&file_ext) {
 
             let image_path = path::Path::new(&settings.deps_settings.image_path)
-                .join(target_str);
-            let image_path = filename_to_make(&String::from(image_path.to_string_lossy()));
+                .join(target_str)
+                .file_stem()
+                .expect("image path is empty!")
+                .to_string_lossy()
+                .to_string();
+            let image_path = filename_to_make(&image_path);
 
             // collect image options
             let mut image_options = vec![];
@@ -134,7 +138,7 @@ node_template! {
                                           max height={}\\textheight]{{{}}}",
                 settings.latex_settings.image_width,
                 settings.latex_settings.image_height,
-                &trim_suffix(&image_path))?;
+                &image_path)?;
             write!(&mut cap_content, "\\caption{{")?;
             traverse_vec(&traverse_article, caption, path, settings, &mut cap_content)?;
             write!(&mut cap_content, "}}")?;
