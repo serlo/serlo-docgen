@@ -97,6 +97,9 @@ node_template! {
                 writeln!(out, "{}", indent_and_trim(math_text, indent, width))?;
                 writeln!(out, "{}", "\\end{align*}")?;
             },
+            "anchor" => {
+                write!(out, " {} ", escape_latex("<no anchors yet!>"))?;
+            }
             _ => {
                 let message = format!("MISSING TEMPLATE: {}\n{} at {}:{} to {}:{}",
                                       template_name, &doctitle,

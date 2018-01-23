@@ -31,6 +31,7 @@ translations:
     hinweis: hint
     frage: question
     antwort: answer
+    anker: anchor
 
 # A list of lowercase template name prefixes which will be stripped if found.
 template_prefixes:
