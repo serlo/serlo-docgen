@@ -13,6 +13,7 @@ use util::*;
 use std::path;
 use std::collections::HashMap;
 use config;
+use std::ffi::OsStr;
 
 
 /// This macro contains all the boilerplate code needed for a
@@ -112,28 +113,28 @@ node_template! {
 
     &Element::InternalReference { ref target, ref options, ref caption, ref position } => {
         let target_str = extract_plain_text(target);
-        let file_ext = target_str.split(".").last().unwrap_or("").to_lowercase();
+        let target_path = path::Path::new(&target_str);
+        let ext = target_path.extension().unwrap_or(OsStr::new(""));
+        let ext_str = ext.to_os_string().into_string().unwrap_or(String::new());
 
         let doctitle: String = setting!(settings.document_title);
         let img_exts: Vec<String> = setting!(settings.targets.deps.image_extensions);
-        let image_path: String = setting!(settings.targets.deps.image_path);
 
         writeln!(out, "\n% defined in {} at {}:{} to {}:{}", &doctitle,
                    position.start.line, position.start.col,
                    position.end.line, position.end.col)?;
 
         // file is an image
-        if img_exts.contains(&file_ext) {
+        if img_exts.contains(&ext_str) {
 
             let width: f32 = setting!(settings.targets.latex.image_width);
             let height: f32 = setting!(settings.targets.latex.image_height);
             let indent: usize = setting!(settings.targets.latex.indentation_depth);
             let line_width: usize = setting!(settings.targets.latex.max_line_width);
+            let image_path: String = setting!(settings.targets.deps.image_path);
 
             let image_path = path::Path::new(&image_path)
-                .join(target_str)
-                .file_stem()
-                .expect("image path is empty!")
+                .join(target_path.file_stem().expect("image path is empty!"))
                 .to_string_lossy()
                 .to_string();
             let image_path = filename_to_make(&image_path);
@@ -163,7 +164,7 @@ node_template! {
             return Ok(())
         }
 
-        write_error(&format!("No export function defined for target {:?}", target_str),
+        write_error(&format!("No export function defined for target {:?}", target_path),
                     settings, out)?;
     }
 }

@@ -35,9 +35,6 @@ translations:
 # A list of lowercase template name prefixes which will be stripped if found.
 template_prefixes:
     - \":mathe für nicht-freaks: vorlage:\"
-    - file
-    - datei
-    - bild
 
 # A list of file prefixes which are ignored.
 file_prefixes:
