@@ -11,8 +11,9 @@ use settings::Settings;
 use mediawiki_parser::ast::*;
 use util::*;
 use std::path;
+use std::collections::HashMap;
 use config;
-
+use std::ffi::OsStr;
 
 /// Extract dependencies from a RAW source AST. Sections are
 /// not included at this point.
@@ -23,17 +24,42 @@ pub fn export_article_deps<'a>(root: &'a Element,
 
     let docrev: String = setting!(settings.document_revision);
     // TODO use rule with multiple targets - one for each possible export
-    write!(out, "{}.pdf:", &docrev)?;
-    collect_article_deps(root, path, settings, out)?;
-    collect_included_section(root, path, settings, out)
+    let targets: HashMap<String, config::Value> = setting!(settings.targets);
+    for (name, target) in targets {
+
+        let gen_deps: bool = from_table!(target.generate_deps);
+        if !gen_deps {
+            continue;
+        }
+
+        let target_ext: String = from_table!(target.target_extension);
+
+        writeln!(out, "# dependencies for {}", &name)?;
+        write!(out, "{}.{}:", &docrev, &target_ext)?;
+
+        let props = CollectionProps {
+            extension_mapping: from_table!(target.deps_extension_mapping),
+            settings: &settings,
+        };
+
+        collect_article_deps(root, path, &props, out)?;
+        collect_included_section(root, path, &props, out)?;
+    }
+    Ok(())
+}
+
+struct CollectionProps<'a> {
+    pub extension_mapping: HashMap<String, String>,
+    pub settings: &'a Settings,
 }
 
 /// Collects the sections included in a document.
-pub fn collect_included_section<'a>(root: &'a Element,
+fn collect_included_section<'a>(root: &'a Element,
                                     path: &mut Vec<&'a Element>,
-                                    settings: &Settings,
+                                    props: &CollectionProps,
                                     out: &mut io::Write) -> io::Result<()> {
 
+    let settings = props.settings;
     if let &Element::Template { ref name, ref content, .. } = root {
         let prefix: String = setting!(settings.targets.deps.section_inclusion_prefix);
         let template_name = extract_plain_text(&name);
@@ -57,31 +83,35 @@ pub fn collect_included_section<'a>(root: &'a Element,
             write!(out, " \\\n\t{}", &filename_to_make(&path.to_string_lossy()))?;
         }
     };
-    traverse_with(&collect_included_section, root, path, settings, out)
+    traverse_with(&collect_included_section, root, path, props, out)
 }
 
 fn collect_article_deps<'a>(root: &'a Element,
                             path: &mut Vec<&'a Element>,
-                            settings: &Settings,
+                            props: &CollectionProps,
                             out: &mut io::Write) -> io::Result<()> {
 
-    match root {
-        &Element::InternalReference { ref target, .. } => {
-            let target = extract_plain_text(target);
-            let ext = target.split(".").last().unwrap_or("").to_lowercase();
+    let settings = &props.settings;
+    let ext_mapping = &props.extension_mapping;
 
-            let extensions: Vec<String> = setting!(settings.targets.deps.image_extensions);
-            let image_path: String = setting!(settings.targets.deps.image_path);
+    if let &Element::InternalReference { ref target, .. } = root {
+        let target = extract_plain_text(target);
+        let target_path = path::Path::new(&target);
+        let ext = target_path.extension().unwrap_or(OsStr::new(""));
+        let ext_str = ext.to_os_string().into_string().unwrap_or(String::new());
 
-            if extensions.contains(&ext) {
-                let ipath = path::Path::new(&image_path)
-                    .join(&target);
-                let ipath = String::from(ipath.to_string_lossy());
-                write!(out, " \\\n\t{}", &filename_to_make(&ipath))?;
-            }
-        },
-        _ => traverse_with(&collect_article_deps, root, path, settings, out)?,
-    };
+        let extensions: Vec<String> = setting!(settings.targets.deps.image_extensions);
+        let image_path: String = setting!(settings.targets.deps.image_path);
 
+        if extensions.contains(&ext_str) {
+            let ipath = path::Path::new(&image_path)
+                .join(&target)
+                .with_extension(ext_mapping.get(&ext_str).unwrap_or(&ext_str));
+            let ipath = String::from(ipath.to_string_lossy());
+            write!(out, " \\\n\t{}", &filename_to_make(&ipath))?;
+        }
+    } else {
+        traverse_with(&collect_article_deps, root, path, props, out)?;
+    }
     Ok(())
 }

@@ -51,6 +51,21 @@ targets:
     # Does this target operate on the input tree directly or with
     # mfnf transformations applied?
     with_transformation: true
+    # extension of the resulting file. Used for make dependency generation.
+    target_extension: \"tex\"
+    # are dependencies generated for this target?
+    generate_deps: true
+    # mapping of external file extensions to target extensions.
+    # this is useful if external dependencies should be processed by
+    # make for this target.
+    deps_extension_mapping:
+        png: pdf
+        svg: pdf
+        eps: pdf
+        jpg: pdf
+        jpeg: pdf
+        gif: pdf
+
     # Page trim in mm.
     page_trim: 0.0
     # Paper width in mm.
@@ -124,7 +139,16 @@ targets:
     # Does this target operate on the input tree directly or with
     # mfnf transformations applied?
     with_transformation: false
-    # File extensions indicaing images.
+    # extension of the resulting file. Used for make dependency generation.
+    target_extension: \"dep\"
+    # are dependencies generated for this target?
+    generate_deps: false
+    # mapping of external file extensions to target extensions.
+    # this is useful if external dependencies should be processed by
+    # make for this target.
+    deps_extension_mapping: {}
+
+    # File extensions indicating images.
     image_extensions:
         - jpg
         - jpeg
@@ -147,7 +171,14 @@ targets:
     # Does this target operate on the input tree directly or with
     # mfnf transformations applied?
     with_transformation: false
-
+    # extension of the resulting file. Used for make dependency generation.
+    target_extension: \"yml\"
+    # are dependencies generated for this target?
+    generate_deps: false
+    # mapping of external file extensions to target extensions.
+    # this is useful if external dependencies should be processed by
+    # make for this target.
+    deps_extension_mapping: {}
 ";
 
 
@@ -177,6 +208,22 @@ macro_rules! setting {
         let mut base: config::Value = $settings.get(thing)
             .expect(&format!("missing setting: {}", &thing));
 
+        while path.len() > 0 {
+            let thing = path.remove(0);
+            base = base.into_table()
+                .expect(&format!("attribute error: {}", &thing))
+                .remove(thing)
+                .expect(&format!("attribute error: {}", &thing));
+        }
+        base.try_into().expect("wrong setting type!")
+    }}
+}
+
+#[macro_export]
+macro_rules! from_table {
+    ($settings:ident $( . $attr:ident)+) => {{
+        let mut path = vec![$(stringify!($attr)),*];
+        let mut base: config::Value = $settings.clone();
         while path.len() > 0 {
             let thing = path.remove(0);
             base = base.into_table()
