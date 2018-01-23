@@ -5,17 +5,19 @@
 extern crate mediawiki_parser;
 extern crate serde_yaml;
 extern crate argparse;
+#[macro_use]
 extern crate mfnf_export;
-extern crate toml;
+extern crate config;
 
 use std::str;
 use std::process;
 use std::io;
 use std::fs;
-use mfnf_export::settings::*;
-use mfnf_export::{latex, deps, sections};
+use std::collections::HashMap;
 
-use mediawiki_parser::util::{read_file};
+use mfnf_export::settings::*;
+use mfnf_export::*;
+
 use argparse::{ArgumentParser, StoreTrue, Store, Collect};
 
 
@@ -86,73 +88,61 @@ fn parse_args() -> Args {
     args
 }
 
-fn build_targets(args: &Args) -> Vec<Target> {
+fn build_targets<'a, 'b, 'c>(args: &Args, settings: &Settings) -> Vec<Target<'a,'b,'c>> {
     let mut result = vec![];
-
-    let mut settings = if args.config_file.is_empty() {
-        Settings::default()
-    } else {
-        let config_source = read_file(&args.config_file);
-        toml::from_str(&config_source)
-            .expect("Could not parse settings file!")
-    };
-
-    settings.document_title = args.doc_title.clone();
-    settings.document_revision = args.doc_revision.clone();
-
+    let target_map: HashMap<String, config::Value> = setting!(settings.targets);
     for target_name in &args.targets {
-        match &target_name[..] {
-            "latex" => {
+        for key in target_map.keys() {
+            if key == target_name {
                 result.push(Target {
-                    name: target_name.to_string(),
-                    output_path: "./export/latex/".to_string(),
-                    settings: settings.clone(),
-                    export_func: &latex::export_article,
-                    with_transformation: true,
-                });
-            },
-            "deps" => {
-                result.push(Target {
-                    name: target_name.to_string(),
-                    output_path: "./export/deps/".to_string(),
-                    settings: settings.clone(),
-                    export_func: &deps::export_article_deps,
-                    with_transformation: false,
-                });
-            },
-            "sections" => {
-                result.push(Target {
-                    name: target_name.to_string(),
-                    output_path: "./export/sections/".to_string(),
-                    settings:  settings.clone(),
-                    export_func: &sections::collect_sections,
-                    with_transformation: false,
+                    name: target_name.clone(),
+                    export_func: match &target_name[..] {
+                        "latex" => &latex::export_article,
+                        "deps" => &deps::export_article_deps,
+                        "sections" => &sections::collect_sections,
+                        _ => panic!("target not implemented!"),
+                    },
+                    with_transformation: target_map.get(target_name)
+                        .unwrap()
+                        .clone()
+                        .into_table()
+                        .unwrap()
+                        .get("with_transformation")
+                        .expect("with_transformation info is missing!")
+                        .clone()
+                        .try_into()
+                        .unwrap()
                 });
             }
-            _ => {
-                eprintln!("unsupported target: `{}`", target_name);
-            }
-        };
+        }
     }
     result
 }
 
 fn main() {
-    let general_root: mediawiki_parser::ast::Element;
-    let transformed_root: mediawiki_parser::ast::Element;
     let args = parse_args();
-    let targets = build_targets(&args);
+    let mut settings = default_config();
 
+    let orig_root: mediawiki_parser::transformations::TResult;
+    // section inclusion, etc. may fail, but deps shoud still be generated.
+    let transformed_root: mediawiki_parser::transformations::TResult;
+
+    if !args.config_file.is_empty() {
+        settings.merge(config::File::with_name(&args.config_file))
+            .expect("Could not parse settings file!");
+    };
+
+    settings.set("document_title", args.doc_title.clone()).unwrap();
+    settings.set("document_revision", args.doc_revision.clone()).unwrap();
+
+    let targets = build_targets(&args, &settings);
     if targets.is_empty() {
         eprintln!("No target specified!");
         process::exit(1);
     }
 
-    let general_settings = &targets.first().unwrap().settings;
-
     if args.dump_config {
-        println!("{}", serde_yaml::to_string(general_settings)
-            .expect("Could serialize settings!"));
+        println!("{}", DEFAULT_SETTINGS);
         process::exit(0);
     }
 
@@ -164,10 +154,9 @@ fn main() {
         serde_yaml::from_reader(io::stdin())
     }).expect("Could not parse input!");
 
-    let temp_root = mfnf_export::apply_universal_transformations(root, general_settings);
-    general_root = handle_transformation_result(temp_root);
-    let temp_root = mfnf_export::apply_output_transformations(general_root.clone(), general_settings);
-    transformed_root = handle_transformation_result(temp_root);
+    orig_root = mfnf_export::apply_universal_transformations(root, &settings);
+    let root_clone = handle_transformation_result(&orig_root).clone();
+    transformed_root = mfnf_export::apply_output_transformations(root_clone, &settings);
 
     for target in &targets[..] {
         let mut path = vec![];
@@ -175,22 +164,24 @@ fn main() {
         (target.export_func)(
             // pull dependencies from original tree
             if target.with_transformation {
-                &transformed_root
+                handle_transformation_result(&transformed_root)
             } else {
-                &general_root
+                handle_transformation_result(&orig_root)
             },
             &mut path,
-            &target.settings,
+            &settings,
             &mut export_result
         ).expect("could not serialize target!");
         println!("{}", str::from_utf8(&export_result).unwrap());
     }
 }
 
-fn handle_transformation_result(result: mediawiki_parser::transformations::TResult) -> mediawiki_parser::ast::Element {
-    match result {
-        Ok(e) => return e,
-        Err(ref e) => {
+fn handle_transformation_result(result: &mediawiki_parser::transformations::TResult)
+    -> &mediawiki_parser::ast::Element {
+
+     match result {
+        &Ok(ref e) => return e,
+        &Err(ref e) => {
             eprintln!("{}", e);
             println!("{}", serde_yaml::to_string(&e)
                 .expect("Could not serialize error!"));

@@ -1,4 +1,5 @@
 extern crate mediawiki_parser;
+extern crate config;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
@@ -8,6 +9,7 @@ use mediawiki_parser::ast::Element;
 use mediawiki_parser::transformations::TResult;
 
 /// Structures for configuration of transformations.
+#[macro_use]
 pub mod settings;
 
 pub mod latex;

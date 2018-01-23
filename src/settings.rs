@@ -1,200 +1,205 @@
 use util::TravFunc;
 use std::collections::HashMap;
+use config;
+
+pub type Settings = config::Config;
+
+pub const DEFAULT_SETTINGS: &'static str = "
+# Title of the current document.
+document_title: \"<no document title>\"
+
+# Additional revision id of an article.
+document_revision: latest
+
+# Maps a template names and template attribute names to their translations.
+# E.g. german template names to their englisch translations.
+translations:
+    beispiel: example
+    definition: definition
+    satz: theorem
+    lösung: solution
+    lösungsweg: solutionprocess
+    titel: title
+    formel: formula
+    fallunterscheidung: proofbycases
+    fall_list: cases
+    beweis_list: proofs
+    beweiszusammenfassung: proofsummary
+    alternativer beweis: alternativeproof
+    beweis: proof
+    warnung: warning
+    hinweis: hint
+    frage: question
+    antwort: answer
+
+# A list of lowercase template name prefixes which will be stripped if found.
+template_prefixes:
+    - \":mathe für nicht-freaks: vorlage:\"
+    - file
+    - datei
+    - bild
+
+# A list of file prefixes which are ignored.
+file_prefixes:
+    - file
+    - datei
+    - bild
+
+# Target - specific settings
+targets:
+  latex:
+    # Does this target operate on the input tree directly or with
+    # mfnf transformations applied?
+    with_transformation: true
+    # Page trim in mm.
+    page_trim: 0.0
+    # Paper width in mm.
+    page_width: 155.0
+    # Paper height in mm.
+    page_height: 235.0
+    # Font size in pt.
+    font_size: 9.0
+    # Baseline height in pt.
+    baseline_height: 12.0
+    # Paper border in mm as [top, bottom, outer, inner]
+    border: [20.5, 32.6, 22.0, 18.5]
+    # Document class options.
+    document_options: >
+        tocflat, listof=chapterentry
+    # Indentation depth for template content.
+    indentation_depth: 4
+    # Maximum line width (without indentation).
+    max_line_width: 80
+    # Maximum width of an image in a figure as fraction of \\textwidth
+    image_width: 0.5
+    # Maximum height of an imgae in a figure as fraction of \\textheight
+    image_height: 0.2
+
+    # Templates which can be exported as an environment.
+    # The template may have a `title` attribute and a content
+    # attribute, which has the same name as the environment.
+    # Any additional template attributes will be exported as
+    # subsequent environments, if listed here.
+    environments:
+        definition:
+            - definition
+        theorem:
+            - theorem
+            - explanation
+            - example
+            - proofsummary
+            - solutionprocess
+            - solution
+            - proof
+        solution:
+            - solution
+        solutionprocess:
+            - solutionprocess
+        proof:
+            - proof
+        proofsummary:
+            - proofsummary
+        alternativeproof:
+            - alternativeproof
+        hint:
+            - hint
+        warning:
+            - warning
+        example:
+            - example
+        importantparagraph:
+            - importantparagraph
+        exercise:
+            - theorem
+            - explanation
+            - example
+            - proofsummary
+            - solutionprocess
+            - solution
+            - proof
+            - exercise
+        explanation:
+            - explanation
+  deps:
+    # Does this target operate on the input tree directly or with
+    # mfnf transformations applied?
+    with_transformation: false
+    # File extensions indicaing images.
+    image_extensions:
+        - jpg
+        - jpeg
+        - png
+        - gif
+        - svg
+        - eps
+        - pdf
+    # Path prefix for images.
+    image_path: images
+    # Path to the section file directory.
+    section_path: sections
+    # Revision number of included sections (always `latest`)
+    section_rev: latest
+    # File extensions for section files
+    section_ext: yml
+    # Template name prefix indication section inclusion
+    section_inclusion_prefix: \"#lst:\"
+  sections:
+    # Does this target operate on the input tree directly or with
+    # mfnf transformations applied?
+    with_transformation: false
+
+";
 
 
 /// An export target.
-pub struct Target<'a> {
+pub struct Target<'a, 'b: 'a, 'c: 'a> {
     /// The target name.
     pub name: String,
-    /// Target export settings.
-    pub settings: Settings,
-    /// The path to write output files to.
-    pub output_path: String,
     /// A function to call for export.
-    pub export_func: &'a TravFunc<'a, &'a Settings>,
-    /// Does this target operate on the input tree directly or with
+    pub export_func: &'a TravFunc<'c, &'b config::Config>,
     /// mfnf transformations applied?
     pub with_transformation: bool,
 }
 
-/// General MFNF transformation settings for all targets.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Settings {
-    pub download_images: bool,
-    pub latex_settings: LaTeXSettings,
-    pub deps_settings: DepSettings,
-
-    /// Title of the current document.
-    pub document_title: String,
-
-    /// Additional revision id of an article.
-    pub document_revision: String,
-
-    /// Maps a template names and template attribute names to their translations.
-    /// E.g. german template names to their englisch translations.
-    pub translations: HashMap<String, String>,
-
-    /// A list of lowercase template name prefixes which will be stripped if found.
-    pub template_prefixes: Vec<String>,
-
-    /// A list of file prefixes which are ignored.
-    pub file_prefixes: Vec<String>,
+pub fn default_config() -> config::Config {
+    let mut settings = config::Config::default();
+    settings
+        .merge(config::File::from_str(DEFAULT_SETTINGS, config::FileFormat::Yaml))
+        .expect("config parse error!");
+    settings
 }
 
-/// General MFNF transformation settings for all targets.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct LaTeXSettings {
+#[macro_export]
+macro_rules! setting {
+    ($settings:ident $( . $attr:ident)+) => {{
+        let mut path = vec![$(stringify!($attr)),*];
+        let thing = path.remove(0);
+        let mut base: config::Value = $settings.get(thing)
+            .expect(&format!("missing setting: {}", &thing));
 
-    /// Page trim in mm.
-    pub page_trim: f32,
-    /// Paper width in mm.
-    pub page_width: f32,
-    /// Paper height in mm.
-    pub page_height: f32,
-    /// Font size in pt.
-    pub font_size: f32,
-    /// Baseline height in pt.
-    pub baseline_height: f32,
-    /// Paper border in mm as [top, bottom, outer, inner]
-    pub border: [f32; 4],
-    /// Document class options.
-    pub document_options: String,
-    /// Indentation depth for template content.
-    pub indentation_depth: usize,
-    /// Maximum line widht (without indentation).
-    pub max_line_width: usize,
-    /// Maximum width of an image in a figure as fraction of \textwidth
-    pub image_width: f32,
-    /// Maximum height of an imgae in a figure as fraction of \textheight
-    pub image_height: f32,
-
-    /// Templates which can be exported as an environment.
-    /// The template may have a `title` attribute and a content
-    /// attribute, which has the same name as the environment.
-    /// Any additional template attributes will be exported as
-    /// subsequent environments.
-    pub environments: HashMap<String, Vec<String>>,
+        while path.len() > 0 {
+            let thing = path.remove(0);
+            base = base.into_table()
+                .expect(&format!("attribute error: {}", &thing))
+                .remove(thing)
+                .expect(&format!("attribute error: {}", &thing));
+        }
+        base.try_into().expect("wrong setting type!")
+    }}
 }
 
+pub fn target_settings<'a>(config: &'a config::Config,
+                       target: &str) -> Option<HashMap<String,config::Value>> {
 
-/// Settings for article dependencies target.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct DepSettings {
-    /// File extensions indicaing images.
-    pub image_extensions: Vec<String>,
-    /// Path prefix for images.
-    pub image_path: String,
-    /// Path to the section file directory.
-    pub section_path: String,
-    /// Revision number of included sections (always "latest")
-    pub section_rev: String,
-    /// File extensions for section files
-    pub section_ext: String,
-    /// Template name prefix indication section inclusion
-    pub section_inclusion_prefix: String
-}
-
-
-macro_rules! s {
-    ($str:expr) => {
-        String::from($str)
-    };
-    ($s1:expr, $s2:expr) => {
-        (String::from($s1), String::from($s2))
-    }
-}
-
-impl Default for Settings {
-    fn default() -> Self {
-        Settings {
-            download_images: true,
-            latex_settings: LaTeXSettings::default(),
-            deps_settings: DepSettings::default(),
-            document_title: s!("<no document name specified>"),
-            document_revision: s!("latest"),
-            file_prefixes: vec![s!("file"), s!("datei"), s!("bild")],
-            translations: [
-                s!("beispiel", "example"),
-                s!("definition", "definition"),
-                s!("satz", "theorem"),
-                s!("lösung", "solution"),
-                s!("lösungsweg", "solutionprocess"),
-                s!("titel", "title"),
-                s!("formel", "formula"),
-                s!("fallunterscheidung", "proofbycases"),
-                s!("fall_list", "cases"),
-                s!("beweis_list", "proofs"),
-                s!("beweiszusammenfassung", "proofsummary"),
-                s!("alternativer beweis", "alternativeproof"),
-                s!("beweis", "proof"),
-                s!("warnung", "warning"),
-                s!("hinweis", "hint"),
-                s!("frage", "question"),
-                s!("antwort", "answer"),
-            ].iter().cloned().collect(),
-            template_prefixes: vec![s!(":mathe für nicht-freaks: vorlage:")],
+    let targets = config.get_array("targets")
+        .expect("Settings object does not specify targets!");
+    for raw_target in targets {
+        let target_map = raw_target.into_table().unwrap();
+        let name = target_map.keys().next().unwrap();
+        if name == target {
+            return Some(target_map.get(name).unwrap().clone().into_table().unwrap())
         }
     }
+    return None
 }
 
-impl Default for LaTeXSettings {
-    fn default() -> Self {
-        LaTeXSettings {
-            page_trim: 0.,
-            page_width: 155.,
-            page_height: 235.,
-            font_size: 9.,
-            baseline_height: 12.,
-            border: [20.5, 32.6, 22., 18.5],
-            indentation_depth: 4,
-            max_line_width: 80,
-            image_width: 0.5,
-            image_height: 0.2,
-            document_options: String::from("tocflat, listof=chapterentry"),
-            environments: [
-                (s!("definition"),          vec![s!("definition")]),
-                (s!("theorem"),             vec![s!("theorem"), s!("explanation"),
-                                                 s!("example"), s!("proofsummary"),
-                                                 s!("solutionprocess"), s!("solution"),
-                                                 s!("proof")
-                                            ]),
-                (s!("solution"),            vec![s!("solution")]),
-                (s!("solutionprocess"),     vec![s!("solutionprocess")]),
-                (s!("proof"),               vec![s!("proof")]),
-                (s!("proofsummary"),        vec![s!("proofsummary")]),
-                (s!("alternativeproof"),    vec![s!("alternativeproof")]),
-                (s!("hint"),                vec![s!("hint")]),
-                (s!("warning"),             vec![s!("warning")]),
-                (s!("example"),             vec![s!("example")]),
-                (s!("importantparagraph"),  vec![s!("importantparagraph")]),
-                (s!("exercise"),            vec![s!("theorem"), s!("explanation"),
-                                                 s!("example"), s!("proofsummary"),
-                                                 s!("solutionprocess"), s!("solution"),
-                                                 s!("proof")
-                                            ]),
-                (s!("explanation"),         vec![s!("explanation")]),
-            ].iter().cloned().collect(),
-        }
-    }
-}
-
-impl Default for DepSettings {
-    fn default() -> Self {
-        DepSettings {
-            image_extensions: vec![
-                s!("jpg"),
-                s!("jpeg"),
-                s!("png"),
-                s!("gif"),
-                s!("svg"),
-                s!("eps"),
-                s!("pdf"),
-            ],
-            image_path: s!("images"),
-            section_path: s!("sections"),
-            section_rev: s!("latest"),
-            section_ext: s!("yml"),
-            section_inclusion_prefix: s!("#lst:"),
-        }
-    }
-}

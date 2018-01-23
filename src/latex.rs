@@ -11,6 +11,9 @@ use mediawiki_parser::ast::*;
 use mediawiki_parser::transformations::*;
 use util::*;
 use std::path;
+use std::collections::HashMap;
+use config;
+
 
 /// This macro contains all the boilerplate code needed for a
 /// non-leaf node.
@@ -45,11 +48,14 @@ node_template! {
             return write_error("Template names must be text-only!", settings, out);
         };
 
+        let doctitle: String = setting!(settings.document_title);
+        let envs: HashMap<String, Vec<String>> = setting!(settings.targets.latex.environments);
+
         // export simple environment templates
-        if let Some(envs) = settings.latex_settings.environments.get(template_name) {
+        if let Some(envs) = envs.get(template_name) {
             let title_content = find_arg(content, "title");
 
-            writeln!(out, "\n% defined in {} at {}:{} to {}:{}", settings.document_title,
+            writeln!(out, "\n% defined in {} at {}:{} to {}:{}", &doctitle,
                    position.start.line, position.start.col,
                    position.end.line, position.end.col)?;
 
@@ -84,15 +90,15 @@ node_template! {
                                                    "\\end{align*}").trim();
                     };
                 };
-                let indent = settings.latex_settings.indentation_depth;
-                let width = settings.latex_settings.max_line_width;
+                let indent: usize = setting!(settings.targets.latex.indentation_depth);
+                let width: usize = setting!(settings.targets.latex.max_line_width);
                 writeln!(out, "{}", "\\begin{align*}")?;
                 writeln!(out, "{}", indent_and_trim(math_text, indent, width))?;
                 writeln!(out, "{}", "\\end{align*}")?;
             },
             _ => {
                 let message = format!("MISSING TEMPLATE: {}\n{} at {}:{} to {}:{}",
-                                      template_name, settings.document_title,
+                                      template_name, &doctitle,
                                       position.start.line, position.start.col,
                                       position.end.line, position.end.col);
                 write_error(&message, settings, out)?;
@@ -108,14 +114,23 @@ node_template! {
         let target_str = extract_plain_text(target);
         let file_ext = target_str.split(".").last().unwrap_or("").to_lowercase();
 
-        writeln!(out, "\n% defined in {} at {}:{} to {}:{}", settings.document_title,
+        let doctitle: String = setting!(settings.document_title);
+        let img_exts: Vec<String> = setting!(settings.targets.deps.image_extensions);
+        let image_path: String = setting!(settings.targets.deps.image_path);
+
+        writeln!(out, "\n% defined in {} at {}:{} to {}:{}", &doctitle,
                    position.start.line, position.start.col,
                    position.end.line, position.end.col)?;
 
         // file is an image
-        if settings.deps_settings.image_extensions.contains(&file_ext) {
+        if img_exts.contains(&file_ext) {
 
-            let image_path = path::Path::new(&settings.deps_settings.image_path)
+            let width: f32 = setting!(settings.targets.latex.image_width);
+            let height: f32 = setting!(settings.targets.latex.image_height);
+            let indent: usize = setting!(settings.targets.latex.indentation_depth);
+            let line_width: usize = setting!(settings.targets.latex.max_line_width);
+
+            let image_path = path::Path::new(&image_path)
                 .join(target_str)
                 .file_stem()
                 .expect("image path is empty!")
@@ -136,16 +151,13 @@ node_template! {
             writeln!(&mut cap_content, "% image options: {:?}", &image_options)?;
             writeln!(&mut cap_content, "\\adjincludegraphics[max width={}\\textwidth, \
                                           max height={}\\textheight]{{{}}}",
-                settings.latex_settings.image_width,
-                settings.latex_settings.image_height,
-                &image_path)?;
+                width, height, &image_path)?;
             write!(&mut cap_content, "\\caption{{")?;
             traverse_vec(&traverse_article, caption, path, settings, &mut cap_content)?;
             write!(&mut cap_content, "}}")?;
 
             writeln!(out, "{}", &indent_and_trim(&str::from_utf8(&cap_content).unwrap(),
-                settings.latex_settings.indentation_depth,
-                settings.latex_settings.max_line_width))?;
+                indent, line_width))?;
             writeln!(out, "\\end{{figure}}")?;
 
             return Ok(())
@@ -167,10 +179,11 @@ node_template! {
         traverse_vec(&traverse_article, content, path, settings, &mut par_content)?;
         let par_string = str::from_utf8(&par_content).unwrap().trim_right().to_string();
 
+        let indent: usize = setting!(settings.targets.latex.indentation_depth);
+        let line_width: usize = setting!(settings.targets.latex.max_line_width);
+
         // trim and indent output string
-        let trimmed = indent_and_trim(&par_string,
-            settings.latex_settings.indentation_depth,
-            settings.latex_settings.max_line_width);
+        let trimmed = indent_and_trim(&par_string, indent, line_width);
         writeln!(out, "{}\n", &trimmed)?;
 
     }
@@ -239,10 +252,12 @@ node_template! {
                 };
                 def_term_temp = String::new();
 
+
+                let indent: usize = setting!(settings.targets.latex.indentation_depth);
+                let line_width: usize = setting!(settings.targets.latex.max_line_width);
+
                 // trim and indent output string
-                let trimmed = indent_and_trim(&item_string,
-                    settings.latex_settings.indentation_depth,
-                    settings.latex_settings.max_line_width);
+                let trimmed = indent_and_trim(&item_string, indent, line_width);
 
                 writeln!(out, "{}", &trimmed)?;
             }
@@ -306,11 +321,13 @@ fn write_error(message: &str,
                settings: &Settings,
                out: &mut io::Write) -> io::Result<()> {
 
-    let indent = settings.latex_settings.indentation_depth;
-    let width = settings.latex_settings.max_line_width;
+    let indent: usize = setting!(settings.targets.latex.indentation_depth);
+    let line_width: usize = setting!(settings.targets.latex.max_line_width);
+
+
     let message = escape_latex(message);
     writeln!(out, "\\begin{{error}}")?;
-    writeln!(out, "{}", indent_and_trim(&message, indent, width))?;
+    writeln!(out, "{}", indent_and_trim(&message, indent, line_width))?;
     writeln!(out, "\\end{{error}}")
 }
 

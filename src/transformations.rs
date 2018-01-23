@@ -1,12 +1,13 @@
 use mediawiki_parser::ast::*;
 use mediawiki_parser::transformations::*;
 use mediawiki_parser::error::TransformationError;
-use settings::Settings;
+use settings::*;
 use util::*;
 use std::path;
+use std::collections::HashMap;
 use std::fs::File;
 use serde_yaml;
-
+use config;
 
 /// Convert template name paragraphs to lowercase text only.
 pub fn normalize_template_names(mut root: Element, settings: &Settings) -> TResult {
@@ -43,15 +44,16 @@ pub fn normalize_template_names(mut root: Element, settings: &Settings) -> TResu
                 Element::Text {
                     position: position.clone(),
                     text: if text.starts_with("#") {
-                                String::from(text.trim())
-                            } else {
-                                // convert to lowercase and remove prefixes
-                                let mut temp_text = &text.trim().to_lowercase()[..];
-                                for prefix in &settings.template_prefixes[..] {
-                                    temp_text = trim_prefix(temp_text, prefix);
-                                }
-                                String::from(temp_text)
-                            },
+                        String::from(text.trim())
+                    } else {
+                        // convert to lowercase and remove prefixes
+                        let mut temp_text = &text.trim().to_lowercase()[..];
+                        let prefixes: Vec<String> = setting!(settings.template_prefixes);
+                        for prefix in prefixes {
+                            temp_text = trim_prefix(temp_text, &prefix);
+                        }
+                        String::from(temp_text)
+                    },
                 }
             );
         } else {
@@ -72,17 +74,18 @@ pub fn normalize_template_names(mut root: Element, settings: &Settings) -> TResu
 /// Translate template names and template attribute names.
 pub fn translate_templates(mut root: Element, settings: &Settings) -> TResult {
     if let &mut Element::Template { ref mut name, ref mut content, .. } = &mut root {
+        let translation_tab: HashMap<String, String> = setting!(settings.translations);
         if let Some(&mut Element::Text { ref mut text, .. }) = name.first_mut() {
-            if let Some(translation) = settings.translations.get(text) {
+            if let Some(translation) = translation_tab.get(text) {
                 text.clear();
-                text.push_str(translation);
+                text.push_str(&translation);
             }
         }
         for child in content {
             if let &mut Element::TemplateArgument { ref mut name, .. } = child {
-                if let Some(translation) = settings.translations.get(name) {
+                if let Some(translation) = translation_tab.get(name) {
                     name.clear();
-                    name.push_str(translation);
+                    name.push_str(&translation);
                 }
             }
         }
@@ -146,13 +149,12 @@ pub fn include_sections_vec<'a>(
             ref content,
             ref position
         } = &mut child {
-
-            let prefix = &settings.deps_settings.section_inclusion_prefix;
+            let prefix: String = setting!(settings.targets.deps.section_inclusion_prefix);
             let template_name = extract_plain_text(&name);
 
             // section transclusion
-            if template_name.to_lowercase().trim().starts_with(prefix) {
-                let article = trim_prefix(template_name.trim(), prefix);
+            if template_name.to_lowercase().trim().starts_with(&prefix) {
+                let article = trim_prefix(template_name.trim(), &prefix);
                 if content.len() < 1 {
                     return Err(TransformationError {
                         cause: "A section inclusion must specify article \
@@ -167,12 +169,15 @@ pub fn include_sections_vec<'a>(
                     });
                 }
 
+                let mut section_file: String = setting!(settings.targets.deps.section_rev);
+                let section_ext: String = setting!(settings.targets.deps.section_ext);
+                let section_path: String = setting!(settings.targets.deps.section_path);
                 let section_name = extract_plain_text(content);
-                let mut section_file = settings.deps_settings.section_rev.clone();
-                section_file.push('.');
-                section_file.push_str(&settings.deps_settings.section_ext);
 
-                let path = path::Path::new(&settings.deps_settings.section_path)
+                section_file.push('.');
+                section_file.push_str(&section_ext);
+
+                let path = path::Path::new(&section_path)
                     .join(&filename_to_make(&article))
                     .join(&filename_to_make(&section_name))
                     .join(&filename_to_make(&section_file));
@@ -251,8 +256,9 @@ pub fn normalize_heading_depths_traverse(
 pub fn remove_file_prefix(mut root: Element, settings: &Settings) -> TResult {
     if let &mut Element::InternalReference { ref mut target, .. } = &mut root {
         if let Some(&mut Element::Text { ref mut text, .. }) = target.first_mut() {
-            for prefix in &settings.file_prefixes {
-                let prefix_str = format!("{}:", prefix.to_lowercase());
+            let prefixes: Vec<String> = setting!(settings.file_prefixes);
+            for prefix in prefixes {
+                let prefix_str = format!("{}:", &prefix);
                 let new_text = String::from(trim_prefix(text, &prefix_str));
                 text.clear();
                 text.push_str(&new_text);

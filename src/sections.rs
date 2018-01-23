@@ -15,6 +15,8 @@ use std::fs::File;
 use std::io::Write;
 use std::fs::DirBuilder;
 use serde_yaml;
+use config;
+
 
 /// Metadata structure for document sections.
 #[derive(Serialize, Deserialize, Debug)]
@@ -32,7 +34,6 @@ pub fn collect_sections<'a>(root: &'a Element,
                             _out: &mut io::Write) -> io::Result<()> {
 
     let sections = collect_section_names(root, settings);
-
     for section in sections {
         if section.is_empty() {
             continue
@@ -54,13 +55,19 @@ pub fn collect_sections<'a>(root: &'a Element,
         }
 
         if !start.is_empty() && !end.is_empty() {
-            let inter = get_intermediary(&start, &end);
-            let mut filename = settings.document_revision.clone();
-            filename.push('.');
-            filename.push_str(&settings.deps_settings.section_ext);
 
-            let mut path = path::Path::new(&settings.deps_settings.section_path)
-                .join(&filename_to_make(&settings.document_title))
+            let inter = get_intermediary(&start, &end);
+
+            let mut filename: String = setting!(settings.document_revision);
+            let file_ext: String = setting!(settings.targets.deps.section_ext);
+            let section_path: String = setting!(settings.targets.deps.section_path);
+            let doctitle: String = setting!(settings.document_title);
+
+            filename.push('.');
+            filename.push_str(&file_ext);
+
+            let mut path = path::Path::new(&section_path)
+                .join(&filename_to_make(&doctitle))
                 .join(&filename_to_make(&section.clone()));
 
             DirBuilder::new()
