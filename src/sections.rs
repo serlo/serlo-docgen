@@ -6,7 +6,8 @@
 
 use std::io;
 use std::str;
-use settings::Settings;
+use std::collections::HashMap;
+use settings::*;
 use mediawiki_parser::ast::*;
 use mediawiki_parser::transformations::*;
 use util::*;
@@ -15,53 +16,52 @@ use std::fs::File;
 use std::io::Write;
 use std::fs::DirBuilder;
 use serde_yaml;
-use config;
 
 
-/// Metadata structure for document sections.
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Section {
-    pub title: String,
-    pub tree: Vec<Element>,
-    pub position: Span,
+/// Write marked document section to the filesystem.
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct SectionsTarget {
+    pub extension_mapping: HashMap<String, String>,
 }
 
-/// Collect all sections in a file and write them to the section repository.
-/// The target path is configured in `DepSettings`.
-pub fn collect_sections<'a>(root: &'a Element,
-                            _path: &mut Vec<&'a Element>,
-                            settings: &Settings,
-                            _out: &mut io::Write) -> io::Result<()> {
+impl Target for SectionsTarget {
+    fn get_name(&self) -> &str { "sections" }
+    fn do_include_sections(&self) -> bool { false }
+    fn do_generate_dependencies(&self) -> bool { false }
+    fn get_target_extension(&self) -> &str { "yml" }
+    fn get_extension_mapping(&self) -> &HashMap<String, String> {
+        &self.extension_mapping
+    }
+    fn export<'a>(&self,
+                root: &'a Element,
+                path: &mut Vec<&'a Element>,
+                settings: &Settings,
+                out: &mut io::Write) -> io::Result<()> {
 
-    let sections = collect_section_names(root, settings);
-    for section in sections {
-        if section.is_empty() {
-            continue
-        }
-        let mut find_settings = SectionData {
-            begin: true,
-            label: &section,
-        };
+        let mut name_collector = SectionNameCollector::default();
+        name_collector.run(root, settings, &mut vec![])?;
 
-        let mut start = vec![];
-        let mut end = vec![];
-        if let Ok(()) = find_section(root, &mut start, &find_settings, &mut vec![]) {
-            continue
-        }
+        for section in name_collector.sections {
+            if section.is_empty() {
+                continue
+            }
 
-        find_settings.begin = false;
-        if let Ok(()) = find_section(root, &mut end, &find_settings, &mut vec![]) {
-            continue
-        }
+            let mut start_finder = SectionFinder::new(&section, true);
+            let mut end_finder = SectionFinder::new(&section, false);
 
-        if !start.is_empty() && !end.is_empty() {
+            start_finder.run(root, (), &mut vec![])?;
+            end_finder.run(root, (), &mut vec![])?;
 
-            let inter = get_intermediary(&start, &end);
+            if start_finder.result.is_empty() || end_finder.result.is_empty() {
+                continue
+            }
 
-            let mut filename: String = setting!(settings.document_revision);
-            let file_ext: String = setting!(settings.targets.deps.section_ext);
-            let section_path: String = setting!(settings.targets.deps.section_path);
-            let doctitle: String = setting!(settings.document_title);
+            let inter = get_intermediary(&start_finder.result, &end_finder.result);
+
+            let mut filename = settings.document_revision.clone();
+            let file_ext = &settings.section_ext;
+            let section_path = &settings.section_path;
+            let doctitle = &settings.document_title;
 
             filename.push('.');
             filename.push_str(&file_ext);
@@ -80,9 +80,10 @@ pub fn collect_sections<'a>(root: &'a Element,
             file.write_all(&serde_yaml::to_string(&inter)
                 .expect("could not serialize section!")
                 .as_bytes())?;
+
         }
+        Ok(())
     }
-    Ok(())
 }
 
 /// Paramters for section filtering transformation.
@@ -175,113 +176,94 @@ fn get_intermediary<'a>(start: &Vec<&'a Element>, end: &Vec<&'a Element>) -> Vec
 }
 
 /// Collect the names of all beginning sections in a document.
-pub fn collect_section_names<'a>(root: &'a Element,
-                                 settings: &Settings) -> Vec<String> {
-
-    let mut sections_string = vec![];
-    recurse_section_names(root, &mut vec![], settings, &mut sections_string)
-        .expect("Error traversing source tree in section search!");
-    let sections_string = String::from_utf8(sections_string).unwrap();
-
-    let mut result = vec![];
-    // list of section names defined in the document
-    let sections: Vec<&str> = sections_string.split("\n").collect();
-
-    for section in sections {
-        let name = String::from(section.trim());
-        if name.is_empty() {
-            continue
-        }
-        result.push(name);
-    }
-    result
+#[derive(Default)]
+struct SectionNameCollector<'e> {
+    path: Vec<&'e Element>,
+    pub sections: Vec<String>,
 }
 
-/// Write all section names encountered to an output file.
-fn recurse_section_names<'a>(root: &'a Element,
-                             path: &mut Vec<&'a Element>,
-                             settings: &Settings,
-                             out: &mut io::Write) -> io::Result<()> {
+impl<'e, 's: 'e> Traversion<'e, &'s Settings> for SectionNameCollector<'e> {
+    fn path_push(&mut self, root: &'e Element) {
+        self.path.push(root);
+    }
+    fn path_pop(&mut self) -> Option<&'e Element> {
+        self.path.pop()
+    }
+    fn get_path(&self) -> &Vec<&'e Element> {
+        &self.path
+    }
+    fn work(&mut self,
+            root: &'e Element,
+            settings: &'s Settings,
+            out: &mut io::Write) -> io::Result<bool> {
 
-    if let &Element::HtmlTag { ref name, ref attributes, .. } = root {
-        if name.to_lowercase() == "section"  {
-            for attr in attributes {
-                if attr.key == "begin" {
-                    writeln!(out, "{}", attr.value)?;
+        if let &Element::HtmlTag { ref name, ref attributes, .. } = root {
+            if name.to_lowercase() == "section"  {
+                for attr in attributes {
+                    if attr.key == "begin" {
+                        self.sections.push(attr.value.trim().into());
+                    }
                 }
             }
-        }
-    };
-    traverse_with(&recurse_section_names, root, path, settings, out)?;
-    Ok(())
-}
-
-/// Parameters for session finding.
-struct SectionData<'a> {
-    pub label: &'a str,
-    pub begin: bool,
+        };
+        Ok(true)
+    }
 }
 
 /// Return a path to the start / end of a section
-fn find_section<'a>(root: &'a Element,
-                    path: &mut Vec<&'a Element>,
-                    settings: &SectionData<'a>,
-                    out: &mut io::Write) -> io::Result<()> {
+#[derive(Default)]
+struct SectionFinder<'e, 'a> {
+    /// label of the section to find.
+    pub label: &'a str,
+    /// get start or end of section?
+    pub begin: bool,
+    path: Vec<&'e Element>,
+    /// the resulting path.
+    pub result: Vec<&'e Element>
+}
 
-    path.push(root);
-    if let &Element::HtmlTag { ref name, ref attributes, .. } = root {
-        if name.to_lowercase() == "section" {
-            for attr in attributes {
-                if attr.key.to_lowercase() == if settings.begin {"begin"} else {"end"}
-                    && attr.value.to_lowercase() == settings.label.to_lowercase() {
-                    // abort recursion, preserve path
-                    return Err(io::Error::new(io::ErrorKind::Other, "recusion abort"));
+impl<'e, 'a> Traversion<'e, ()> for SectionFinder<'e, 'a> {
+    fn path_push(&mut self, root: &'e Element) {
+        self.path.push(root);
+    }
+    fn path_pop(&mut self) -> Option<&'e Element> {
+        self.path.pop()
+    }
+    fn get_path(&self) -> &Vec<&'e Element> {
+        &self.path
+    }
+    fn work(&mut self,
+            root: &'e Element,
+            settings: (),
+            out: &mut io::Write) -> io::Result<bool> {
+
+        // end recursion if result is found
+        if self.result.len() > 0 {
+            return Ok(false)
+        }
+
+        if let &Element::HtmlTag { ref name, ref attributes, .. } = root {
+            if name.to_lowercase() == "section" {
+                for attr in attributes {
+                    if attr.key.to_lowercase() == if self.begin {"begin"} else {"end"}
+                        && attr.value.to_lowercase() == self.label.to_lowercase() {
+                        self.result = self.path.clone();
+                    }
                 }
             }
-        }
-    };
-    // pop if recursion not aborted
-    traverse_with(&find_section, root, path, settings, out)?;
-    path.pop();
-    Ok(())
-}
-
-/// Extract all child nodes from an elment in a list.
-/// If an element has multiple fields, they are concatenated
-/// in a semantically useful order.
-fn extract_content<'a>(root: Element) -> Option<Vec<Element>> {
-    match root {
-        Element::Document { content, .. } => Some(content),
-        Element::Heading { mut caption, mut content, .. } => {
-            caption.append(&mut content);
-            Some(caption)
-        },
-        Element::Formatted { content, .. } => Some(content),
-        Element::Paragraph { content, .. } => Some(content),
-        Element::Template { mut name, mut content, .. } => {
-            name.append(&mut content);
-            Some(name)
-        },
-        Element::TemplateArgument { value, .. } => Some(value),
-        Element::InternalReference { mut target, options, mut caption, .. } => {
-            for mut option in options {
-                target.append(&mut option);
-            }
-            target.append(&mut caption);
-            Some(target)
-        },
-        Element::ExternalReference { caption, .. } => Some(caption),
-        Element::ListItem { content, .. } => Some(content),
-        Element::List { content, .. } => Some(content),
-        Element::Table { mut caption, mut rows, .. } => {
-            caption.append(&mut rows);
-            Some(caption)
-        }
-        Element::TableRow { cells, .. } => Some(cells),
-        Element::TableCell { content, .. } => Some(content),
-        Element::HtmlTag { content, .. } => Some(content),
-        Element::Text { .. } => None,
-        Element::Comment { .. } => None,
-        Element::Error { .. } => None,
+        };
+        Ok(true)
     }
 }
+
+impl<'a, 'e> SectionFinder<'e, 'a> {
+    fn new(label: &'a str, begin: bool) -> SectionFinder {
+        SectionFinder {
+            label,
+            begin,
+            path: vec![],
+            result: vec![],
+        }
+    }
+}
+

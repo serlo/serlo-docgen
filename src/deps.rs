@@ -15,7 +15,7 @@ use std::collections::HashMap;
 use MFNFTargets;
 use std::ffi::OsStr;
 
-/// Data for the dependencies
+/// Writes a list of `make` dependencies for each target.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct DepsTarget {
     extension_map_dummy: HashMap<String, String>,
@@ -42,7 +42,6 @@ impl Target for DepsTarget {
 
             let target = target.get_target();
 
-            println!("configuration {} of target {}", name, target.get_name());
             if !target.do_generate_dependencies() {
                 continue;
             }
@@ -57,9 +56,7 @@ impl Target for DepsTarget {
                 extension_map: target.get_extension_mapping(),
             };
 
-            let mut section_collection = SectionCollectionTraversion {
-                path: vec![],
-            };
+            let mut section_collection = SectionCollectionTraversion::default();
 
             file_collection.run(root, settings, out)?;
             section_collection.run(root, settings, out)?;
@@ -69,6 +66,7 @@ impl Target for DepsTarget {
 }
 
 /// Collects the sections included in a document.
+#[derive(Default)]
 struct SectionCollectionTraversion<'b> {
     pub path: Vec<&'b Element>,
 }

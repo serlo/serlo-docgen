@@ -5,9 +5,7 @@
 extern crate mediawiki_parser;
 extern crate serde_yaml;
 extern crate argparse;
-#[macro_use]
 extern crate mfnf_export;
-extern crate config;
 
 use std::str;
 use std::process;

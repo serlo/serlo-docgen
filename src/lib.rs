@@ -13,15 +13,16 @@ pub mod settings;
 
 pub mod latex;
 pub mod deps;
-//pub mod sections;
-mod util;
-mod transformations;
+pub mod sections;
+pub mod util;
+pub mod transformations;
 
 /// Available targets for mfnf-export.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum MFNFTargets {
     Dependencies(deps::DepsTarget),
     Latex(latex::LatexTarget),
+    Sections(sections::SectionsTarget),
 }
 
 impl MFNFTargets {
@@ -30,6 +31,7 @@ impl MFNFTargets {
         match self {
             &MFNFTargets::Dependencies(ref t) => t,
             &MFNFTargets::Latex(ref t) => t,
+            &MFNFTargets::Sections(ref t) => t,
         }
     }
 }

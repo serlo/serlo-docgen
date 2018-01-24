@@ -128,7 +128,7 @@ pub fn filename_to_make(input: &str) -> String {
 /// All fields of the traversion struct can be mutated,
 /// external settings cannot.
 pub trait Traversion<'a, S: Copy> {
-   /// push to the traversion path.
+    /// push to the traversion path.
     fn path_push(&mut self, &'a Element);
     /// pop from the traversion path.
     fn path_pop(&mut self) -> Option<&'a Element>;
@@ -234,5 +234,45 @@ pub trait Traversion<'a, S: Copy> {
         }
         self.path_pop();
         Ok(())
+    }
+}
+
+/// Extract all child nodes from an elment in a list.
+/// If an element has multiple fields, they are concatenated
+/// in a semantically useful order.
+pub fn extract_content<'a>(root: Element) -> Option<Vec<Element>> {
+    match root {
+        Element::Document { content, .. } => Some(content),
+        Element::Heading { mut caption, mut content, .. } => {
+            caption.append(&mut content);
+            Some(caption)
+        },
+        Element::Formatted { content, .. } => Some(content),
+        Element::Paragraph { content, .. } => Some(content),
+        Element::Template { mut name, mut content, .. } => {
+            name.append(&mut content);
+            Some(name)
+        },
+        Element::TemplateArgument { value, .. } => Some(value),
+        Element::InternalReference { mut target, options, mut caption, .. } => {
+            for mut option in options {
+                target.append(&mut option);
+            }
+            target.append(&mut caption);
+            Some(target)
+        },
+        Element::ExternalReference { caption, .. } => Some(caption),
+        Element::ListItem { content, .. } => Some(content),
+        Element::List { content, .. } => Some(content),
+        Element::Table { mut caption, mut rows, .. } => {
+            caption.append(&mut rows);
+            Some(caption)
+        }
+        Element::TableRow { cells, .. } => Some(cells),
+        Element::TableCell { content, .. } => Some(content),
+        Element::HtmlTag { content, .. } => Some(content),
+        Element::Text { .. } => None,
+        Element::Comment { .. } => None,
+        Element::Error { .. } => None,
     }
 }
