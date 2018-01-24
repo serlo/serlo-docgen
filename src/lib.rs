@@ -1,5 +1,4 @@
 extern crate mediawiki_parser;
-extern crate config;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
@@ -14,9 +13,26 @@ pub mod settings;
 
 pub mod latex;
 pub mod deps;
-pub mod sections;
+//pub mod sections;
 mod util;
 mod transformations;
+
+/// Available targets for mfnf-export.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum MFNFTargets {
+    Dependencies(deps::DepsTarget),
+    Latex(latex::LatexTarget),
+}
+
+impl MFNFTargets {
+    /// Get the inner struct implementing the target trait.
+    pub fn get_target(&self) -> &settings::Target {
+        match self {
+            &MFNFTargets::Dependencies(ref t) => t,
+            &MFNFTargets::Latex(ref t) => t,
+        }
+    }
+}
 
 /// Applies all transformations which should happen before section transclusion.
 /// This is mostly tree normlization and is applied on all targets.

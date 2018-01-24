@@ -88,62 +88,34 @@ fn parse_args() -> Args {
     args
 }
 
-fn build_targets<'a, 'b, 'c>(args: &Args, settings: &Settings) -> Vec<Target<'a,'b,'c>> {
-    let mut result = vec![];
-    let target_map: HashMap<String, config::Value> = setting!(settings.targets);
-    for target_name in &args.targets {
-        for key in target_map.keys() {
-            if key == target_name {
-                result.push(Target {
-                    name: target_name.clone(),
-                    export_func: match &target_name[..] {
-                        "latex" => &latex::export_article,
-                        "deps" => &deps::export_article_deps,
-                        "sections" => &sections::collect_sections,
-                        _ => panic!("target not implemented!"),
-                    },
-                    with_transformation: target_map.get(target_name)
-                        .unwrap()
-                        .clone()
-                        .into_table()
-                        .unwrap()
-                        .get("with_transformation")
-                        .expect("with_transformation info is missing!")
-                        .clone()
-                        .try_into()
-                        .unwrap()
-                });
-            }
-        }
-    }
-    result
-}
-
 fn main() {
     let args = parse_args();
-    let mut settings = default_config();
+    let mut settings = settings::Settings::default();
 
     let orig_root: mediawiki_parser::transformations::TResult;
     // section inclusion, etc. may fail, but deps shoud still be generated.
     let transformed_root: mediawiki_parser::transformations::TResult;
 
+    /*
     if !args.config_file.is_empty() {
         settings.merge(config::File::with_name(&args.config_file))
             .expect("Could not parse settings file!");
     };
+    */
 
-    settings.set("document_title", args.doc_title.clone()).unwrap();
-    settings.set("document_revision", args.doc_revision.clone()).unwrap();
+    settings.document_title = args.doc_title.clone();
+    settings.document_revision = args.doc_revision.clone();
 
-    let targets = build_targets(&args, &settings);
-    if targets.is_empty() {
-        eprintln!("No target specified!");
-        process::exit(1);
-    }
-
+    /*
     if args.dump_config {
         println!("{}", DEFAULT_SETTINGS);
         process::exit(0);
+    }
+    */
+
+    if args.targets.is_empty() {
+        eprintln!("No target specified!");
+        process::exit(1);
     }
 
     let root = (if !args.input_file.is_empty() {
@@ -158,20 +130,23 @@ fn main() {
     let root_clone = handle_transformation_result(&orig_root).clone();
     transformed_root = mfnf_export::apply_output_transformations(root_clone, &settings);
 
-    for target in &targets[..] {
+    for target in &args.targets {
         let mut path = vec![];
         let mut export_result = vec![];
-        (target.export_func)(
-            // pull dependencies from original tree
-            if target.with_transformation {
-                handle_transformation_result(&transformed_root)
-            } else {
-                handle_transformation_result(&orig_root)
-            },
-            &mut path,
-            &settings,
-            &mut export_result
-        ).expect("could not serialize target!");
+        let target = match settings.targets.get(target) {
+            Some(t) => t.get_target(),
+            None => {
+                eprintln!("target not configured: {:?}", target);
+                continue
+            }
+        };
+        let root = if target.do_include_sections() {
+            handle_transformation_result(&transformed_root)
+        } else {
+            handle_transformation_result(&orig_root)
+        };
+        target.export(root, &mut path, &settings, &mut export_result)
+            .expect("target export failed!");
         println!("{}", str::from_utf8(&export_result).unwrap());
     }
 }

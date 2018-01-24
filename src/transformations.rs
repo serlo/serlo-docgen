@@ -7,7 +7,6 @@ use std::path;
 use std::collections::HashMap;
 use std::fs::File;
 use serde_yaml;
-use config;
 
 /// Convert template name paragraphs to lowercase text only.
 pub fn normalize_template_names(mut root: Element, settings: &Settings) -> TResult {
@@ -48,7 +47,7 @@ pub fn normalize_template_names(mut root: Element, settings: &Settings) -> TResu
                     } else {
                         // convert to lowercase and remove prefixes
                         let mut temp_text = &text.trim().to_lowercase()[..];
-                        let prefixes: Vec<String> = setting!(settings.template_prefixes);
+                        let prefixes = &settings.template_prefixes;
                         for prefix in prefixes {
                             temp_text = trim_prefix(temp_text, &prefix);
                         }
@@ -74,7 +73,7 @@ pub fn normalize_template_names(mut root: Element, settings: &Settings) -> TResu
 /// Translate template names and template attribute names.
 pub fn translate_templates(mut root: Element, settings: &Settings) -> TResult {
     if let &mut Element::Template { ref mut name, ref mut content, .. } = &mut root {
-        let translation_tab: HashMap<String, String> = setting!(settings.translations);
+        let translation_tab = &settings.translations;
         if let Some(&mut Element::Text { ref mut text, .. }) = name.first_mut() {
             if let Some(translation) = translation_tab.get(text) {
                 text.clear();
@@ -149,12 +148,12 @@ pub fn include_sections_vec<'a>(
             ref content,
             ref position
         } = &mut child {
-            let prefix: String = setting!(settings.targets.deps.section_inclusion_prefix);
+            let prefix = &settings.section_inclusion_prefix;
             let template_name = extract_plain_text(&name);
 
             // section transclusion
-            if template_name.to_lowercase().trim().starts_with(&prefix) {
-                let article = trim_prefix(template_name.trim(), &prefix);
+            if template_name.to_lowercase().trim().starts_with(prefix) {
+                let article = trim_prefix(template_name.trim(), prefix);
                 if content.len() < 1 {
                     return Err(TransformationError {
                         cause: "A section inclusion must specify article \
@@ -169,9 +168,9 @@ pub fn include_sections_vec<'a>(
                     });
                 }
 
-                let mut section_file: String = setting!(settings.targets.deps.section_rev);
-                let section_ext: String = setting!(settings.targets.deps.section_ext);
-                let section_path: String = setting!(settings.targets.deps.section_path);
+                let mut section_file = settings.section_rev.clone();
+                let section_ext = &settings.section_ext;
+                let section_path = &settings.section_path;
                 let section_name = extract_plain_text(content);
 
                 section_file.push('.');
@@ -256,8 +255,7 @@ pub fn normalize_heading_depths_traverse(
 pub fn remove_file_prefix(mut root: Element, settings: &Settings) -> TResult {
     if let &mut Element::InternalReference { ref mut target, .. } = &mut root {
         if let Some(&mut Element::Text { ref mut text, .. }) = target.first_mut() {
-            let prefixes: Vec<String> = setting!(settings.file_prefixes);
-            for prefix in prefixes {
+            for prefix in &settings.file_prefixes {
                 let prefix_str = format!("{}:", &prefix);
                 let new_text = String::from(trim_prefix(text, &prefix_str));
                 text.clear();

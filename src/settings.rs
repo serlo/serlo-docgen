@@ -1,8 +1,10 @@
-use util::TravFunc;
+use mediawiki_parser::ast::Element;
 use std::collections::HashMap;
-use config;
-
-pub type Settings = config::Config;
+use serde::{Serialize, Deserialize};
+use std::io;
+use deps;
+use latex;
+use MFNFTargets;
 
 pub const DEFAULT_SETTINGS: &'static str = "
 # Title of the current document.
@@ -169,7 +171,7 @@ targets:
     # Does this target operate on the input tree directly or with
     # mfnf transformations applied?
     with_transformation: false
-    # extension of the resulting file. Used for make dependency generation.
+
     target_extension: \"yml\"
     # are dependencies generated for this target?
     generate_deps: false
@@ -180,71 +182,143 @@ targets:
 ";
 
 
-/// An export target.
-pub struct Target<'a, 'b: 'a, 'c: 'a> {
-    /// The target name.
-    pub name: String,
-    /// A function to call for export.
-    pub export_func: &'a TravFunc<'c, &'b config::Config>,
+#[macro_export]
+macro_rules! string_vec {
+    ($($x:expr),*) => (vec![$($x.to_string()),*]);
+}
+
+#[macro_export]
+macro_rules! string_map {
+    ($($k:expr => $v:expr),*) => {{
+        let mut map: HashMap<String, String> = HashMap::new();
+        $(map.insert($k.to_string(), $v.to_string());)*
+        map
+    }}
+}
+
+#[macro_export]
+macro_rules! string_value_map {
+    ($($k:expr => $v:expr),*) => {{
+        let mut map = HashMap::new();
+        $(map.insert($k.to_string(), $v);)*
+        map
+    }}
+}
+
+pub trait Target {
+    /// export the the ast to `out`.
+    fn export<'a>(&self,
+                  root: &'a Element,
+                  path: &mut Vec<&'a Element>,
+                  settings: &Settings,
+                  out: &mut io::Write) -> io::Result<()>;
+    /// get the name of this target.
+    fn get_name(&self) -> &str;
+    /// does this target operate on the input tree directly or with
     /// mfnf transformations applied?
-    pub with_transformation: bool,
+    fn do_include_sections(&self) -> bool { false }
+    /// are make dependencies generated for this target?
+    fn do_generate_dependencies(&self) -> bool { false }
+    /// extension of the resulting file. Used for make dependency generation.
+    fn get_target_extension(&self) -> &str;
+    /// mapping of external file extensions to target extensions.
+    /// this is useful if external dependencies should be processed by
+    /// make for this target.
+    fn get_extension_mapping(&self) -> &HashMap<String, String>;
 }
 
-pub fn default_config() -> config::Config {
-    let mut settings = config::Config::default();
-    settings
-        .merge(config::File::from_str(DEFAULT_SETTINGS, config::FileFormat::Yaml))
-        .expect("config parse error!");
-    settings
+
+
+/// General MFNF transformation settings for all targets.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Settings {
+    /// The targets defined on the settings.
+    /// Maps a target name to a target definition.
+    /// This allows for multiple targets of the same type with different parameters.
+    pub targets: HashMap<String, MFNFTargets>,
+
+    /// Title of the current document.
+    pub document_title: String,
+
+    /// Additional revision id of an article.
+    pub document_revision: String,
+
+    /// Maps a template names and template attribute names to their translations.
+    /// E.g. german template names to their englisch translations.
+    pub translations: HashMap<String, String>,
+
+    /// A list of lowercase template name prefixes which will be stripped if found.
+    pub template_prefixes: Vec<String>,
+
+    /// A list of file prefixes which are ignored.
+    pub file_prefixes: Vec<String>,
+
+    /// File extensions indicating images.
+    pub image_extensions: Vec<String>,
+
+    /// Path prefix for images.
+    pub image_path: String,
+
+    /// Path to the section file directory.
+    pub section_path: String,
+
+    /// Default revision number of included sections (always `latest`)
+    pub section_rev: String,
+
+    /// File extensions for section files
+    pub section_ext: String,
+
+    /// Template name prefix indication section inclusion
+    pub section_inclusion_prefix: String,
 }
 
-#[macro_export]
-macro_rules! setting {
-    ($settings:ident $( . $attr:ident)+) => {{
-        let mut path = vec![$(stringify!($attr)),*];
-        let thing = path.remove(0);
-        let mut base: config::Value = $settings.get(thing)
-            .expect(&format!("missing setting: {}", &thing));
-
-        while path.len() > 0 {
-            let thing = path.remove(0);
-            base = base.into_table()
-                .expect(&format!("attribute error: {}", &thing))
-                .remove(thing)
-                .expect(&format!("attribute error: {}", &thing));
-        }
-        base.try_into().expect("wrong setting type!")
-    }}
-}
-
-#[macro_export]
-macro_rules! from_table {
-    ($settings:ident $( . $attr:ident)+) => {{
-        let mut path = vec![$(stringify!($attr)),*];
-        let mut base: config::Value = $settings.clone();
-        while path.len() > 0 {
-            let thing = path.remove(0);
-            base = base.into_table()
-                .expect(&format!("attribute error: {}", &thing))
-                .remove(thing)
-                .expect(&format!("attribute error: {}", &thing));
-        }
-        base.try_into().expect("wrong setting type!")
-    }}
-}
-
-pub fn target_settings<'a>(config: &'a config::Config,
-                       target: &str) -> Option<HashMap<String,config::Value>> {
-
-    let targets = config.get_array("targets")
-        .expect("Settings object does not specify targets!");
-    for raw_target in targets {
-        let target_map = raw_target.into_table().unwrap();
-        let name = target_map.keys().next().unwrap();
-        if name == target {
-            return Some(target_map.get(name).unwrap().clone().into_table().unwrap())
+impl Default for Settings {
+    fn default() -> Settings {
+        Settings {
+            targets: {
+                let mut tmap = HashMap::new();
+                tmap.insert("deps".to_string(),
+                    MFNFTargets::Dependencies(deps::DepsTarget::default()));
+                tmap.insert("latex".to_string(),
+                    MFNFTargets::Latex(latex::LatexTarget::default()));
+                tmap
+            },
+            document_title: "<no document name specified>".into(),
+            document_revision: "latest".into(),
+            file_prefixes: string_vec!["file", "datei", "bild"],
+            translations: string_map![
+                "beispiel" => "example",
+                "definition" => "definition",
+                "satz" => "theorem",
+                "lösung" => "solution",
+                "lösungsweg" => "solutionprocess",
+                "titel" => "title",
+                "formel" => "formula",
+                "fallunterscheidung" => "proofbycases",
+                "fall_list" => "cases",
+                "beweis_list" => "proofs",
+                "beweiszusammenfassung" => "proofsummary",
+                "alternativer beweis" => "alternativeproof",
+                "beweis" => "proof",
+                "warnung" => "warning",
+                "hinweis" => "hint",
+                "frage" => "question",
+                "antwort" => "answer"
+            ],
+            template_prefixes: string_vec![":mathe für nicht-freaks: vorlage:"],
+            image_extensions: string_vec!["jpg",
+                                            "jpeg",
+                                            "png",
+                                            "gif",
+                                            "svg",
+                                            "eps",
+                                            "pdf"],
+            image_path: "images".into(),
+            section_path: "section".into(),
+            section_rev: "latest".into(),
+            section_ext: "yml".into(),
+            section_inclusion_prefix: "#lst:".into(),
         }
     }
-    return None
 }
 

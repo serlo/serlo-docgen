@@ -1,5 +1,6 @@
 use std::io;
 use mediawiki_parser::ast::*;
+use settings::Target;
 
 /// Escape LaTeX-Specific symbols
 pub fn escape_latex(input: &str) -> String {
@@ -123,108 +124,115 @@ pub fn filename_to_make(input: &str) -> String {
     input.replace(" ", "_").replace(":", "@COLON@")
 }
 
-/// Function signature for export traversal.
-pub type TravFunc<'a, S> = Fn(&'a Element,
-                           &mut Vec<&'a Element>,
-                           S,
-                           &mut io::Write) -> io::Result<()>;
+/// Implements a version over a tree of `Element`.
+/// All fields of the traversion struct can be mutated,
+/// external settings cannot.
+pub trait Traversion<'a, S: Copy> {
+   /// push to the traversion path.
+    fn path_push(&mut self, &'a Element);
+    /// pop from the traversion path.
+    fn path_pop(&mut self) -> Option<&'a Element>;
+    /// get the traversion path.
+    fn get_path(&self) -> &Vec<&'a Element>;
+    /// template method for handling single nodes.
+    /// if the result is `false`, handling is complete
+    /// children of this node are not considered,
+    /// otherwise `work()` is recursively called for all children.
+    fn work(&mut self,
+            root: &'a Element,
+            settings: S,
+            out: &mut io::Write) -> io::Result<bool>;
 
-/// Traverse a list of subtrees with a given function.
-pub fn traverse_vec<'a, S: Copy>(func: &TravFunc<'a, S>,
-                    content: &'a Vec<Element>,
-                    path: &mut Vec<&'a Element>,
-                    settings: S,
-                    out: &mut io::Write) -> io::Result<()> {
-
-    for elem in &content[..] {
-        func(elem, path, settings, out)?;
+    /// run this traversion for a vector of elements.
+    fn run_vec(&mut self,
+               content: &'a Vec<Element>,
+               settings: S,
+               out: &mut io::Write) -> io::Result<()> {
+        for elem in &content[..] {
+            self.run(elem, settings, out)?;
+        }
+        Ok(())
     }
-    Ok(())
-}
+    /// run this traversion for an element.
+    fn run(&mut self,
+           root: &'a Element,
+           settings: S,
+           out: &mut io::Write) -> io::Result<()> {
 
-/// List element variant names.
-pub fn get_path_names<'a>(path: &Vec<&'a Element>) -> Vec<&'a str> {
-    let mut names = vec![];
-    for elem in path {
-        names.push(elem.get_variant_name());
-    }
-    names
-}
+        self.path_push(root);
 
-/// Traverse a syntax tree depth-first with a given function.
-pub fn traverse_with<'a, S: Copy>(func: &TravFunc<'a, S>,
-                         root: &'a Element,
-                         path: &mut Vec<&'a Element>,
-                         settings: S,
-                         out: &mut io::Write) -> io::Result<()> {
-
-    let vec_func = traverse_vec;
-    match root {
-        &Element::Document { ref content, .. } => {
-            vec_func(func, content, path, settings, out)?;
+        // break if work function breaks recursion.
+        if !self.work(root, settings, out)? {
+            return Ok(());
         }
-        &Element::Heading {
-            ref caption,
-            ref content,
-            ..
-        } => {
-            vec_func(func, caption, path, settings, out)?;
-            vec_func(func, content, path, settings, out)?;
-        }
-        &Element::Text { .. } => (),
-        &Element::Formatted { ref content, .. } => {
-            vec_func(func, content, path, settings, out)?;
-        }
-        &Element::Paragraph { ref content, .. } => {
-            vec_func(func, content, path, settings, out)?;
-        }
-        &Element::Template { ref content, ref name, .. } => {
-            vec_func(func, content, path, settings, out)?;
-            vec_func(func, name, path, settings, out)?;
-        }
-        &Element::TemplateArgument { ref value, .. } => {
-            vec_func(func, value, path, settings, out)?;
-        }
-        &Element::InternalReference {
-            ref target,
-            ref options,
-            ref caption,
-            ..
-        } => {
-            vec_func(func, target, path, settings, out)?;
-            for option in options {
-                vec_func(func, option, path, settings, out)?;
+        match root {
+            &Element::Document { ref content, .. } => {
+                self.run_vec(content, settings, out)?;
             }
-            vec_func(func, caption, path, settings, out)?;
+            &Element::Heading {
+                ref caption,
+                ref content,
+                ..
+            } => {
+                self.run_vec(caption, settings, out)?;
+                self.run_vec(content, settings, out)?;
+            }
+            &Element::Text { .. } => (),
+            &Element::Formatted { ref content, .. } => {
+                self.run_vec(content, settings, out)?;
+            }
+            &Element::Paragraph { ref content, .. } => {
+                self.run_vec(content, settings, out)?;
+            }
+            &Element::Template { ref content, ref name, .. } => {
+                self.run_vec(content, settings, out)?;
+                self.run_vec(name, settings, out)?;
+            }
+            &Element::TemplateArgument { ref value, .. } => {
+                self.run_vec(value, settings, out)?;
+            }
+            &Element::InternalReference {
+                ref target,
+                ref options,
+                ref caption,
+                ..
+            } => {
+                self.run_vec(target, settings, out)?;
+                for option in options {
+                    self.run_vec(option, settings, out)?;
+                }
+                self.run_vec(caption, settings, out)?;
+            }
+            &Element::ExternalReference { ref caption, .. } => {
+                self.run_vec(caption, settings, out)?;
+            }
+            &Element::ListItem { ref content, .. } => {
+                self.run_vec(content, settings, out)?;
+            }
+            &Element::List { ref content, .. } => {
+                self.run_vec(content, settings, out)?;
+            }
+            &Element::Table {
+                ref caption,
+                ref rows,
+                ..
+            } => {
+                self.run_vec(caption, settings, out)?;
+                self.run_vec(rows, settings, out)?;
+            }
+            &Element::TableRow { ref cells, .. } => {
+                self.run_vec(cells, settings, out)?;
+            }
+            &Element::TableCell { ref content, .. } => {
+                self.run_vec(content, settings, out)?;
+            }
+            &Element::Comment { .. } => (),
+            &Element::HtmlTag { ref content, .. } => {
+                self.run_vec(content, settings, out)?;
+            },
+            &Element::Error { .. } => (),
         }
-        &Element::ExternalReference { ref caption, .. } => {
-            vec_func(func, caption, path, settings, out)?;
-        }
-        &Element::ListItem { ref content, .. } => {
-            vec_func(func, content, path, settings, out)?;
-        }
-        &Element::List { ref content, .. } => {
-            vec_func(func, content, path, settings, out)?;
-        }
-        &Element::Table {
-            ref caption,
-            ref rows,
-            ..
-        } => {
-            vec_func(func, caption, path, settings, out)?;
-            vec_func(func, rows, path, settings, out)?;
-        }
-        &Element::TableRow { ref cells, .. } => {
-            vec_func(func, cells, path, settings, out)?;
-        }
-        &Element::TableCell { ref content, .. } => {
-            vec_func(func, content, path, settings, out)?;
-        }
-        &Element::Comment { .. } => (),
-        &Element::HtmlTag { ref content, .. } => {
-            vec_func(func, content, path, settings, out)?;
-        },
-        &Element::Error { .. } => (),
+        self.path_pop();
+        Ok(())
     }
-    Ok(())
 }
