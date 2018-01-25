@@ -1,75 +1,21 @@
-//! Implementation of the `deps` target.
-//!
-//! The `deps` target is used to export a list of article dependencies.
-//! It is applied to a syntax tree with only part of the export transformations applied.
-//! Transformations such as section inclusion or heading depth normalization are excluded,
-//! while others (e.g. tepmlate name translation, image prefix removal) are applied before
-//! this target is executed.
+//! Helpers which look for certain things in the input ast and print
+//! them to a given output in `make` dependency format.
 
-use std::io;
-use settings::*;
-use mediawiki_parser::ast::*;
-use util::*;
-use std::path::PathBuf;
 use std::collections::HashMap;
+use std::path::PathBuf;
+use util::*;
+use mediawiki_parser::ast::Element;
+use settings::Settings;
+use std::io;
 
 
-/// Writes a list of `make` dependencies for each target.
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct DepsTarget {
-    extension_map_dummy: HashMap<String, String>,
-}
-
-impl Target for DepsTarget {
-    fn get_name(&self) -> &str { "dependencies" }
-
-    fn get_target_extension(&self) -> &str { "dep" }
-
-    fn get_extension_mapping(&self) -> &HashMap<String, String> {
-        &self.extension_map_dummy
-    }
-
-    /// Extract dependencies from a RAW source AST. Sections are
-    /// not included at this point.
-    fn export<'a>(&self, root: &'a Element,
-                         settings: &Settings,
-                         out: &mut io::Write) -> io::Result<()> {
-
-        let docrev = &settings.document_revision;
-        for (name, target) in &settings.targets {
-
-            let target = target.get_target();
-
-            if !target.do_generate_dependencies() {
-                continue;
-            }
-
-            let target_ext = target.get_target_extension();
-
-            writeln!(out, "# dependencies for {}", &name)?;
-            write!(out, "{}.{}:", &docrev, target_ext)?;
-
-            let mut file_collection = FileCollectionTraversion {
-                path: vec![],
-                extension_map: target.get_extension_mapping(),
-            };
-
-            let mut section_collection = SectionCollectionTraversion::default();
-
-            file_collection.run(root, settings, out)?;
-            section_collection.run(root, settings, out)?;
-        }
-        Ok(())
-    }
-}
-
-/// Collects the sections included in a document.
+/// Prints paths of the sections included in a document.
 #[derive(Default)]
-struct SectionCollectionTraversion<'b> {
+pub struct InclusionPrinter<'b> {
     pub path: Vec<&'b Element>,
 }
 
-impl<'a, 'b: 'a> Traversion<'a, &'b Settings> for SectionCollectionTraversion<'a> {
+impl<'a, 'b: 'a> Traversion<'a, &'b Settings> for InclusionPrinter<'a> {
     fn path_push(&mut self, root: &'a Element) {
         self.path.push(&root);
     }
@@ -109,14 +55,14 @@ impl<'a, 'b: 'a> Traversion<'a, &'b Settings> for SectionCollectionTraversion<'a
     }
 }
 
-/// Collects file dependencies of an article.
-struct FileCollectionTraversion<'a, 'b> {
+/// Print paths of file dependencies of an article.
+pub struct FilesPrinter<'a, 'b> {
     pub path: Vec<&'b Element>,
     /// map of original to target file extension of a dependency.
     pub extension_map: &'a HashMap<String, String>,
 }
 
-impl<'a, 'b: 'a> Traversion<'a, &'b Settings> for FileCollectionTraversion<'b, 'a> {
+impl<'a, 'b: 'a> Traversion<'a, &'b Settings> for FilesPrinter<'b, 'a> {
     fn path_push(&mut self, root: &'a Element) {
         self.path.push(&root);
     }
@@ -148,5 +94,14 @@ impl<'a, 'b: 'a> Traversion<'a, &'b Settings> for FileCollectionTraversion<'b, '
             }
         };
         Ok(true)
+    }
+}
+
+impl<'a, 'b> FilesPrinter<'a, 'b> {
+    pub fn new(extension_map: &'a HashMap<String, String>) -> FilesPrinter {
+        FilesPrinter {
+            path: vec![],
+            extension_map,
+        }
     }
 }

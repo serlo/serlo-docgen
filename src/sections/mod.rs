@@ -19,6 +19,7 @@ use serde_yaml;
 mod finder;
 mod filter;
 
+
 /// Write marked document section to the filesystem.
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct SectionsTarget {
