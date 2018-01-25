@@ -13,6 +13,7 @@ use std::io;
 use std::fs;
 
 use mfnf_export::*;
+use mediawiki_parser::transformations::TResult;
 
 use argparse::{ArgumentParser, StoreTrue, Store, Collect};
 
@@ -86,11 +87,11 @@ fn parse_args() -> Args {
 
 fn main() {
     let args = parse_args();
-    let mut settings = settings::Settings::default();
+    let mut settings = Settings::default();
 
-    let orig_root: mediawiki_parser::transformations::TResult;
+    let orig_root: TResult;
     // section inclusion, etc. may fail, but deps shoud still be generated.
-    let transformed_root: mediawiki_parser::transformations::TResult;
+    let transformed_root: TResult;
 
     /*
     if !args.config_file.is_empty() {
@@ -122,9 +123,9 @@ fn main() {
         serde_yaml::from_reader(io::stdin())
     }).expect("Could not parse input!");
 
-    orig_root = mfnf_export::apply_universal_transformations(root, &settings);
+    orig_root = mfnf_export::normalize(root, &settings);
     let root_clone = handle_transformation_result(&orig_root).clone();
-    transformed_root = mfnf_export::apply_output_transformations(root_clone, &settings);
+    transformed_root = mfnf_export::compose(root_clone, &settings);
 
     for target in &args.targets {
         let mut export_result = vec![];

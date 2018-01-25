@@ -1,4 +1,3 @@
-use mediawiki_parser::ast::Element;
 use std::collections::HashMap;
 use deps;
 use latex;

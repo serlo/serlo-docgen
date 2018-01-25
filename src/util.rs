@@ -1,6 +1,5 @@
 //! Various utility functions and definitions.
 
-use std::io;
 use mediawiki_parser::ast::*;
 
 /// Escape LaTeX-Specific symbols

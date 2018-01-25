@@ -3,12 +3,7 @@
 
 use std::collections::HashMap;
 use std::path::PathBuf;
-use util::*;
-use mediawiki_parser::ast::Element;
-use settings::Settings;
-use std::io;
-use traversion::Traversion;
-
+use preamble::*;
 
 /// Prints paths of the sections included in a document.
 #[derive(Default)]

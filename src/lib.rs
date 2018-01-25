@@ -4,23 +4,34 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_yaml;
 
-use mediawiki_parser::ast::Element;
 use mediawiki_parser::transformations::TResult;
+use mediawiki_parser::ast::Element;
 
-// global definitions
 mod traversion;
 mod target;
-
-pub mod util;
-
-/// Structures for configuration of transformations.
 #[macro_use]
-pub mod settings;
+mod settings;
+mod util;
+mod latex;
+mod deps;
+mod sections;
+mod transformations;
 
-pub mod latex;
-pub mod deps;
-pub mod sections;
-pub mod transformations;
+// common includes for submodules
+mod preamble {
+    pub use traversion::Traversion;
+    pub use target::Target;
+    pub use settings::Settings;
+    pub use mediawiki_parser::ast::Element;
+    pub use std::io;
+    pub use util::*;
+}
+
+// public exports
+pub use traversion::Traversion;
+pub use target::Target;
+pub use settings::Settings;
+
 
 /// Available targets for mfnf-export.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -43,8 +54,9 @@ impl MFNFTargets {
 
 /// Applies all transformations which should happen before section transclusion.
 /// This is mostly tree normlization and is applied on all targets.
-pub fn apply_universal_transformations(mut root: Element,
-                                       settings: &settings::Settings) -> TResult {
+pub fn normalize(mut root: Element,
+                 settings: &settings::Settings) -> TResult {
+
     root = transformations::normalize_template_names(root, settings)?;
     root = transformations::translate_templates(root, settings)?;
     root = transformations::normalize_template_title(root, settings)?;
@@ -53,8 +65,9 @@ pub fn apply_universal_transformations(mut root: Element,
 }
 
 /// Applies transformations necessary for article output (e.g section transclusion).
-pub fn apply_output_transformations(mut root: Element,
-                                    settings: &settings::Settings) -> TResult {
+pub fn compose(mut root: Element,
+               settings: &settings::Settings) -> TResult {
+
     root = transformations::include_sections(root, settings)?;
     root = transformations::normalize_heading_depths(root, settings)?;
     Ok(root)

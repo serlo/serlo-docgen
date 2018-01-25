@@ -3,18 +3,15 @@
 //! This target renders the final syntax tree to a LaTeX document body.
 //! LaTeX boilerplate like preamble or document tags have to be added afterwards.
 
-use std::io;
 use std::io::Write;
 use std::str;
-use settings::Settings;
 use mediawiki_parser::ast::*;
 use mediawiki_parser::transformations::*;
 use util::*;
 use std::path;
 use std::collections::HashMap;
 use std::ffi::OsStr;
-use target::Target;
-use traversion::Traversion;
+use preamble::*;
 
 
 /// Data for LaTeX export.

@@ -1,10 +1,7 @@
 //! Implements helpters for the sections target related to finding
 //! things in the ast structure.
 
-use std::io;
-use mediawiki_parser::ast::Element;
-use traversion::Traversion;
-
+use preamble::*;
 
 /// Collect the names of all beginning sections in a document.
 #[derive(Default)]

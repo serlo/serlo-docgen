@@ -1,9 +1,8 @@
 //! Helpers for the sections target related to extracting section content.
 
 use mediawiki_parser::transformations::*;
-use mediawiki_parser::ast::Element;
-use util::*;
 use sections::finder::SectionFinder;
+use preamble::*;
 
 /// Paramters for section filtering transformation.
 #[derive(Debug, Clone)]

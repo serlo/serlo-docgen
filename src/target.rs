@@ -1,10 +1,7 @@
 //! Defines the target trait.
 
-use std::io;
-use mediawiki_parser::ast::Element;
+use preamble::*;
 use std::collections::HashMap;
-use settings::Settings;
-
 
 /// Marks an exportable target type.
 pub trait Target {

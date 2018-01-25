@@ -1,10 +1,7 @@
-use mediawiki_parser::ast::*;
 use mediawiki_parser::transformations::*;
 use mediawiki_parser::error::TransformationError;
-use settings::*;
-use util::*;
+use preamble::*;
 use std::path;
-use std::collections::HashMap;
 use std::fs::File;
 use serde_yaml;
 

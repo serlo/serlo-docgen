@@ -1,8 +1,6 @@
 //! Helper trait for operations reading from the document tree.
 
-use std::io;
-use mediawiki_parser::ast::*;
-
+use preamble::*;
 
 /// Implements a version over a tree of `Element`.
 /// All fields of the traversion struct can be mutated,
@@ -19,9 +17,9 @@ pub trait Traversion<'a, S: Copy> {
     /// children of this node are not considered,
     /// otherwise `work()` is recursively called for all children.
     fn work(&mut self,
-            root: &'a Element,
-            settings: S,
-            out: &mut io::Write) -> io::Result<bool> {
+            _root: &'a Element,
+            _settings: S,
+            _out: &mut io::Write) -> io::Result<bool> {
         Ok(true)
     }
 
@@ -30,9 +28,9 @@ pub trait Traversion<'a, S: Copy> {
     /// children of the vector's elements are not considered,
     /// otherwise `work()` is recursively called for all children.
     fn work_vec(&mut self,
-            root: &'a Vec<Element>,
-            settings: S,
-            out: &mut io::Write) -> io::Result<bool> {
+            _root: &'a Vec<Element>,
+            _settings: S,
+            _out: &mut io::Write) -> io::Result<bool> {
         Ok(true)
     }
 

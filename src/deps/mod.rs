@@ -6,13 +6,8 @@
 //! while others (e.g. tepmlate name translation, image prefix removal) are applied before
 //! this target is executed.
 
-use std::io;
-use settings::Settings;
-use mediawiki_parser::ast::Element;
-use util::*;
+use preamble::*;
 use std::collections::HashMap;
-use target::Target;
-use traversion::Traversion;
 
 mod printers;
 

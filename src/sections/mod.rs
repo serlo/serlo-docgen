@@ -5,11 +5,8 @@
 //! directory specified through the transformation settings in the YAML format.
 
 use std::collections::HashMap;
-use settings::Settings;
-use target::Target;
-use mediawiki_parser::ast::*;
+use preamble::*;
 
-use util::filename_to_make;
 use std::path;
 use std::fs::File;
 use std::io::Write;
