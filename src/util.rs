@@ -1,6 +1,6 @@
 use std::io;
 use mediawiki_parser::ast::*;
-use settings::Target;
+
 
 /// Escape LaTeX-Specific symbols
 pub fn escape_latex(input: &str) -> String {

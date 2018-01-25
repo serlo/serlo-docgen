@@ -32,7 +32,6 @@ impl Target for DepsTarget {
     /// Extract dependencies from a RAW source AST. Sections are
     /// not included at this point.
     fn export<'a>(&self, root: &'a Element,
-                         path: &mut Vec<&'a Element>,
                          settings: &Settings,
                          out: &mut io::Write) -> io::Result<()> {
 

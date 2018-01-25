@@ -29,11 +29,10 @@ macro_rules! string_value_map {
 
 pub trait Target {
     /// export the the ast to `out`.
-    fn export<'a>(&self,
-                  root: &'a Element,
-                  path: &mut Vec<&'a Element>,
-                  settings: &Settings,
-                  out: &mut io::Write) -> io::Result<()>;
+    fn export(&self,
+              root: &Element,
+              settings: &Settings,
+              out: &mut io::Write) -> io::Result<()>;
     /// get the name of this target.
     fn get_name(&self) -> &str;
     /// does this target operate on the input tree directly or with

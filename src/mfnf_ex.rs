@@ -11,9 +11,7 @@ use std::str;
 use std::process;
 use std::io;
 use std::fs;
-use std::collections::HashMap;
 
-use mfnf_export::settings::*;
 use mfnf_export::*;
 
 use argparse::{ArgumentParser, StoreTrue, Store, Collect};
@@ -129,7 +127,6 @@ fn main() {
     transformed_root = mfnf_export::apply_output_transformations(root_clone, &settings);
 
     for target in &args.targets {
-        let mut path = vec![];
         let mut export_result = vec![];
         let target = match settings.targets.get(target) {
             Some(t) => t.get_target(),
@@ -143,7 +140,7 @@ fn main() {
         } else {
             handle_transformation_result(&orig_root)
         };
-        target.export(root, &mut path, &settings, &mut export_result)
+        target.export(root, &settings, &mut export_result)
             .expect("target export failed!");
         println!("{}", str::from_utf8(&export_result).unwrap());
     }

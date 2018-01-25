@@ -120,7 +120,6 @@ impl Target for LatexTarget {
     }
     fn export<'a>(&self,
                   root: &'a Element,
-                  path: &mut Vec<&'a Element>,
                   settings: &Settings,
                   out: &mut io::Write) -> io::Result<()> {
 

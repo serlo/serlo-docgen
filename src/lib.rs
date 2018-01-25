@@ -7,6 +7,8 @@ extern crate serde_yaml;
 use mediawiki_parser::ast::Element;
 use mediawiki_parser::transformations::TResult;
 
+pub mod util;
+
 /// Structures for configuration of transformations.
 #[macro_use]
 pub mod settings;
@@ -14,7 +16,6 @@ pub mod settings;
 pub mod latex;
 pub mod deps;
 pub mod sections;
-pub mod util;
 pub mod transformations;
 
 /// Available targets for mfnf-export.
