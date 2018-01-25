@@ -101,7 +101,8 @@ impl Default for Settings {
                 "warnung" => "warning",
                 "hinweis" => "hint",
                 "frage" => "question",
-                "antwort" => "answer"
+                "antwort" => "answer",
+                "anker" => "anchor"
             ],
             template_prefixes: string_vec![":mathe für nicht-freaks: vorlage:"],
             image_extensions: string_vec!["jpg",

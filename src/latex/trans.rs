@@ -14,12 +14,8 @@ pub fn normalize_formula(mut root: Element, settings: &Settings) -> TResult {
         ..
     } = &mut root {
 
-        let text = if let Some(&Element::Text {ref text, .. }) = name.first() {
-            text
-        } else {
-            ""
-        };
-        if text != "formula" {
+        let template_name = extract_plain_text(name);
+        if &template_name == "formula" {
             let arg_error = Element::Error {
                 position: position.clone(),
                 message: "Forumla templates must have exactly one anonymous \
@@ -46,8 +42,8 @@ pub fn normalize_formula(mut root: Element, settings: &Settings) -> TResult {
                     ..
                 }) = value.pop() {
 
-                    let is_math = if let &MarkupType::Math = markup {false} else {true};
-                    if content.len() != 1 || is_math {
+                    let is_math = if let &MarkupType::Math = markup {true} else {false};
+                    if content.len() != 1 || !is_math {
                         return Ok(arg_error);
                     }
                     value.clear();
