@@ -10,10 +10,10 @@ use std::io;
 use settings::*;
 use mediawiki_parser::ast::*;
 use util::*;
-use std::path;
+use std::path::PathBuf;
 use std::collections::HashMap;
-use MFNFTargets;
 use std::ffi::OsStr;
+
 
 /// Writes a list of `make` dependencies for each target.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -100,10 +100,10 @@ impl<'a, 'b: 'a> Traversion<'a, &'b Settings> for SectionCollectionTraversion<'a
                 section_file.push('.');
                 section_file.push_str(section_ext);
 
-                let path = path::Path::new(section_path)
-                    .join(&filename_to_make(&article))
-                    .join(&filename_to_make(&section_name))
-                    .join(&filename_to_make(&section_file));
+                let path = PathBuf::from(section_path)
+                    .join(&article)
+                    .join(&section_name)
+                    .join(&section_file);
                 write!(out, " \\\n\t{}", &filename_to_make(&path.to_string_lossy()))?;
             }
         };
@@ -133,19 +133,19 @@ impl<'a, 'b: 'a> Traversion<'a, &'b Settings> for FileCollectionTraversion<'b, '
 
         if let &Element::InternalReference { ref target, .. } = root {
             let target = extract_plain_text(target);
-            let target_path = path::Path::new(&target);
-            let ext = target_path.extension().unwrap_or(OsStr::new(""));
-            let ext_str = ext.to_os_string().into_string().unwrap_or(String::new());
+            let target_path = PathBuf::from(target);
+            let ext = target_path.extension().unwrap_or_default();
+            let ext_str = ext.to_string_lossy().into();
 
             let extensions = &settings.image_extensions;
             let image_path = &settings.image_path;
             let target_extension = self.extension_map.get(&ext_str).unwrap_or(&ext_str);
 
             if extensions.contains(&ext_str) {
-                let ipath = path::Path::new(&image_path)
-                    .join(&target)
+                let ipath = PathBuf::from(&image_path)
+                    .join(&target_path)
                     .with_extension(target_extension);
-                let ipath = String::from(ipath.to_string_lossy());
+                let ipath = ipath.to_string_lossy().to_string();
                 write!(out, " \\\n\t{}", &filename_to_make(&ipath))?;
             }
         };
