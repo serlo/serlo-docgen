@@ -12,7 +12,6 @@ use mediawiki_parser::ast::*;
 use util::*;
 use std::path::PathBuf;
 use std::collections::HashMap;
-use std::ffi::OsStr;
 
 
 /// Writes a list of `make` dependencies for each target.

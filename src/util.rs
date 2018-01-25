@@ -135,19 +135,37 @@ pub trait Traversion<'a, S: Copy> {
     /// get the traversion path.
     fn get_path(&self) -> &Vec<&'a Element>;
     /// template method for handling single nodes.
-    /// if the result is `false`, handling is complete
+    /// if the result is `false`, handling is complete and
     /// children of this node are not considered,
     /// otherwise `work()` is recursively called for all children.
     fn work(&mut self,
             root: &'a Element,
             settings: S,
-            out: &mut io::Write) -> io::Result<bool>;
+            out: &mut io::Write) -> io::Result<bool> {
+        Ok(true)
+    }
+
+    /// template method for handling a vector of nodes.
+    /// if the result is `false`, handling is complete and
+    /// children of the vector's elements are not considered,
+    /// otherwise `work()` is recursively called for all children.
+    fn work_vec(&mut self,
+            root: &'a Vec<Element>,
+            settings: S,
+            out: &mut io::Write) -> io::Result<bool> {
+        Ok(true)
+    }
+
 
     /// run this traversion for a vector of elements.
     fn run_vec(&mut self,
                content: &'a Vec<Element>,
                settings: S,
                out: &mut io::Write) -> io::Result<()> {
+
+        if !self.work_vec(content, settings, out)? {
+            return Ok(());
+        }
         for elem in &content[..] {
             self.run(elem, settings, out)?;
         }

@@ -46,17 +46,7 @@ impl Target for SectionsTarget {
                 continue
             }
 
-            let mut start_finder = SectionFinder::new(&section, true);
-            let mut end_finder = SectionFinder::new(&section, false);
-
-            start_finder.run(root, (), &mut vec![])?;
-            end_finder.run(root, (), &mut vec![])?;
-
-            if start_finder.result.is_empty() || end_finder.result.is_empty() {
-                continue
-            }
-
-            let inter = get_intermediary(&start_finder.result, &end_finder.result);
+            let inter = SectionFilter::extract(&section, root);
 
             let mut filename = settings.document_revision.clone();
             let file_ext = &settings.section_ext;
@@ -88,12 +78,58 @@ impl Target for SectionsTarget {
 
 /// Paramters for section filtering transformation.
 #[derive(Debug, Clone)]
-struct SectionFilter<'a, 'b: 'a> {
-    pub begin: &'a Vec<&'b Element>,
-    pub end: &'a Vec<&'b Element>,
+struct SectionFilter<'b, 'e: 'b> {
+    pub begin: &'b Vec<&'e Element>,
+    pub end: &'b Vec<&'e Element>,
+    /// wether to include nodes before end of the section,
+    /// even if no start is present in the current subtree.
     pub include_pre: bool,
 }
 
+impl<'a, 'b: 'a> SectionFilter<'a, 'b> {
+    /// Extract a list of nodes forming a section from an input ast.
+    fn extract(label: &str, root: &Element) -> Vec<Element> {
+
+        let mut start_finder = SectionFinder::new(label, true);
+        let mut end_finder = SectionFinder::new(label, false);
+
+        start_finder.run(root, (), &mut vec![]).unwrap();
+        end_finder.run(root, (), &mut vec![]).unwrap();
+
+        if start_finder.result.is_empty() || end_finder.result.is_empty() {
+            return vec![]
+        }
+
+        // lowest common node
+        let mut common = None;
+        for ps in start_finder.result.iter().rev() {
+            for pe in end_finder.result.iter().rev() {
+                if pe == ps {
+                    common = Some(ps);
+                    break;
+                }
+            }
+            if let Some(_) = common {
+                break;
+            }
+        }
+        let common = match common {
+            Some(c) => c,
+            None => return vec![],
+        };
+
+        let filter = SectionFilter {
+            begin: &start_finder.result,
+            end: &end_finder.result,
+            include_pre: false,
+       };
+
+        let result = filter_section_element(common, &vec![], &filter)
+            .expect("section extraction failed!");
+
+        extract_content(result).unwrap_or(vec![])
+    }
+}
 
 /// Recursively trim a subtree to only contain the elements
 /// enclosed by the section paths in SectionFilter.
@@ -122,7 +158,7 @@ fn filter_section_subtree<'a>(_func: &TFunc<&SectionFilter>,
             found_begin = true;
 
             // ignore the starting section tag
-            if !(Some(&child) == settings.begin.last()) {
+            if Some(&child) != settings.begin.last() {
                 result.push(filter_section_element(&child, path, &settings.clone())
                     .expect("error in section filter"));
             }
@@ -134,7 +170,7 @@ fn filter_section_subtree<'a>(_func: &TFunc<&SectionFilter>,
             child_settings.include_pre = true;
 
             // ignore the ending section tag
-            if !(Some(&child) == settings.end.last()) {
+            if Some(&child) != settings.end.last() {
                 result.push(filter_section_element(&child, path, &child_settings)
                     .expect("error in section filter"));
             }
@@ -149,31 +185,6 @@ fn filter_section_subtree<'a>(_func: &TFunc<&SectionFilter>,
     Ok(result)
 }
 
-/// Get the children of the lowest common element of two section paths.
-/// Child nodes before and after the section tag are discarded.
-fn get_intermediary<'a>(start: &Vec<&'a Element>, end: &Vec<&'a Element>) -> Vec<Element> {
-    // lowest common node
-    let mut common = None;
-    for ps in start.iter().rev() {
-        for pe in end.iter().rev() {
-            if pe == ps {
-                common = Some(ps);
-                break;
-            }
-        }
-        if let Some(_) = common {
-            break;
-        }
-    }
-    if let None = common {
-        return vec![];
-    }
-    let common = common.unwrap();
-    let section_filter = SectionFilter { begin: start, end, include_pre: false };
-    let filtered = filter_section_element(&common, &vec![], &section_filter)
-        .expect("error in section filter");
-    extract_content(filtered).unwrap_or(vec![])
-}
 
 /// Collect the names of all beginning sections in a document.
 #[derive(Default)]
