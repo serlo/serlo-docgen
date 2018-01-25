@@ -7,6 +7,10 @@ extern crate serde_yaml;
 use mediawiki_parser::ast::Element;
 use mediawiki_parser::transformations::TResult;
 
+// global definitions
+mod traversion;
+mod target;
+
 pub mod util;
 
 /// Structures for configuration of transformations.
@@ -28,7 +32,7 @@ pub enum MFNFTargets {
 
 impl MFNFTargets {
     /// Get the inner struct implementing the target trait.
-    pub fn get_target(&self) -> &settings::Target {
+    pub fn get_target(&self) -> &target::Target {
         match self {
             &MFNFTargets::Dependencies(ref t) => t,
             &MFNFTargets::Latex(ref t) => t,

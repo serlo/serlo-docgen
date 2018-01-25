@@ -6,13 +6,15 @@
 use std::io;
 use std::io::Write;
 use std::str;
-use settings::*;
+use settings::Settings;
 use mediawiki_parser::ast::*;
 use mediawiki_parser::transformations::*;
 use util::*;
 use std::path;
 use std::collections::HashMap;
 use std::ffi::OsStr;
+use target::Target;
+use traversion::Traversion;
 
 
 /// Data for LaTeX export.

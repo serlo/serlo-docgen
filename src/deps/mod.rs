@@ -7,10 +7,12 @@
 //! this target is executed.
 
 use std::io;
-use settings::*;
+use settings::Settings;
 use mediawiki_parser::ast::Element;
 use util::*;
 use std::collections::HashMap;
+use target::Target;
+use traversion::Traversion;
 
 mod printers;
 

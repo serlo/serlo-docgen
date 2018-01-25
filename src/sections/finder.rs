@@ -3,7 +3,7 @@
 
 use std::io;
 use mediawiki_parser::ast::Element;
-use util::*;
+use traversion::Traversion;
 
 
 /// Collect the names of all beginning sections in a document.
