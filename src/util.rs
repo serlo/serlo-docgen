@@ -1,6 +1,6 @@
 //! Various utility functions and definitions.
 
-use mediawiki_parser::ast::*;
+use mediawiki_parser::*;
 
 /// Escape LaTeX-Specific symbols
 pub fn escape_latex(input: &str) -> String {

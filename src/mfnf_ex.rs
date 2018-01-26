@@ -123,9 +123,9 @@ fn main() {
         serde_yaml::from_reader(io::stdin())
     }).expect("Could not parse input!");
 
-    orig_root = mfnf_export::normalize(root, &settings);
+    orig_root = normalize(root, &settings);
     let root_clone = handle_transformation_result(&orig_root).clone();
-    transformed_root = mfnf_export::compose(root_clone, &settings);
+    transformed_root = compose(root_clone, &settings);
 
     for target in &args.targets {
         let mut export_result = vec![];
@@ -147,8 +147,7 @@ fn main() {
     }
 }
 
-fn handle_transformation_result(result: &mediawiki_parser::transformations::TResult)
-    -> &mediawiki_parser::ast::Element {
+fn handle_transformation_result(result: &TResult) -> &mediawiki_parser::Element {
 
      match result {
         &Ok(ref e) => return e,

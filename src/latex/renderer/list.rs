@@ -2,7 +2,7 @@
 
 use preamble::*;
 use super::LatexRenderer;
-use mediawiki_parser::ast::ListItemKind;
+use mediawiki_parser::*;
 
 
 impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {

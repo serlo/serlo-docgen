@@ -1,5 +1,5 @@
 use mediawiki_parser::transformations::*;
-use mediawiki_parser::error::TransformationError;
+use mediawiki_parser::TransformationError;
 use preamble::*;
 use std::path;
 use std::fs::File;

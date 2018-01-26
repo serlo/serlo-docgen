@@ -5,9 +5,8 @@ extern crate serde_derive;
 extern crate serde_yaml;
 
 use mediawiki_parser::transformations::TResult;
-use mediawiki_parser::ast::Element;
+use mediawiki_parser::Element;
 
-mod traversion;
 mod target;
 #[macro_use]
 mod settings;
@@ -19,16 +18,15 @@ mod transformations;
 
 // common includes for submodules
 mod preamble {
-    pub use traversion::Traversion;
+    pub use mediawiki_parser::Traversion;
     pub use target::Target;
     pub use settings::Settings;
-    pub use mediawiki_parser::ast::Element;
+    pub use mediawiki_parser::Element;
     pub use std::io;
     pub use util::*;
 }
 
 // public exports
-pub use traversion::Traversion;
 pub use target::Target;
 pub use settings::Settings;
 

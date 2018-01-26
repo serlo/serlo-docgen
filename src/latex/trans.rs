@@ -1,7 +1,7 @@
 //! Implements formula text normalization for the `latex` target.
 
 use mediawiki_parser::transformations::*;
-use mediawiki_parser::ast::MarkupType;
+use mediawiki_parser::MarkupType;
 use preamble::*;
 
 /// Transform a formula template argument to text-only.

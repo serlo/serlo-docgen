@@ -1,7 +1,7 @@
 //! LaTeX renderer implemenation for simple node types.
 
 use preamble::*;
-use mediawiki_parser::ast::MarkupType;
+use mediawiki_parser::MarkupType;
 use super::LatexRenderer;
 
 

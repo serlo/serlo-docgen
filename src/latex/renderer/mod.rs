@@ -2,7 +2,7 @@
 
 use preamble::*;
 use latex::LatexTarget;
-use mediawiki_parser::ast::Span;
+use mediawiki_parser::Span;
 
 mod simple;
 mod template;
