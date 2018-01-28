@@ -16,6 +16,9 @@ mod deps;
 mod sections;
 mod transformations;
 
+#[cfg(test)]
+mod test;
+
 // common includes for submodules
 mod preamble {
     pub use mediawiki_parser::Traversion;
