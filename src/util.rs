@@ -1,6 +1,9 @@
 //! Various utility functions and definitions.
 
 use mediawiki_parser::*;
+use std::path::PathBuf;
+use settings::Settings;
+
 
 /// Escape LaTeX-Specific symbols
 pub fn escape_latex(input: &str) -> String {
@@ -122,6 +125,20 @@ pub fn extract_plain_text(content: &Vec<Element>) -> String {
 /// Convert a filename to a make-friedly format.
 pub fn filename_to_make(input: &str) -> String {
     input.replace(" ", "_").replace(":", "@COLON@")
+}
+
+/// Path of a section file.
+pub fn get_section_path(article: &str, section: &str, settings: &Settings) -> String {
+    let section_file = &settings.section_rev;
+    let section_ext = &settings.section_ext;
+    let section_path = &settings.section_path;
+    let path = PathBuf::new()
+        .join(&section_path)
+        .join(&article)
+        .join(&section)
+        .join(&section_file)
+        .with_extension(&section_ext);
+    return filename_to_make(&path.to_string_lossy());
 }
 
 /// Extract all child nodes from an elment in a list.

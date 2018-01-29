@@ -1,9 +1,9 @@
 use mediawiki_parser::transformations::*;
 use mediawiki_parser::TransformationError;
 use preamble::*;
-use std::path;
 use std::fs::File;
 use serde_yaml;
+
 
 /// Convert template name paragraphs to lowercase text only.
 pub fn normalize_template_names(mut root: Element, settings: &Settings) -> TResult {
@@ -165,23 +165,13 @@ pub fn include_sections_vec<'a>(
                     });
                 }
 
-                let mut section_file = settings.section_rev.clone();
-                let section_ext = &settings.section_ext;
-                let section_path = &settings.section_path;
                 let section_name = extract_plain_text(content);
-
-                section_file.push('.');
-                section_file.push_str(&section_ext);
-
-                let path = path::Path::new(&section_path)
-                    .join(&filename_to_make(&article))
-                    .join(&filename_to_make(&section_name))
-                    .join(&filename_to_make(&section_file));
+                let path = get_section_path(&article, &section_name, &settings);
 
                 // error returned when the section file is faulty
                 let file_error = TransformationError {
-                    cause: format!("section file `{}` could not be read or parsed!",
-                                &path.to_string_lossy()),
+                    cause: format!("section file `{}` could not \
+                                   be read or parsed!", &path),
                     position: position.clone(),
                     transformation_name: "include_sections".to_string(),
                     tree: Element::Template {

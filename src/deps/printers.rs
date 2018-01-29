@@ -32,19 +32,8 @@ impl<'a, 'b: 'a> Traversion<'a, &'b Settings> for InclusionPrinter<'a> {
             if template_name.to_lowercase().starts_with(&prefix) {
                 let article = trim_prefix(&template_name, &prefix);
                 let section_name = extract_plain_text(content);
-
-                let mut section_file = settings.section_rev.clone();
-                let section_ext = &settings.section_ext;
-                let section_path = &settings.section_path;
-
-                section_file.push('.');
-                section_file.push_str(section_ext);
-
-                let path = PathBuf::from(section_path)
-                    .join(&article)
-                    .join(&section_name)
-                    .join(&section_file);
-                write!(out, " \\\n\t{}", &filename_to_make(&path.to_string_lossy()))?;
+                let path = get_section_path(&article, &section_name, &settings);
+                write!(out, " \\\n\t{}", &path)?;
             }
         };
         Ok(true)
