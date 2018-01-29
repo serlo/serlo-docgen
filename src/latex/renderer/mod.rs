@@ -8,6 +8,7 @@ mod simple;
 mod template;
 mod iref;
 mod list;
+mod html;
 
 
 /// Recursively renders a syntax tree to latex.
@@ -38,6 +39,7 @@ impl<'e, 's: 'e, 't: 'e> Traversion<'e, &'s Settings> for LatexRenderer<'e, 't> 
             &Element::Template { .. } => self.template(root, settings, out)?,
             &Element::InternalReference { .. } => self.internal_ref(root, settings, out)?,
             &Element::List { .. } => self.list(root, settings, out)?,
+            &Element::HtmlTag { .. } => self.htmltag(root, settings, out)?,
 
             // Leaf Elements
             &Element::Text { .. } => self.text(root, settings, out)?,

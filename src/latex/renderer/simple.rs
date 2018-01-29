@@ -96,6 +96,16 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                         _ => "parse error!",
                     })?;
                 },
+                &MarkupType::StrikeThrough => {
+                    write!(out, "\\sout{{")?;
+                    self.run_vec(content, settings, out)?;
+                    write!(out, "}}")?;
+                },
+                &MarkupType::Underline => {
+                    writeln!(out, "\\ul{{")?;
+                    self.run_vec(content, settings, out)?;
+                    writeln!(out, "}}")?;
+                },
                 _ => {
                     let msg = format!("MarkupType not implemented: {:?}", &markup);
                     self.write_error(&msg, out)?;
