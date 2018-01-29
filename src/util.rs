@@ -175,6 +175,7 @@ pub fn extract_content<'a>(root: Element) -> Option<Vec<Element>> {
         Element::TableRow { cells, .. } => Some(cells),
         Element::TableCell { content, .. } => Some(content),
         Element::HtmlTag { content, .. } => Some(content),
+        Element::Gallery { content, .. } => Some(content),
         Element::Text { .. } => None,
         Element::Comment { .. } => None,
         Element::Error { .. } => None,
