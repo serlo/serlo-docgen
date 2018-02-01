@@ -153,3 +153,61 @@ content:
 \\end{enumerate}
 
 ");
+
+test_case!("latex", complex_list, "
+type: template
+position: {}
+name:
+    - type: text
+      position: {}
+      text: Liste
+content:
+    - type: templateargument
+      position: {}
+      name: item1
+      value:
+        - type: text
+          position: {}
+          text: item content 1",
+"\\begin{itemize}
+    \\item item content 1
+\\end{itemize}
+
+");
+
+test_case!("latex", complex_olist, "
+type: template
+position: {}
+name:
+    - type: text
+      position: {}
+      text: Liste
+content:
+    - type: templateargument
+      position: {}
+      name: type
+      value:
+        - type: text
+          position: {}
+          text: ol
+    - type: templateargument
+      position: {}
+      name: item1
+      value:
+        - type: text
+          position: {}
+          text: item content 1
+    - type: templateargument
+      position: {}
+      name: item3
+      value:
+        - type: text
+          position: {}
+          text: second item
+",
+"\\begin{enumerate}
+    \\item item content 1
+    \\item second item
+\\end{enumerate}
+
+");

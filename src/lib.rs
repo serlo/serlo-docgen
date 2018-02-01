@@ -63,6 +63,7 @@ pub fn normalize(mut root: Element,
     root = transformations::translate_templates(root, settings)?;
     root = transformations::normalize_template_title(root, settings)?;
     root = transformations::remove_file_prefix(root, settings)?;
+    root = transformations::convert_template_list(root, settings)?;
     Ok(root)
 }
 

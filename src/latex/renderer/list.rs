@@ -20,7 +20,8 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                     kind
             } else {
                 self.write_error("first child of list element \
-                    is not a list item!", out)?;
+                    is not a list item (or does not exist)!", out)?;
+                eprintln!("error: {:?}", root);
                 return Ok(false)
             };
 

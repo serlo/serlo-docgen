@@ -1,5 +1,6 @@
 use mediawiki_parser::transformations::*;
 use mediawiki_parser::TransformationError;
+use mediawiki_parser::ListItemKind;
 use preamble::*;
 use std::fs::File;
 use serde_yaml;
@@ -224,7 +225,7 @@ pub fn normalize_heading_depths(
     Ok(root)
 }
 
-pub fn normalize_heading_depths_traverse(
+fn normalize_heading_depths_traverse(
     mut root: Element,
     current_depth: usize) -> TResult {
 
@@ -251,4 +252,61 @@ pub fn remove_file_prefix(mut root: Element, settings: &Settings) -> TResult {
         }
     }
     recurse_inplace(&remove_file_prefix, root, settings)
+}
+
+/// Convert list templates (MFNF) to mediawiki lists.
+pub fn convert_template_list(mut root: Element, settings: &Settings) -> TResult {
+    if let Element::Template { ref name, ref mut content, ref position } = root {
+        if extract_plain_text(name) == "list" {
+
+            let mut list_content = vec![];
+
+            let list_type = if let Some(&Element::TemplateArgument {
+                ref value,
+                ..
+            }) = find_arg(content, "type") {
+                extract_plain_text(value).to_lowercase()
+            } else {
+                String::new()
+            };
+
+            let item_kind = match list_type.trim() {
+                "ol" | "ordered" => ListItemKind::Ordered,
+                "ul" | _ => ListItemKind::Unordered,
+            };
+
+            for child in content.drain(..) {
+                if let Element::TemplateArgument {
+                    name,
+                    mut value,
+                    position,
+                } = child {
+                    if name.starts_with("item") {
+                        let li = Element::ListItem {
+                            position,
+                            content: value,
+                            kind: item_kind,
+                            depth: 1,
+                        };
+                        list_content.push(li);
+                    // a whole sublist only wrapped by the template,
+                    // -> replace template by wrapped list
+                    } else if name.starts_with("list") {
+                        if value.is_empty() {
+                            continue
+                        }
+                        let sublist = value.remove(0);
+                        return recurse_inplace(&convert_template_list, sublist, settings);
+                    }
+                }
+            }
+
+            let list = Element::List {
+                position: position.to_owned(),
+                content: list_content,
+            };
+            return recurse_inplace(&convert_template_list, list, settings);
+        }
+    }
+    recurse_inplace(&convert_template_list, root, settings)
 }
