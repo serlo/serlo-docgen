@@ -7,12 +7,12 @@ use preamble::*;
 /// Transform a formula template argument to text-only.
 pub fn normalize_formula(mut root: Element, settings: &Settings) -> TResult {
 
-    if let &mut Element::Template {
+    if let Element::Template {
         ref name,
         ref mut content,
         ref position,
         ..
-    } = &mut root {
+    } = root {
 
         let template_name = extract_plain_text(name);
         if &template_name == "formula" {
@@ -42,7 +42,7 @@ pub fn normalize_formula(mut root: Element, settings: &Settings) -> TResult {
                     ..
                 }) = value.pop() {
 
-                    let is_math = if let &MarkupType::Math = markup {true} else {false};
+                    let is_math = if let MarkupType::Math = *markup {true} else {false};
                     if content.len() != 1 || !is_math {
                         return Ok(arg_error);
                     }

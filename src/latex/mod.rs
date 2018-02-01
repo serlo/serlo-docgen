@@ -124,7 +124,7 @@ impl Target for LatexTarget {
         latex_tree = trans::normalize_formula(latex_tree, settings)
             .expect("Could not appy LaTeX-Secific transformations!");
 
-        let mut renderer = LatexRenderer::new(&self);
+        let mut renderer = LatexRenderer::new(self);
         renderer.run(&latex_tree, settings, out)
     }
 }

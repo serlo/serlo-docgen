@@ -7,7 +7,7 @@ use serde_yaml;
 
 /// Convert template name paragraphs to lowercase text only.
 pub fn normalize_template_names(mut root: Element, settings: &Settings) -> TResult {
-    if let &mut Element::Template { ref mut name, ref mut content, ref position, .. } = &mut root {
+    if let Element::Template { ref mut name, ref mut content, ref position, .. } = root {
 
         let new_text = match name.drain(..).next() {
             Some(Element::Paragraph { content, .. }) => {
@@ -22,7 +22,7 @@ pub fn normalize_template_names(mut root: Element, settings: &Settings) -> TResu
         };
 
         for child in content {
-            if let &mut Element::TemplateArgument { ref mut name, .. } = child {
+            if let Element::TemplateArgument { ref mut name, .. } = *child {
                 let lowercase = name.trim().to_lowercase();
                 name.clear();
                 name.push_str(&lowercase);
@@ -39,14 +39,14 @@ pub fn normalize_template_names(mut root: Element, settings: &Settings) -> TResu
             name.push(
                 Element::Text {
                     position: position.clone(),
-                    text: if text.starts_with("#") {
+                    text: if text.starts_with('#') {
                         String::from(text.trim())
                     } else {
                         // convert to lowercase and remove prefixes
                         let mut temp_text = &text.trim().to_lowercase()[..];
                         let prefixes = &settings.template_prefixes;
                         for prefix in prefixes {
-                            temp_text = trim_prefix(temp_text, &prefix);
+                            temp_text = trim_prefix(temp_text, prefix);
                         }
                         String::from(temp_text)
                     },
@@ -69,19 +69,19 @@ pub fn normalize_template_names(mut root: Element, settings: &Settings) -> TResu
 
 /// Translate template names and template attribute names.
 pub fn translate_templates(mut root: Element, settings: &Settings) -> TResult {
-    if let &mut Element::Template { ref mut name, ref mut content, .. } = &mut root {
+    if let Element::Template { ref mut name, ref mut content, .. } = root {
         let translation_tab = &settings.translations;
         if let Some(&mut Element::Text { ref mut text, .. }) = name.first_mut() {
             if let Some(translation) = translation_tab.get(text) {
                 text.clear();
-                text.push_str(&translation);
+                text.push_str(translation);
             }
         }
         for child in content {
-            if let &mut Element::TemplateArgument { ref mut name, .. } = child {
+            if let Element::TemplateArgument { ref mut name, .. } = *child {
                 if let Some(translation) = translation_tab.get(name) {
                     name.clear();
-                    name.push_str(&translation);
+                    name.push_str(translation);
                 }
             }
         }
@@ -91,11 +91,11 @@ pub fn translate_templates(mut root: Element, settings: &Settings) -> TResult {
 
 /// Convert template attribute `title` to text only.
 pub fn normalize_template_title(mut root: Element, settings: &Settings) -> TResult {
-    if let &mut Element::TemplateArgument { ref name, ref mut value, ref position } = &mut root {
+    if let Element::TemplateArgument { ref name, ref mut value, ref position } = root {
         if name == "title" {
             let mut last_value = value.pop();
             // title is empty
-            if let None = last_value {
+            if last_value.is_none() {
                 return Err(TransformationError {
                     cause: "A template title must not be empty!".to_string(),
                     position: position.clone(),
@@ -140,13 +140,13 @@ pub fn include_sections_vec<'a>(
     let mut result = vec![];
     for mut child in root_content.drain(..) {
 
-        if let &mut Element::Template {
+        if let Element::Template {
             ref name,
             ref content,
             ref position
-        } = &mut child {
+        } = child {
             let prefix = &settings.section_inclusion_prefix;
-            let template_name = extract_plain_text(&name);
+            let template_name = extract_plain_text(name);
 
             // section transclusion
             if template_name.to_lowercase().trim().starts_with(prefix) {
@@ -166,7 +166,7 @@ pub fn include_sections_vec<'a>(
                 }
 
                 let section_name = extract_plain_text(content);
-                let path = get_section_path(&article, &section_name, &settings);
+                let path = get_section_path(article, &section_name, settings);
 
                 // error returned when the section file is faulty
                 let file_error = TransformationError {
@@ -230,7 +230,7 @@ pub fn normalize_heading_depths_traverse(
 
     let mut current_depth = current_depth;
 
-    if let &mut Element::Heading { ref mut depth, .. } = &mut root {
+    if let Element::Heading { ref mut depth, .. } = root {
         *depth = current_depth;
         current_depth += 1;
     }
@@ -240,7 +240,7 @@ pub fn normalize_heading_depths_traverse(
 
 /// Remove prefixes before filenames of included files.
 pub fn remove_file_prefix(mut root: Element, settings: &Settings) -> TResult {
-    if let &mut Element::InternalReference { ref mut target, .. } = &mut root {
+    if let Element::InternalReference { ref mut target, .. } = root {
         if let Some(&mut Element::Text { ref mut text, .. }) = target.first_mut() {
             for prefix in &settings.file_prefixes {
                 let prefix_str = format!("{}:", &prefix);

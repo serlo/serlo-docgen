@@ -11,7 +11,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                      settings: &'s Settings,
                      out: &mut io::Write) -> io::Result<bool> {
 
-        if let &Element::Paragraph { ref content, .. } = root {
+        if let Element::Paragraph { ref content, .. } = *root {
 
             // render paragraph content
             let mut par_content = vec![];
@@ -33,7 +33,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                    settings: &'s Settings,
                    out: &mut io::Write) -> io::Result<bool> {
 
-        if let &Element::Heading {ref depth, ref caption, ref content, .. } = root {
+        if let Element::Heading {ref depth, ref caption, ref content, .. } = *root {
 
             write!(out, "\\")?;
 
@@ -54,7 +54,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                    _: &'s Settings,
                    out: &mut io::Write) -> io::Result<bool> {
 
-        if let &Element::Comment { ref text, .. } = root {
+        if let Element::Comment { ref text, .. } = *root {
             writeln!(out, "% {}", text)?;
         }
         Ok(false)
@@ -64,7 +64,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                 _: &'s Settings,
                 out: &mut io::Write) -> io::Result<bool> {
 
-        if let &Element::Text { ref text, .. } = root {
+        if let Element::Text { ref text, .. } = *root {
             write!(out, "{}", &escape_latex(text))?;
         }
         Ok(false)
@@ -74,34 +74,34 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                      settings: &'s Settings,
                      out: &mut io::Write) -> io::Result<bool> {
 
-        if let &Element::Formatted { ref markup, ref content, .. } = root {
-            match markup {
-                &MarkupType::NoWiki => {
+        if let Element::Formatted { ref markup, ref content, .. } = *root {
+            match *markup {
+                MarkupType::NoWiki => {
                     self.run_vec(content, settings, out)?;
                 },
-                &MarkupType::Bold => {
+                MarkupType::Bold => {
                     write!(out, "\\textbf{{")?;
                     self.run_vec(content, settings, out)?;
                     write!(out, "}}")?;
                 },
-                &MarkupType::Italic => {
+                MarkupType::Italic => {
                     write!(out, "\\textit{{")?;
                     self.run_vec(content, settings, out)?;
                     write!(out, "}}")?;
 
                 },
-                &MarkupType::Math => {
+                MarkupType::Math => {
                     write!(out, "${}$", match content.first() {
                         Some(&Element::Text {ref text, .. }) => text,
                         _ => "parse error!",
                     })?;
                 },
-                &MarkupType::StrikeThrough => {
+                MarkupType::StrikeThrough => {
                     write!(out, "\\sout{{")?;
                     self.run_vec(content, settings, out)?;
                     write!(out, "}}")?;
                 },
-                &MarkupType::Underline => {
+                MarkupType::Underline => {
                     writeln!(out, "\\ul{{")?;
                     self.run_vec(content, settings, out)?;
                     writeln!(out, "}}")?;

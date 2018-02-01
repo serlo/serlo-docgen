@@ -10,6 +10,7 @@ use mediawiki_parser::Element;
 mod target;
 #[macro_use]
 mod settings;
+#[macro_use]
 mod util;
 mod latex;
 mod deps;
@@ -45,10 +46,10 @@ pub enum MFNFTargets {
 impl MFNFTargets {
     /// Get the inner struct implementing the target trait.
     pub fn get_target(&self) -> &target::Target {
-        match self {
-            &MFNFTargets::Dependencies(ref t) => t,
-            &MFNFTargets::Latex(ref t) => t,
-            &MFNFTargets::Sections(ref t) => t,
+        match *self {
+            MFNFTargets::Dependencies(ref t) => t,
+            MFNFTargets::Latex(ref t) => t,
+            MFNFTargets::Sections(ref t) => t,
         }
     }
 }

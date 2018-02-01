@@ -52,10 +52,10 @@ impl Target for SectionsTarget {
             let doctitle = &settings.document_title;
 
             filename.push('.');
-            filename.push_str(&file_ext);
+            filename.push_str(file_ext);
 
             let mut path = path::Path::new(&section_path)
-                .join(&filename_to_make(&doctitle))
+                .join(&filename_to_make(doctitle))
                 .join(&filename_to_make(&section.clone()));
 
             DirBuilder::new()
@@ -65,7 +65,7 @@ impl Target for SectionsTarget {
             path = path.join(&filename);
 
             let mut file = File::create(&path)?;
-            file.write_all(&serde_yaml::to_string(&inter)
+            file.write_all(serde_yaml::to_string(&inter)
                 .expect("could not serialize section!")
                 .as_bytes())?;
 

@@ -10,11 +10,11 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                        settings: &'s Settings,
                        out: &mut io::Write) -> io::Result<bool> {
 
-        if let &Element::Template {
+        if let Element::Template {
             ref name,
             ref content,
             ref position
-        } = root {
+        } = *root {
 
             let template_name = extract_plain_text(name);
 
@@ -45,14 +45,14 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
             // any other template
             match &template_name[..] {
                 "formula" => {
-                    self.formula(&content, out)?;
+                    self.formula(content, out)?;
                 },
                 "anchor" => {
                     write!(out, " {} ", escape_latex("<no anchors yet!>"))?;
                 }
                 _ => {
                     let message = format!("MISSING TEMPLATE: {}", template_name);
-                    self.write_def_location(position, &doctitle, out)?;
+                    self.write_def_location(position, doctitle, out)?;
                     self.write_error(&message, out)?;
                 }
             };
@@ -60,7 +60,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         Ok(false)
     }
 
-    fn formula(&self, content: &Vec<Element>, out: &mut io::Write) -> io::Result<()> {
+    fn formula(&self, content: &[Element], out: &mut io::Write) -> io::Result<()> {
 
         let mut math_text = "ERROR: Template was not transformed properly!";
         if let Some(&Element::TemplateArgument {

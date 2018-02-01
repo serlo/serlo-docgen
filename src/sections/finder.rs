@@ -11,21 +11,15 @@ pub struct SectionNameCollector<'e> {
 }
 
 impl<'e> Traversion<'e, ()> for SectionNameCollector<'e> {
-    fn path_push(&mut self, root: &'e Element) {
-        self.path.push(root);
-    }
-    fn path_pop(&mut self) -> Option<&'e Element> {
-        self.path.pop()
-    }
-    fn get_path(&self) -> &Vec<&'e Element> {
-        &self.path
-    }
+
+    path_methods!('e);
+
     fn work(&mut self,
             root: &'e Element,
             _: (),
             _: &mut io::Write) -> io::Result<bool> {
 
-        if let &Element::HtmlTag { ref name, ref attributes, .. } = root {
+        if let Element::HtmlTag { ref name, ref attributes, .. } = *root {
             if name.to_lowercase() == "section"  {
                 for attr in attributes {
                     if attr.key == "begin" {
@@ -41,7 +35,7 @@ impl<'e> Traversion<'e, ()> for SectionNameCollector<'e> {
 impl<'e> SectionNameCollector<'e> {
     pub fn collect_from(root: &Element) -> Vec<String> {
         let mut collector = SectionNameCollector::default();
-        return if collector.run(root, (), &mut vec![]).is_ok() {
+        if collector.run(root, (), &mut vec![]).is_ok() {
             collector.sections
         } else {
             vec![]
@@ -62,26 +56,20 @@ pub struct SectionFinder<'e, 'a> {
 }
 
 impl<'e, 'a> Traversion<'e, ()> for SectionFinder<'e, 'a> {
-    fn path_push(&mut self, root: &'e Element) {
-        self.path.push(root);
-    }
-    fn path_pop(&mut self) -> Option<&'e Element> {
-        self.path.pop()
-    }
-    fn get_path(&self) -> &Vec<&'e Element> {
-        &self.path
-    }
+
+    path_methods!('e);
+
     fn work(&mut self,
             root: &'e Element,
             _: (),
             _: &mut io::Write) -> io::Result<bool> {
 
         // end recursion if result is found
-        if self.result.len() > 0 {
+        if !self.result.is_empty() {
             return Ok(false)
         }
 
-        if let &Element::HtmlTag { ref name, ref attributes, .. } = root {
+        if let Element::HtmlTag { ref name, ref attributes, .. } = *root {
             if name.to_lowercase() == "section" {
                 for attr in attributes {
                     if attr.key.to_lowercase() == if self.begin {"begin"} else {"end"}
@@ -104,7 +92,7 @@ impl<'a, 'e> SectionFinder<'e, 'a> {
             result: vec![],
         };
 
-        return if finder.run(root, (), &mut vec![]).is_ok() {
+        if finder.run(root, (), &mut vec![]).is_ok() {
             finder.result
         } else {
             vec![]

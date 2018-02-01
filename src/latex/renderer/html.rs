@@ -8,12 +8,12 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
     pub fn htmltag(&mut self, root: &'e Element,
                    settings: &'s Settings,
                    out: &mut io::Write) -> io::Result<bool> {
-        if let &Element::HtmlTag {
+        if let Element::HtmlTag {
             ref position,
             ref name,
             ref attributes,
             ref content
-        } = root {
+        } = *root {
             match name.to_lowercase().trim() {
                 "dfn" => {
                     write!(out, "\\textit{{")?;

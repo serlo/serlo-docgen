@@ -11,12 +11,12 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                     settings: &'s Settings,
                     out: &mut io::Write) -> io::Result<bool> {
 
-        if let &Element::InternalReference {
+        if let Element::InternalReference {
             ref target,
             ref options,
             ref caption,
             ref position
-         } = root {
+         } = *root {
 
             let target_str = extract_plain_text(target);
             let target_path = path::Path::new(&target_str);
@@ -45,10 +45,10 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                 // collect image options
                 let mut image_options = vec![];
                 for option in options {
-                    image_options.push(extract_plain_text(&option).trim().to_string());
+                    image_options.push(extract_plain_text(option).trim().to_string());
                 }
 
-                self.write_def_location(position, &doctitle, out)?;
+                self.write_def_location(position, doctitle, out)?;
 
                 writeln!(out, "\\begin{{figure}}[h]")?;
 

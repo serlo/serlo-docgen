@@ -12,27 +12,21 @@ pub struct InclusionPrinter<'b> {
 }
 
 impl<'a, 'b: 'a> Traversion<'a, &'b Settings> for InclusionPrinter<'a> {
-    fn path_push(&mut self, root: &'a Element) {
-        self.path.push(&root);
-    }
-    fn path_pop(&mut self) -> Option<&'a Element> {
-        self.path.pop()
-    }
-    fn get_path(&self) -> &Vec<&'a Element> {
-        &self.path
-    }
+
+    path_methods!('a);
+
     fn work(&mut self, root: &Element, settings: &'b Settings,
             out: &mut io::Write) -> io::Result<bool> {
 
-        if let &Element::Template { ref name, ref content, .. } = root {
+        if let Element::Template { ref name, ref content, .. } = *root {
             let prefix: &str = &settings.section_inclusion_prefix;
-            let template_name = extract_plain_text(&name);
+            let template_name = extract_plain_text(name);
 
             // section transclusion
             if template_name.to_lowercase().starts_with(&prefix) {
-                let article = trim_prefix(&template_name, &prefix);
+                let article = trim_prefix(&template_name, prefix);
                 let section_name = extract_plain_text(content);
-                let path = get_section_path(&article, &section_name, &settings);
+                let path = get_section_path(article, &section_name, settings);
                 write!(out, " \\\n\t{}", &path)?;
             }
         };
@@ -48,19 +42,13 @@ pub struct FilesPrinter<'a, 'b> {
 }
 
 impl<'a, 'b: 'a> Traversion<'a, &'b Settings> for FilesPrinter<'b, 'a> {
-    fn path_push(&mut self, root: &'a Element) {
-        self.path.push(&root);
-    }
-    fn path_pop(&mut self) -> Option<&'a Element> {
-        self.path.pop()
-    }
-    fn get_path(&self) -> &Vec<&'a Element> {
-        &self.path
-    }
+
+    path_methods!('a);
+
     fn work(&mut self, root: &Element, settings: &'b Settings,
             out: &mut io::Write) -> io::Result<bool> {
 
-        if let &Element::InternalReference { ref target, .. } = root {
+        if let Element::InternalReference { ref target, .. } = *root {
             let target = extract_plain_text(target);
             let target_path = PathBuf::from(target);
             let ext = target_path.extension().unwrap_or_default();

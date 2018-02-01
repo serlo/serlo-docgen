@@ -11,10 +11,12 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
             settings: &'s Settings,
             out: &mut io::Write) -> io::Result<bool> {
 
-        if let &Element::List { ref content, .. } = root {
+        if let Element::List { ref content, .. } = *root {
 
-            let kind = if let &Element::ListItem { ref kind, .. } =
-                content.first().unwrap_or(root) {
+            let kind = if let Element::ListItem {
+                ref kind,
+                ..
+            } = *content.first().unwrap_or(root) {
                     kind
             } else {
                 self.write_error("first child of list element \
@@ -22,18 +24,19 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                 return Ok(false)
             };
 
-            let envname = match kind {
-                &ListItemKind::Ordered => "enumerate",
-                &ListItemKind::Unordered => "itemize",
-                &ListItemKind::Definition => "itemize",
-                &ListItemKind::DefinitionTerm => "itemize",
+            let envname = match *kind {
+                ListItemKind::Ordered => "enumerate",
+                ListItemKind::Unordered
+                | ListItemKind::Definition
+                | ListItemKind::DefinitionTerm
+                => "itemize",
             };
             writeln!(out, "\\begin{{{}}}", envname)?;
 
             let mut def_term_temp = String::new();
 
             for child in content {
-                if let &Element::ListItem { ref content, ref kind, .. } = child {
+                if let Element::ListItem { ref content, ref kind, .. } = *child {
 
                     // render paragraph content
                     let mut par_content = vec![];
@@ -42,12 +45,12 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                         .unwrap().trim_right().to_string();
 
                     // definition term
-                    if let &ListItemKind::DefinitionTerm = kind {
+                    if let ListItemKind::DefinitionTerm = *kind {
                         def_term_temp.push_str(&par_string);
                         continue
                     }
 
-                    let item_string = if let &ListItemKind::Definition = kind {
+                    let item_string = if let ListItemKind::Definition = *kind {
                         format!("\\item \\textbf{{{}}}: {}", def_term_temp, par_string)
                     } else {
                         format!("\\item {}", par_string)

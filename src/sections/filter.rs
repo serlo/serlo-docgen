@@ -34,7 +34,7 @@ impl<'a, 'b: 'a> SectionFilter<'a, 'b> {
                     break;
                 }
             }
-            if let Some(_) = common {
+            if common.is_some() {
                 break;
             }
         }
@@ -49,17 +49,17 @@ impl<'a, 'b: 'a> SectionFilter<'a, 'b> {
             include_pre: false,
        };
 
-        let result = filter_section_element(common, &vec![], &filter)
+        let result = filter_section_element(common, &[], &filter)
             .expect("section extraction failed!");
 
-        extract_content(result).unwrap_or(vec![])
+        extract_content(result).unwrap_or_default()
     }
 }
 
 /// Recursively trim a subtree to only contain the elements
-/// enclosed by the section paths in SectionFilter.
+/// enclosed by the section paths in `SectionFilter`.
 fn filter_section_element(root: &Element,
-                          path: &Vec<&Element>,
+                          path: &[&Element],
                           settings: &SectionFilter) -> TResult {
 
     recurse_clone_template(&filter_section_element,
@@ -69,10 +69,10 @@ fn filter_section_element(root: &Element,
 
 
 /// Recursively trim a list of elments to only contain the elements
-/// enclosed by the section paths in SectionFilter.
+/// enclosed by the section paths in `SectionFilter`.
 fn filter_section_subtree<'a>(_func: &TFunc<&SectionFilter>,
-                              content: &Vec<Element>,
-                              path: &Vec<&'a Element>,
+                              content: &[Element],
+                              path: &[&'a Element],
                               settings: &SectionFilter) -> TListResult {
     let mut result = vec![];
     let mut found_begin = false;
@@ -84,7 +84,7 @@ fn filter_section_subtree<'a>(_func: &TFunc<&SectionFilter>,
 
             // ignore the starting section tag
             if Some(&child) != settings.begin.last() {
-                result.push(filter_section_element(&child, path, &settings.clone())
+                result.push(filter_section_element(child, path, &settings.clone())
                     .expect("error in section filter"));
             }
             continue;
@@ -96,7 +96,7 @@ fn filter_section_subtree<'a>(_func: &TFunc<&SectionFilter>,
 
             // ignore the ending section tag
             if Some(&child) != settings.end.last() {
-                result.push(filter_section_element(&child, path, &child_settings)
+                result.push(filter_section_element(child, path, &child_settings)
                     .expect("error in section filter"));
             }
             break;

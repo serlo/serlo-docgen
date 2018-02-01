@@ -149,9 +149,9 @@ fn main() {
 
 fn handle_transformation_result(result: &TResult) -> &mediawiki_parser::Element {
 
-     match result {
-        &Ok(ref e) => return e,
-        &Err(ref e) => {
+     match *result {
+        Ok(ref e) => e,
+        Err(ref e) => {
             eprintln!("{}", e);
             println!("{}", serde_yaml::to_string(&e)
                 .expect("Could not serialize error!"));
