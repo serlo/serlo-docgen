@@ -14,13 +14,6 @@ use self::renderer::{LatexRenderer};
 /// Data for LaTeX export.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LatexTarget {
-    /// Does this target operate on the input tree directly or with
-    /// mfnf transformations applied?
-    with_transformation: bool,
-    /// extension of the resulting file. Used for make dependency generation.
-    target_extension: String,
-    /// are dependencies generated for this target?
-    generate_deps: bool,
     /// mapping of external file extensions to target extensions.
     /// this is useful if external dependencies should be processed by
     /// make for this target.
@@ -60,9 +53,6 @@ pub struct LatexTarget {
 impl Default for LatexTarget {
     fn default() -> LatexTarget {
         LatexTarget {
-            with_transformation: true,
-            target_extension: "tex".into(),
-            generate_deps: true,
             deps_extension_mapping: string_map![
                 "png" => "pdf",
                 "svg" => "pdf",
