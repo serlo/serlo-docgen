@@ -170,27 +170,26 @@ pub fn include_sections_vec<'a>(
                 let path = get_section_path(article, &section_name, settings);
 
                 // error returned when the section file is faulty
-                let file_error = TransformationError {
-                    cause: format!("section file `{}` could not \
-                                   be read or parsed!", &path),
-                    position: position.clone(),
-                    transformation_name: "include_sections".to_string(),
-                    tree: Element::Template {
-                        name: name.clone(),
-                        position: position.clone(),
-                        content: content.clone(),
-                    }
+                let file_error = Element::Error {
+                    position: position.to_owned(),
+                    message: format!("section file `{}` could not \
+                                be read or parsed!", &path)
                 };
 
                 let section_str = File::open(&path);
+
                 if section_str.is_err() {
-                    return Err(file_error)
+                    result.push(file_error);
+                    return Ok(result);
                 }
 
                 let mut section_tree: Vec<Element>
                     = match serde_yaml::from_reader(&section_str.unwrap()) {
                     Ok(root) => root,
-                    Err(_) => return Err(file_error),
+                    Err(_) => {
+                        result.push(file_error);
+                        return Ok(result);
+                    }
                 };
 
                 result.push(
