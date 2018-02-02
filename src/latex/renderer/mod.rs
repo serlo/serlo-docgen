@@ -38,6 +38,7 @@ impl<'e, 's: 'e, 't: 'e> Traversion<'e, &'s Settings> for LatexRenderer<'e, 't> 
             // Leaf Elements
             Element::Text { .. } => self.text(root, settings, out)?,
             Element::Comment { .. } => self.comment(root, settings, out)?,
+            Element::Error { .. } => self.error(root, settings, out)?,
             _ => {
                 self.write_error(&format!("export for element `{}` not implemented!",
                     root.get_variant_name()), out)?;
@@ -74,6 +75,18 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         writeln!(out, "\n% defined in {} at {}:{} to {}:{}", doctitle,
                  pos.start.line, pos.start.col,
                  pos.end.line, pos.end.col)
+    }
+
+    fn error(&self,
+        root: &Element,
+        settings: &Settings,
+        out: &mut io::Write
+    ) -> io::Result<bool> {
+        if let Element::Error { ref position, ref message } = *root {
+            self.write_def_location(position, &settings.document_title, out)?;
+            self.write_error(message, out)?;
+        }
+        Ok(true)
     }
 }
 
