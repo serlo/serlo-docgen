@@ -6,6 +6,19 @@ use super::LatexRenderer;
 
 impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
 
+    fn template_arg(&mut self, root: &'e Element,
+                    settings: &'s Settings,
+                    out: &mut io::Write) -> io::Result<bool> {
+
+        if let Element::TemplateArgument {
+            ref value,
+            ..
+        } = *root {
+            self.run_vec(value, settings, out)?;
+        }
+        Ok(false)
+    }
+
     pub fn template(&mut self, root: &'e Element,
                        settings: &'s Settings,
                        out: &mut io::Write) -> io::Result<bool> {
@@ -31,11 +44,11 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                     if let Some(env_content) = find_arg(content, environment) {
                         write!(out, "\\begin{{{}}}[", environment)?;
                         if let Some(title_content) = title_content {
-                            self.run(title_content, settings, out)?;
+                            self.template_arg(title_content, settings, out)?;
                         }
-                        write!(out, "]\n")?;
 
-                        self.run(env_content, settings, out)?;
+                        write!(out, "]\n")?;
+                        self.template_arg(env_content, settings, out)?;
                         write!(out, "\\end{{{}}}\n", environment)?;
                     }
                 }
