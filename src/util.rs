@@ -124,7 +124,10 @@ pub fn extract_plain_text(content: &[Element]) -> String {
 
 /// Convert a filename to a make-friedly format.
 pub fn filename_to_make(input: &str) -> String {
-    input.replace(" ", "_").replace(":", "@COLON@")
+    input.replace(" ", "_")
+        .replace(":", "@COLON@")
+        .replace("(", "@LBR@")
+        .replace(")", "@RBR@")
 }
 
 /// Path of a section file.
