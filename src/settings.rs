@@ -66,6 +66,9 @@ pub struct Settings {
 
     /// Template name prefix indication section inclusion
     pub section_inclusion_prefix: String,
+
+    /// Path to the texvccheck executable
+    pub texvccheck_path: String,
 }
 
 impl Default for Settings {
@@ -118,6 +121,7 @@ impl Default for Settings {
             section_rev: "latest".into(),
             section_ext: "yml".into(),
             section_inclusion_prefix: "#lst:".into(),
+            texvccheck_path: "mk/bin/texvccheck".into(),
         }
     }
 }

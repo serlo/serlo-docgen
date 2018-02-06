@@ -64,6 +64,7 @@ pub fn normalize(mut root: Element,
     root = transformations::normalize_template_title(root, settings)?;
     root = transformations::remove_file_prefix(root, settings)?;
     root = transformations::convert_template_list(root, settings)?;
+    root = transformations::normalize_math_formulas(root, settings)?;
     Ok(root)
 }
 

@@ -27,6 +27,7 @@ struct Args {
     pub doc_title: String,
     pub doc_revision: String,
     pub targets: Vec<String>,
+    pub texvccheck_path: String,
 }
 
 impl Default for Args {
@@ -38,6 +39,7 @@ impl Default for Args {
             doc_title: "<no document name specified>".to_string(),
             doc_revision: "latest".to_string(),
             targets: vec![],
+            texvccheck_path: String::new(),
         }
     }
 }
@@ -80,6 +82,11 @@ fn parse_args() -> Args {
             Collect,
             "List of targets to export. Currently supported: `latex`"
         );
+        ap.refer(&mut args.texvccheck_path).add_option(
+            &["-p", "--texvccheck-path"],
+            Store,
+            "Path to the `texvccheck` executable."
+        );
         ap.parse_args_or_exit();
     }
     args
@@ -114,6 +121,12 @@ fn main() {
         eprintln!("No target specified!");
         process::exit(1);
     }
+
+    if args.texvccheck_path.is_empty() {
+        eprintln!("Path to texvccheck not given!");
+        process::exit(1);
+    }
+    settings.texvccheck_path = args.texvccheck_path.clone();
 
     let root = (if !args.input_file.is_empty() {
         let file = fs::File::open(&args.input_file)

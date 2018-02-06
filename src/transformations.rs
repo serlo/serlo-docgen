@@ -1,8 +1,11 @@
 use mediawiki_parser::transformations::*;
 use mediawiki_parser::TransformationError;
 use mediawiki_parser::ListItemKind;
+use mediawiki_parser::MarkupType;
+use mediawiki_parser::Span;
 use preamble::*;
 use std::fs::File;
+use std::process::Command;
 use serde_yaml;
 
 
@@ -124,6 +127,67 @@ pub fn normalize_template_title(mut root: Element, settings: &Settings) -> TResu
     recurse_inplace(&normalize_template_title, root, settings)
 }
 
+/// Normalize math formulas with texvccheck
+pub fn normalize_math_formulas(mut root: Element, settings: &Settings) -> TResult {
+    if let Element::Formatted {
+        ref markup,
+        ref mut content,
+        ref position,
+    } = root {
+        if *markup == MarkupType::Math {
+            match check_formula(content, position, settings) {
+                e @ Element::Text { .. } => {
+                    content.clear();
+                    content.push(e);
+                },
+                e @ _ => return Ok(e),
+            }
+        }
+    }
+    recurse_inplace(&normalize_math_formulas, root, settings)
+}
+
+/// Check a Tex formula, return normalized version or error
+fn check_formula(content: &Vec<Element>, position: &Span, settings: &Settings) -> Element {
+    if content.len() != 1 {
+        return Element::Error {
+            message: "A formula must have exactly one content element!".into(),
+            position: position.clone(),
+        }
+    }
+    let checked_formula = match content[0] {
+        Element::Text { ref text, .. } => texvccheck(text, settings),
+        _ => return Element::Error {
+            message: "A formula must only have text as content!".into(),
+            position: position.clone(),
+        }
+    };
+    let error_cause = match checked_formula.chars().next() {
+        Some('+') => return Element::Text {
+            position: position.clone(),
+            text: checked_formula.replacen('+', "", 1),
+        },
+        Some('S') => "syntax error".into(),
+        Some('E') => "lexing error".into(),
+        Some('F') => format!("unknown function `{}`", checked_formula.chars().skip(1).collect::<String>()),
+        Some('-') => "other error".into(),
+        None => "empty string".into(),
+        _ => "unknown error".into(),
+    };
+    Element::Error {
+        message: error_cause,
+        position: position.clone(),
+    }
+}
+
+/// Call the external program `texvccheck` to check a Tex formula
+fn texvccheck(formula: &String, settings: &Settings) -> String {
+    let output = Command::new(&settings.texvccheck_path)
+                         .arg(formula)
+                         .output()
+                         .expect("Failed to launch texvccheck!");
+    String::from_utf8(output.stdout).expect("Corrupted texvccheck output!")
+}
 
 pub fn include_sections(
     mut root: Element,
