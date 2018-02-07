@@ -129,6 +129,9 @@ pub fn normalize_template_title(mut root: Element, settings: &Settings) -> TResu
 
 /// Normalize math formulas with texvccheck
 pub fn normalize_math_formulas(mut root: Element, settings: &Settings) -> TResult {
+    if !settings.check_tex_formulas {
+        return Ok(root);
+    }
     if let Element::Formatted {
         ref markup,
         ref mut content,

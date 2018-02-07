@@ -69,6 +69,9 @@ pub struct Settings {
 
     /// Path to the texvccheck executable
     pub texvccheck_path: String,
+
+    /// Whether Tex formulas should be checked with texvccheck
+    pub check_tex_formulas: bool,
 }
 
 impl Default for Settings {
@@ -122,6 +125,7 @@ impl Default for Settings {
             section_ext: "yml".into(),
             section_inclusion_prefix: "#lst:".into(),
             texvccheck_path: "mk/bin/texvccheck".into(),
+            check_tex_formulas: false,
         }
     }
 }

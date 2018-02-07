@@ -123,10 +123,11 @@ fn main() {
     }
 
     if args.texvccheck_path.is_empty() {
-        eprintln!("Path to texvccheck not given!");
-        process::exit(1);
+        eprintln!("Warning: no texvccheck path, won't perform checks!");
+    } else {
+        settings.texvccheck_path = args.texvccheck_path.clone();
+        settings.check_tex_formulas = true;
     }
-    settings.texvccheck_path = args.texvccheck_path.clone();
 
     let root = (if !args.input_file.is_empty() {
         let file = fs::File::open(&args.input_file)
