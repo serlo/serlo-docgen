@@ -110,12 +110,11 @@ fn main() {
     settings.document_title = args.doc_title.clone();
     settings.document_revision = args.doc_revision.clone();
 
-    /*
     if args.dump_config {
-        println!("{}", DEFAULT_SETTINGS);
+        println!("{}", serde_yaml::to_string(&settings)
+            .expect("could not serialize default settings!"));
         process::exit(0);
     }
-    */
 
     if args.targets.is_empty() {
         eprintln!("No target specified!");
