@@ -1,7 +1,8 @@
 //! Various utility functions and definitions.
 
 use mediawiki_parser::*;
-use std::path::PathBuf;
+use std::path::{PathBuf};
+use std::process;
 use settings::Settings;
 
 
@@ -130,8 +131,32 @@ pub fn filename_to_make(input: &str) -> String {
         .replace(")", "@RBR@")
 }
 
+/// verifies a given "path" is only a plain filename without directory structure.
+fn is_plain_file(path: &PathBuf) -> bool {
+    let components = path.components();
+    if components.count() != 1 {
+        return false
+    }
+    match path.components().next() {
+        Some(c) => c.as_os_str() == path,
+        None => false
+    }
+}
+
 /// Path of a section file.
 pub fn get_section_path(article: &str, section: &str, settings: &Settings) -> String {
+    if !is_plain_file(&PathBuf::from(article)) {
+        eprintln!("article name \"{}\" contains path elements. \
+                   This could be dangerous! Abort.", article);
+        process::exit(1);
+    }
+
+    if !is_plain_file(&PathBuf::from(section)) {
+        eprintln!("section name \"{}\" contains path elements. \
+                   This could be dangerous! Abort.", section);
+        process::exit(1);
+    }
+
     let section_file = &settings.section_rev;
     let section_ext = &settings.section_ext;
     let section_path = &settings.section_path;
