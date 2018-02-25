@@ -52,6 +52,9 @@ pub struct Settings {
     /// File extensions indicating images.
     pub image_extensions: Vec<String>,
 
+    /// Base path for web links to articles.
+    pub article_url_base: String,
+
     /// Path prefix for images.
     pub image_path: String,
 
@@ -120,6 +123,7 @@ impl Default for Settings {
                                             "eps",
                                             "pdf"],
             image_path: "images".into(),
+            article_url_base: "https://de.wikibooks.org/wiki/".into(),
             section_path: "sections".into(),
             section_rev: "latest".into(),
             section_ext: "yml".into(),

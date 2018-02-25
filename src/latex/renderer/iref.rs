@@ -72,6 +72,19 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
 
                 return Ok(false)
             }
+
+            // export links to other articles as url to the article
+            if target_str.to_lowercase().starts_with("mathe für nicht-freaks:") {
+
+                let mut cap_content = vec![];
+                self.run_vec(caption, settings, &mut cap_content)?;
+
+                let mut url = settings.article_url_base.to_owned();
+                url.push_str(&target_str);
+                url = url.replace(' ', "_");
+
+                writeln!(out, "\\href{{{}}}{{{}}}", &url, &String::from_utf8(cap_content).unwrap())?;
+            }
             let msg = format!("No export function defined for ref {:?}", target_path);
             self.write_error(&msg, out)?;
         }
