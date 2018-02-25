@@ -14,6 +14,8 @@ macro_rules! alias {
     }
 }
 
+// --- Internal References ---
+
 alias!(FIGURE_ENV, "\
 \\begin{{figure}}[h]
     % image options: {:?}
@@ -23,3 +25,10 @@ alias!(FIGURE_ENV, "\
 ");
 
 alias!(INTERNAL_HREF, "\\href{{{}}}{{\\emph{{{}}}}}");
+
+// --- HTML ELEMENTS ---
+
+alias!(HTML_ITALIC, "\\textit{{{}}}");
+alias!(HTML_REF, "\\footnote{{{}}}");
+
+

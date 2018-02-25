@@ -16,14 +16,12 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         } = *root {
             match name.to_lowercase().trim() {
                 "dfn" => {
-                    write!(out, "\\textit{{")?;
-                    self.run_vec(content, settings, out)?;
-                    write!(out, "}}")?;
+                    let content = content.render(self, settings)?;
+                    write!(out, HTML_ITALIC!(), &content)?;
                 },
                 "ref" => {
-                    write!(out, "\\footnote{{")?;
-                    self.run_vec(content, settings, out)?;
-                    write!(out, "}}")?;
+                    let content = content.render(self, settings)?;
+                    write!(out, HTML_REF!(), &content)?;
                 },
                 _ => {
                     let msg = format!("no export function defined \
