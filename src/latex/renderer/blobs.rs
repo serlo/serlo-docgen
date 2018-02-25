@@ -26,9 +26,17 @@ alias!(FIGURE_ENV, "\
 
 alias!(INTERNAL_HREF, "\\href{{{}}}{{\\emph{{{}}}}}");
 
-// --- HTML ELEMENTS ---
+// --- HTML Elements ---
 
 alias!(HTML_ITALIC, "\\textit{{{}}}");
 alias!(HTML_REF, "\\footnote{{{}}}");
 
+// --- Lists ---
 
+alias!(ITEM, "    \\item {}");
+alias!(ITEM_DEFINITION, "    \\item \\textbf{{{}}}: {}");
+alias!(LIST, "\
+\\begin{{{}}}
+{}
+\\end{{{}}}\
+");
