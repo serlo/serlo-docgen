@@ -45,7 +45,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                    out: &mut io::Write) -> io::Result<bool> {
 
         if let Element::Comment { ref text, .. } = *root {
-            writeln!(out, "% {}", text)?;
+            writeln!(out, "% {}", &escape_latex(text))?;
         }
         Ok(false)
     }
