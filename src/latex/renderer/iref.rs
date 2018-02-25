@@ -82,9 +82,10 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                 let mut url = settings.article_url_base.to_owned();
                 url.push_str(&target_str);
                 url = url.replace(' ', "_");
-                let url = String::from_utf8(cap_content).unwrap();
+                let caption = String::from_utf8(cap_content).unwrap();
 
-                return writeln!(out, "\\href{{{}}}{{\\emph{{{}}}}}", &url, &url);
+                writeln!(out, "\\href{{{}}}{{\\emph{{{}}}}}", &url, &caption)?;
+                return Ok(false)
             }
 
             let msg = format!("No export function defined for ref {:?}", target_path);
