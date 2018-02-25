@@ -45,3 +45,11 @@ alias!(LIST, "\
 
 alias!(SECTION, "\\{}section{{{}}}
 ");
+
+// --- Formatting ---
+
+alias!(BOLD, "\\textbf{{{}}}");
+alias!(ITALIC, "\\textit{{{}}}");
+alias!(MATH, "${}$");
+alias!(STRIKE_THROUGH, "\\sout{{{}}}");
+alias!(UNDERLINE, "\\ul{{{}}}");

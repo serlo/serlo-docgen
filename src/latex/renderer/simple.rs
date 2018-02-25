@@ -35,7 +35,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
             let depth_string = "sub".repeat(depth - 1);
 
             writeln!(out, SECTION!(), depth_string, caption.trim())?;
-            writeln!(out, "{}", &content);
+            writeln!(out, "{}", &content)?;
         };
         Ok(false)
     }
@@ -65,36 +65,28 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                      out: &mut io::Write) -> io::Result<bool> {
 
         if let Element::Formatted { ref markup, ref content, .. } = *root {
+
+            let inner = content.render(self, settings)?;
+
             match *markup {
                 MarkupType::NoWiki => {
-                    self.run_vec(content, settings, out)?;
+                    write!(out, "{}", &inner)?;
                 },
                 MarkupType::Bold => {
-                    write!(out, "\\textbf{{")?;
-                    self.run_vec(content, settings, out)?;
-                    write!(out, "}}")?;
+                    write!(out, BOLD!(), &inner)?;
                 },
                 MarkupType::Italic => {
-                    write!(out, "\\textit{{")?;
-                    self.run_vec(content, settings, out)?;
-                    write!(out, "}}")?;
-
+                    write!(out, ITALIC!(), &inner)?;
                 },
                 MarkupType::Math => {
-                    write!(out, "${}$", match content.first() {
-                        Some(&Element::Text {ref text, .. }) => text,
-                        _ => "parse error!",
-                    })?;
+                    let inner = extract_plain_text(&content);
+                    write!(out, MATH!(), &inner)?;
                 },
                 MarkupType::StrikeThrough => {
-                    write!(out, "\\sout{{")?;
-                    self.run_vec(content, settings, out)?;
-                    write!(out, "}}")?;
+                    write!(out, STRIKE_THROUGH!(), &inner)?;
                 },
                 MarkupType::Underline => {
-                    writeln!(out, "\\ul{{")?;
-                    self.run_vec(content, settings, out)?;
-                    writeln!(out, "}}")?;
+                    write!(out, UNDERLINE!(), &inner)?;
                 },
                 _ => {
                     let msg = format!("MarkupType not implemented: {:?}", &markup);
