@@ -33,10 +33,15 @@ alias!(HTML_REF, "\\footnote{{{}}}");
 
 // --- Lists ---
 
-alias!(ITEM, "    \\item {}");
-alias!(ITEM_DEFINITION, "    \\item \\textbf{{{}}}: {}");
+alias!(ITEM, "\\item {}");
+alias!(ITEM_DEFINITION, "\\item \\textbf{{{}}}: {}");
 alias!(LIST, "\
 \\begin{{{}}}
 {}
 \\end{{{}}}\
+");
+
+// --- Headings ---
+
+alias!(SECTION, "\\{}section{{{}}}
 ");

@@ -13,18 +13,8 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
 
         if let Element::Paragraph { ref content, .. } = *root {
 
-            // render paragraph content
-            let mut par_content = vec![];
-            self.run_vec(content, settings, &mut par_content)?;
-            let par_string = String::from_utf8(par_content)
-                .unwrap().trim_right().to_string();
-
-            let indent = self.latex.indentation_depth;
-            let line_width = self.latex.max_line_width;
-
-            // trim and indent output string
-            let trimmed = indent_and_trim(&par_string, indent, line_width);
-            writeln!(out, "{}\n", &trimmed)?;
+            let content = content.render(self, settings)?;
+            writeln!(out, "{}\n", content.trim())?;
         };
         Ok(false)
     }
@@ -33,19 +23,19 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                    settings: &'s Settings,
                    out: &mut io::Write) -> io::Result<bool> {
 
-        if let Element::Heading {ref depth, ref caption, ref content, .. } = *root {
+        if let Element::Heading {depth, ref caption, ref content, .. } = *root {
 
-            write!(out, "\\")?;
+            let line_width = self.latex.max_line_width;
+            let indent = self.latex.indentation_depth;
 
-            for _ in 1..*depth {
-                write!(out, "sub")?;
-            }
+            let caption = caption.render(self, settings)?;
+            let mut content = content.render(self, settings)?;
 
-            write!(out, "section{{")?;
-            self.run_vec(caption, settings, out)?;
-            write!(out, "}}\n\n")?;
+            content = indent_and_trim(&content, indent, line_width);
+            let depth_string = "sub".repeat(depth - 1);
 
-            self.run_vec(content, settings, out)?;
+            writeln!(out, SECTION!(), depth_string, caption.trim())?;
+            writeln!(out, "{}", &content);
         };
         Ok(false)
     }
