@@ -50,41 +50,29 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
 
                 self.write_def_location(position, doctitle, out)?;
 
-                writeln!(out, "\\begin{{figure}}[h]")?;
+                let cap_content = caption.render(self, settings)?;
 
-                // render figure content
-                let mut cap_content = vec![];
-                self.run_vec(caption, settings, &mut cap_content)?;
-
-                let fig_text = format!("\
-                    % image options: {:?}\n\
-                    \\adjincludegraphics[max width={}\\textwidth, \
-                        max height={}\\textheight]{{{}}}\n\
-                    \\caption{{{}}}",
+                writeln!(
+                    out,
+                    BLOB_FIGURE_ENV!(),
                     &image_options,
                     width, height,
                     &image_path,
-                    &String::from_utf8(cap_content).unwrap()
-                );
-
-                writeln!(out, "{}", &indent_and_trim(&fig_text, indent, line_width))?;
-                writeln!(out, "\\end{{figure}}\n")?;
-
+                    &cap_content
+                )?;
                 return Ok(false)
             }
 
             // export links to other articles as url to the article
             if target_str.to_lowercase().starts_with("mathe für nicht-freaks:") {
 
-                let mut cap_content = vec![];
-                self.run_vec(caption, settings, &mut cap_content)?;
+                let cap_content = caption.render(self, settings)?;
 
                 let mut url = settings.article_url_base.to_owned();
                 url.push_str(&target_str);
                 url = url.replace(' ', "_");
-                let caption = String::from_utf8(cap_content).unwrap();
 
-                writeln!(out, "\\href{{{}}}{{\\emph{{{}}}}}", &url, &caption)?;
+                writeln!(out, "\\href{{{}}}{{\\emph{{{}}}}}", &url, &cap_content)?;
                 return Ok(false)
             }
 

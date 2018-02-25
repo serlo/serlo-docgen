@@ -3,6 +3,8 @@
 use preamble::*;
 use latex::LatexTarget;
 use mediawiki_parser::Span;
+#[macro_use]
+mod blobs;
 
 mod simple;
 mod template;
