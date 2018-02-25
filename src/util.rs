@@ -4,6 +4,7 @@ use mediawiki_parser::*;
 use std::path::{PathBuf};
 use std::process;
 use settings::Settings;
+use std::io;
 
 
 /// Escape LaTeX-Specific symbols
@@ -184,6 +185,41 @@ macro_rules! path_methods {
         fn get_path(&self) -> &Vec<&$lt Element> {
             &self.path
         }
+    }
+}
+
+/// This object can be rendered by a traversion.
+pub trait Renderable<S>  {
+    fn render<'e, 's>(
+        &'e self,
+        renderer: &mut Traversion<'e, &'s S>,
+        settings: &'s S,
+    ) -> io::Result<String>;
+}
+
+impl<S> Renderable<S> for Element {
+    fn render<'e, 's>(
+        &'e self,
+        renderer: &mut Traversion<'e, &'s S>,
+        settings: &'s S,
+    ) -> io::Result<String> {
+
+        let mut temp = vec![];
+        renderer.run(&self, settings, &mut temp)?;
+        Ok(String::from_utf8(temp).unwrap())
+    }
+}
+
+impl<S> Renderable<S> for [Element] {
+    fn render<'e, 's>(
+        &'e self,
+        renderer: &mut Traversion<'e, &'s S>,
+        settings: &'s S,
+    ) -> io::Result<String> {
+
+        let mut temp = vec![];
+        renderer.run_vec(&self, settings, &mut temp)?;
+        Ok(String::from_utf8(temp).unwrap())
     }
 }
 
