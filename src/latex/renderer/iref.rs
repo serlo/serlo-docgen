@@ -29,13 +29,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
             // file is an image
             if img_exts.contains(&ext_str) {
 
-                let width = self.latex.image_width;
-                let height = self.latex.image_height;
-                let indent = self.latex.indentation_depth;
-                let line_width = self.latex.max_line_width;
-                let image_path = &settings.image_path;
-
-                let image_path = path::Path::new(image_path)
+                let image_path = path::PathBuf::from(&settings.image_path)
                     .join(target_path.file_stem()
                     .expect("image path is empty!"))
                     .to_string_lossy()
@@ -54,9 +48,10 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
 
                 writeln!(
                     out,
-                    BLOB_FIGURE_ENV!(),
+                    FIGURE_ENV!(),
                     &image_options,
-                    width, height,
+                    self.latex.image_width,
+                    self.latex.image_height,
                     &image_path,
                     &cap_content
                 )?;
@@ -72,7 +67,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                 url.push_str(&target_str);
                 url = url.replace(' ', "_");
 
-                writeln!(out, "\\href{{{}}}{{\\emph{{{}}}}}", &url, &cap_content)?;
+                writeln!(out, INTERNAL_HREF!(), &url, &cap_content)?;
                 return Ok(false)
             }
 

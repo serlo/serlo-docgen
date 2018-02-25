@@ -14,10 +14,12 @@ macro_rules! alias {
     }
 }
 
-alias!(BLOB_FIGURE_ENV, "\
+alias!(FIGURE_ENV, "\
 \\begin{{figure}}[h]
     % image options: {:?}
     \\adjincludegraphics[max width={}\\textwidth, max height={}\\textheight]{{{}}}
     \\caption{{{}}}
 \\end{{figure}}
 ");
+
+alias!(INTERNAL_HREF, "\\href{{{}}}{{\\emph{{{}}}}}");
