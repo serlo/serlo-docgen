@@ -63,28 +63,31 @@ pub fn indent_and_trim(input: &str, depth: usize, max_line_width: usize) -> Stri
 
     let mut lines = vec![];
     for line in input.split('\n') {
-        let comment = line.trim().starts_with(COMMENT_PREFIX.trim());
-        let start_string = format!("{:depth$}", "", depth=depth);
-        let mut current_line = start_string.clone();
+        let trimmed = line.trim();
+        let comment = trimmed.starts_with(COMMENT_PREFIX.trim());
+        let line_depth = depth + line.len() - line.trim_left().len();
+        let start_string = format!("{:depth$}", "", depth=line_depth);
 
-        if line.trim().len() > max_line_width && line.trim().matches(' ').count() > 0 {
+        let mut new_line = start_string.clone();
 
-            for word in line.split(' ') {
-                if current_line.trim().len() + word.len() + 1 > max_line_width {
-                    lines.push(current_line);
-                    current_line = start_string.clone();
+        if trimmed.len() > max_line_width {
+
+            for word in trimmed.split(' ') {
+                if new_line.trim().len() + word.len() + 1 > max_line_width {
+                    lines.push(new_line);
+                    new_line = start_string.clone();
                     if comment {
-                        current_line.push_str(COMMENT_PREFIX);
+                        new_line.push_str(COMMENT_PREFIX);
                     }
                 }
 
-                current_line.push_str(word);
-                current_line.push(' ');
+                new_line.push_str(word);
+                new_line.push(' ');
             }
-            lines.push(current_line);
+            lines.push(new_line);
         } else {
-            current_line.push_str(line);
-            lines.push(current_line);
+            new_line.push_str(trimmed);
+            lines.push(new_line);
         }
     }
     lines.join("\n")
