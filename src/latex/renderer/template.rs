@@ -67,29 +67,24 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
 
     fn formula(&self, content: &[Element], out: &mut io::Write) -> io::Result<()> {
 
-        let mut math_text = "ERROR: Template was not transformed properly!";
-        if let Some(&Element::TemplateArgument {
-            ref value,
-                ..
-            }) = content.first() {
-            if let Some(&Element::Text {
-                ref text,
-                ..
-                }) = value.first() {
-                math_text = trim_enclosing(text.trim(),
-                                        "\\begin{align}",
-                                        "\\end{align}");
-                math_text = trim_enclosing(math_text,
-                                        "\\begin{align*}",
-                                        "\\end{align*}").trim();
-            };
-        };
-        let indent = self.latex.indentation_depth;
-        let width= self.latex.max_line_width;
+        let content = extract_plain_text(content).trim().to_owned();
+        let mut trimmed = trim_enclosing(
+            &content,
+            "\\begin{align}",
+            "\\end{align}"
+        );
+        trimmed = trim_enclosing(
+            trimmed,
+            "\\begin{align*}",
+            "\\end{align*}"
+        ).trim();
 
-        writeln!(out, "\\begin{{align*}}")?;
-        writeln!(out, "{}", indent_and_trim(math_text, indent, width))?;
-        writeln!(out, "\\end{{align*}}")
+        self.environment(
+            MATH_ENV!(),
+            &vec![],
+            trimmed,
+            out,
+        )
     }
 
     pub fn template_arg(&mut self, root: &'e Element,

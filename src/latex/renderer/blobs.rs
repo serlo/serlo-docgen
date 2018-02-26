@@ -62,5 +62,5 @@ alias!(UNDERLINE, "\\ul{{{}}}");
 
 // -- Templates ---
 
-
+alias!(MATH_ENV, "align*");
 

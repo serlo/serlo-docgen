@@ -11,64 +11,64 @@ use serde_yaml;
 
 /// Convert template name paragraphs to lowercase text only.
 pub fn normalize_template_names(mut root: Element, settings: &Settings) -> TResult {
-    if let Element::Template { ref mut name, ref mut content, ref position, .. } = root {
+if let Element::Template { ref mut name, ref mut content, ref position, .. } = root {
 
-        let new_text = match name.drain(..).next() {
-            Some(Element::Paragraph { content, .. }) => {
-                content
-            },
-            Some(e) => { vec![e] },
-            None => { return Ok(Element::Error {
-                        position: position.clone(),
-                        message: "MFNF template name must not be empty!".to_string(),
-                    })
-            }
-        };
-
-        for child in content {
-            if let Element::TemplateArgument { ref mut name, .. } = *child {
-                let lowercase = name.trim().to_lowercase();
-                name.clear();
-                name.push_str(&lowercase);
-            } else {
-                return Ok(Element::Error {
+    let new_text = match name.drain(..).next() {
+        Some(Element::Paragraph { content, .. }) => {
+            content
+        },
+        Some(e) => { vec![e] },
+        None => { return Ok(Element::Error {
                     position: position.clone(),
-                    message: "Only TemplateArguments are allowed as children of templates!".to_string(),
+                    message: "MFNF template name must not be empty!".to_string(),
                 })
-            }
-        }
-
-        if let Some(&Element::Text { ref position, ref text }) = new_text.first() {
-            name.clear();
-            name.push(
-                Element::Text {
-                    position: position.clone(),
-                    text: if text.starts_with('#') {
-                        String::from(text.trim())
-                    } else {
-                        // convert to lowercase and remove prefixes
-                        let mut temp_text = &text.trim().to_lowercase()[..];
-                        let prefixes = &settings.template_prefixes;
-                        for prefix in prefixes {
-                            temp_text = trim_prefix(temp_text, prefix);
-                        }
-                        String::from(temp_text)
-                    },
-                }
-            );
-        } else {
-            return Ok(Element::Error {
-                position: if let Some(e) = new_text.first() {
-                    e.get_position().clone()
-                } else {
-                    position.clone()
-                },
-                message: "MFNF Template names must be plain strings \
-                        With no markup!".to_string(),
-            });
         }
     };
-    recurse_inplace(&normalize_template_names, root, settings)
+
+    for child in content {
+        if let Element::TemplateArgument { ref mut name, .. } = *child {
+            let lowercase = name.trim().to_lowercase();
+            name.clear();
+            name.push_str(&lowercase);
+        } else {
+            return Ok(Element::Error {
+                position: position.clone(),
+                message: "Only TemplateArguments are allowed as children of templates!".to_string(),
+            })
+        }
+    }
+
+    if let Some(&Element::Text { ref position, ref text }) = new_text.first() {
+        name.clear();
+        name.push(
+            Element::Text {
+                position: position.clone(),
+                text: if text.starts_with('#') {
+                    String::from(text.trim())
+                } else {
+                    // convert to lowercase and remove prefixes
+                    let mut temp_text = &text.trim().to_lowercase()[..];
+                    let prefixes = &settings.template_prefixes;
+                    for prefix in prefixes {
+                        temp_text = trim_prefix(temp_text, prefix);
+                    }
+                    String::from(temp_text)
+                },
+            }
+        );
+    } else {
+        return Ok(Element::Error {
+            position: if let Some(e) = new_text.first() {
+                e.get_position().clone()
+            } else {
+                position.clone()
+            },
+            message: "MFNF Template names must be plain strings \
+                    With no markup!".to_string(),
+        });
+    }
+};
+recurse_inplace(&normalize_template_names, root, settings)
 }
 
 /// Translate template names and template attribute names.
@@ -129,9 +129,7 @@ pub fn normalize_template_title(mut root: Element, settings: &Settings) -> TResu
 
 /// Normalize math formulas with texvccheck
 pub fn normalize_math_formulas(mut root: Element, settings: &Settings) -> TResult {
-    if !settings.check_tex_formulas {
-        return Ok(root);
-    }
+
     if let Element::Formatted {
         ref markup,
         ref mut content,
@@ -159,7 +157,15 @@ fn check_formula(content: &Vec<Element>, position: &Span, settings: &Settings) -
         }
     }
     let checked_formula = match content[0] {
-        Element::Text { ref text, .. } => texvccheck(text, settings),
+        Element::Text { ref text, .. } => {
+            if settings.check_tex_formulas {
+                texvccheck(text, settings)
+            } else {
+                let mut ret = "+".to_owned();
+                ret.push_str(text);
+                ret
+            }
+        },
         _ => return Element::Error {
             message: "A formula must only have text as content!".into(),
             position: position.clone(),
@@ -172,7 +178,8 @@ fn check_formula(content: &Vec<Element>, position: &Span, settings: &Settings) -
         },
         Some('S') => "syntax error".into(),
         Some('E') => "lexing error".into(),
-        Some('F') => format!("unknown function `{}`", checked_formula.chars().skip(1).collect::<String>()),
+        Some('F') => format!("unknown function `{}`",
+            checked_formula.chars().skip(1).collect::<String>()),
         Some('-') => "other error".into(),
         None => "empty string".into(),
         _ => "unknown error".into(),
@@ -184,7 +191,7 @@ fn check_formula(content: &Vec<Element>, position: &Span, settings: &Settings) -
 }
 
 /// Call the external program `texvccheck` to check a Tex formula
-fn texvccheck(formula: &String, settings: &Settings) -> String {
+fn texvccheck(formula: &str, settings: &Settings) -> String {
     let output = Command::new(&settings.texvccheck_path)
                          .arg(formula)
                          .output()
