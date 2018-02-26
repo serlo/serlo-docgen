@@ -76,7 +76,7 @@ alias!(GALLERY_CONTENT, "\
 % image options: {:?}
 \\stepcounter{{imagelabel}}
 \\addxcontentsline{{lof}}{{section}}[]{{License Info not yet supported.}}
-\\begin{{minipage}}[t]{{}}
+\\begin{{minipage}}[t]{{\\linewidth}}
     \\begin{{figure}}[H]
         \\begin{{minipage}}[t][{}\\textheight][c][\\linewidth]
             \\centering
