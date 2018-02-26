@@ -53,6 +53,13 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                     image_options.push(extract_plain_text(option).trim().to_string());
                 }
 
+                // thumnails and inline images are not handled here
+                if !image_options.contains(&"center".to_owned()) {
+                    let msg = format!("No inline or thumnail images supported, yet!");
+                    self.write_error(&msg, out)?;
+                    return Ok(false)
+                }
+
                 self.write_def_location(position, doctitle, out)?;
 
                 let cap_content = caption.render(self, settings)?;

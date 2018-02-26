@@ -41,7 +41,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                     let mut inner = format!(
                         GALLERY_CONTENT!(),
                         &image_options,
-                        self.latex.image_width,
+                        self.latex.image_height,
                         self.latex.image_height,
                         &path,
                         &caption,
@@ -54,12 +54,21 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                 }
             }
 
+            // partition gallery rows
+            let mut table_rows = vec![];
+            for chunk in rendered_images.chunks(self.latex.gallery_images_per_row) {
+                let mut row = chunk.join("&\n");
+                let missing = self.latex.gallery_images_per_row - chunk.len();
+                row.push_str(&"&\n".repeat(missing));
+                table_rows.push(row);
+            }
+
             self.write_def_location(position, &doctitle, out)?;
             writeln!(
                 out,
                 GALLERY!(),
                 columns,
-                rendered_images.join("\n")
+                table_rows.join("\\\\\n")
             )?;
         }
         Ok(false)

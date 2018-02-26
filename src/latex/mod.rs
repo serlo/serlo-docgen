@@ -48,6 +48,9 @@ pub struct LatexTarget {
     /// Any additional template attributes will be exported as
     /// subsequent environments, if listed here.
     environments: HashMap<String, Vec<String>>,
+
+    /// Specifies how many images a gallery may have on one row.
+    gallery_images_per_row: usize,
 }
 
 impl Default for LatexTarget {
@@ -91,6 +94,7 @@ impl Default for LatexTarget {
                                           "proof"],
                 "explanation" => string_vec!["explanation"]
             ],
+            gallery_images_per_row: 2,
         }
     }
 }

@@ -78,7 +78,7 @@ alias!(GALLERY_CONTENT, "\
 \\addxcontentsline{{lof}}{{section}}[]{{License Info not yet supported.}}
 \\begin{{minipage}}[t]{{\\linewidth}}
     \\begin{{figure}}[H]
-        \\begin{{minipage}}[t][{}\\textheight][c][\\linewidth]
+        \\begin{{minipage}}[t][{}\\textheight][c]{{\\linewidth}}
             \\centering
             \\adjincludegraphics[max width=1.\\linewidth,
                 max height={}\\textheight]{{{}}}
