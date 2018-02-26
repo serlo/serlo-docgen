@@ -45,16 +45,16 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                 self.write_def_location(position, doctitle, out)?;
 
                 let cap_content = caption.render(self, settings)?;
-
-                writeln!(
-                    out,
-                    FIGURE_ENV!(),
+                let fig_content = format!(
+                    FIGURE_CONTENT!(),
                     &image_options,
                     self.latex.image_width,
                     self.latex.image_height,
                     &image_path,
                     &cap_content
-                )?;
+                );
+
+                self.environment("figure", &vec!["h"], &fig_content, out)?;
                 return Ok(false)
             }
 

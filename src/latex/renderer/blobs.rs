@@ -14,14 +14,20 @@ macro_rules! alias {
     }
 }
 
+// --- Environments ---
+
+alias!(GENERIC_ENV, "\
+\\begin{{{}}}{}
+{}
+\\end{{{}}}
+");
+
 // --- Internal References ---
 
-alias!(FIGURE_ENV, "\
-\\begin{{figure}}[h]
-    % image options: {:?}
-    \\adjincludegraphics[max width={}\\textwidth, max height={}\\textheight]{{{}}}
-    \\caption{{{}}}
-\\end{{figure}}
+alias!(FIGURE_CONTENT, "\
+% image options: {:?}
+\\adjincludegraphics[max width={}\\textwidth, max height={}\\textheight]{{{}}}
+\\caption{{{}}}\
 ");
 
 alias!(INTERNAL_HREF, "\\href{{{}}}{{\\emph{{{}}}}}");

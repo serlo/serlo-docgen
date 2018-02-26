@@ -58,23 +58,35 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         }
     }
 
-    fn write_error(&self,
-                   message: &str,
-                   out: &mut io::Write) -> io::Result<()> {
-
+    fn environment(
+        &self,
+        name: &str,
+        args: &[&str],
+        content: &str,
+        out: &mut io::Write)
+    -> io::Result<()> {
         let indent = self.latex.indentation_depth;
         let line_width = self.latex.max_line_width;
 
+        let arg_string: String = args.iter().map(|a| format!("[{}]", a)).collect();
+        let content = indent_and_trim(&content, indent, line_width);
+        write!(out, GENERIC_ENV!(), name, &arg_string, content, name)
+    }
+
+    fn write_error(
+        &self,
+        message: &str,
+        out: &mut io::Write)
+    -> io::Result<()> {
+
         let message = escape_latex(message);
-        writeln!(out, "\\begin{{error}}")?;
-        writeln!(out, "{}", indent_and_trim(&message, indent, line_width))?;
-        writeln!(out, "\\end{{error}}")
+        self.environment("error", &vec![], &message, out)
     }
 
     fn write_def_location(&self, pos: &Span, doctitle: &str,
                           out: &mut io::Write) -> io::Result<()> {
 
-        writeln!(out, "\n% defined in {} at {}:{} to {}:{}", doctitle,
+        writeln!(out, "% defined in {} at {}:{} to {}:{}", doctitle,
                  pos.start.line, pos.start.col,
                  pos.end.line, pos.end.col)
     }
