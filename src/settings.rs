@@ -115,13 +115,15 @@ impl Default for Settings {
                 "liste" => "list"
             ],
             template_prefixes: string_vec![":mathe für nicht-freaks: vorlage:"],
-            image_extensions: string_vec!["jpg",
-                                            "jpeg",
-                                            "png",
-                                            "gif",
-                                            "svg",
-                                            "eps",
-                                            "pdf"],
+            image_extensions: string_vec![
+                "jpg",
+                "jpeg",
+                "png",
+                "gif",
+                "svg",
+                "eps",
+                "pdf"
+            ],
             image_path: "images".into(),
             article_url_base: "https://de.wikibooks.org/wiki/".into(),
             section_path: "sections".into(),

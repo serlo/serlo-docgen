@@ -59,3 +59,8 @@ alias!(ITALIC, "\\textit{{{}}}");
 alias!(MATH, "${}$");
 alias!(STRIKE_THROUGH, "\\sout{{{}}}");
 alias!(UNDERLINE, "\\ul{{{}}}");
+
+// -- Templates ---
+
+
+

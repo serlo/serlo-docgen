@@ -33,6 +33,7 @@ impl<'e, 's: 'e, 't: 'e> Traversion<'e, &'s Settings> for LatexRenderer<'e, 't> 
             Element::Formatted { .. } => self.formatted(root, settings, out)?,
             Element::Paragraph { .. } => self.paragraph(root, settings, out)?,
             Element::Template { .. } => self.template(root, settings, out)?,
+            Element::TemplateArgument { .. } => self.template_arg(root, settings, out)?,
             Element::InternalReference { .. } => self.internal_ref(root, settings, out)?,
             Element::List { .. } => self.list(root, settings, out)?,
             Element::HtmlTag { .. } => self.htmltag(root, settings, out)?,
