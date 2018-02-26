@@ -7,6 +7,22 @@ use super::LatexRenderer;
 
 impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
 
+    pub fn build_image_path(
+        &self,
+        target: &[Element],
+        settings: &Settings
+    ) -> String {
+        let target_str = extract_plain_text(target);
+        let target_path = path::Path::new(&target_str);
+
+        let image_path = path::PathBuf::from(&settings.image_path)
+            .join(target_path.file_stem()
+            .expect("image path is empty!"))
+            .to_string_lossy()
+            .to_string();
+        filename_to_make(&image_path)
+    }
+
     pub fn internal_ref(&mut self, root: &'e Element,
                     settings: &'s Settings,
                     out: &mut io::Write) -> io::Result<bool> {
@@ -29,12 +45,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
             // file is an image
             if img_exts.contains(&ext_str) {
 
-                let image_path = path::PathBuf::from(&settings.image_path)
-                    .join(target_path.file_stem()
-                    .expect("image path is empty!"))
-                    .to_string_lossy()
-                    .to_string();
-                let image_path = filename_to_make(&image_path);
+                let image_path = self.build_image_path(target, settings);
 
                 // collect image options
                 let mut image_options = vec![];

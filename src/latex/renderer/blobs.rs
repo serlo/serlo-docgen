@@ -60,7 +60,30 @@ alias!(MATH, "${}$");
 alias!(STRIKE_THROUGH, "\\sout{{{}}}");
 alias!(UNDERLINE, "\\ul{{{}}}");
 
-// -- Templates ---
+// --- Templates ---
 
 alias!(MATH_ENV, "align*");
 
+// --- Galleries ---
+
+alias!(GALLERY, "\
+\\begin{{tabularx}}{{\\linewidth}}{{{}}}
+{}
+\\end{{tabularx}}
+");
+
+alias!(GALLERY_CONTENT, "\
+% image options: {:?}
+\\stepcounter{{imagelabel}}
+\\addxcontentsline{{lof}}{{section}}[]{{License Info not yet supported.}}
+\\begin{{minipage}}[t]{{}}
+    \\begin{{figure}}[H]
+        \\begin{{minipage}}[t][{}\\textheight][c][\\linewidth]
+            \\centering
+            \\adjincludegraphics[max width=1.\\linewidth,
+                max height={}\\textheight]{{{}}}
+        \\end{{minipage}}
+        \\caption*{{{} (\\arabic{{imagelabel}})}}
+    \\end{{figure}}
+\\end{{minipage}}
+");

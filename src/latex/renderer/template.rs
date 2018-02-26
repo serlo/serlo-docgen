@@ -99,5 +99,4 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         }
         Ok(false)
     }
-
 }
