@@ -74,7 +74,10 @@ pub fn indent_and_trim(input: &str, depth: usize, max_line_width: usize) -> Stri
         if trimmed.len() > max_line_width {
 
             for word in trimmed.split(' ') {
-                if new_line.trim().len() + word.len() + 1 > max_line_width {
+
+                let current_length = new_line.trim().len();
+
+                if current_length + word.len() + 1 > max_line_width && current_length > 0 {
                     lines.push(new_line);
                     new_line = start_string.clone();
                     if comment {
