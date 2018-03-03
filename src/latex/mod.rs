@@ -116,7 +116,9 @@ impl Target for LatexTarget {
         // apply latex-specific transformations
         let mut latex_tree = root.clone();
         latex_tree = trans::normalize_formula(latex_tree, settings)
-            .expect("Could not appy LaTeX-Secific transformations!");
+            .expect("Error in formula normalization!");
+        latex_tree = trans::hoist_thumbnails(latex_tree, settings)
+            .expect("Error in thumbnail hoisting!");
 
         let mut renderer = LatexRenderer::new(self);
         renderer.run(&latex_tree, settings, out)

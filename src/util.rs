@@ -150,6 +150,21 @@ fn is_plain_file(path: &PathBuf) -> bool {
     }
 }
 
+/// Returns wether an image is semantically a thumbnail image.
+pub fn is_thumb(image: &Element) -> bool {
+    if let Element::InternalReference {
+        ref options,
+        ..
+    } = *image {
+        for option in options {
+            if extract_plain_text(option).to_lowercase().trim() == "thumb" {
+                return true
+            }
+        }
+    }
+    false
+}
+
 /// Path of a section file.
 pub fn get_section_path(article: &str, section: &str, settings: &Settings) -> String {
     if !is_plain_file(&PathBuf::from(article)) {
