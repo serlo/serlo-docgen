@@ -14,10 +14,18 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
     ) -> String {
         let target_str = extract_plain_text(target);
         let target_path = path::Path::new(&target_str);
+        let ext = target_path.extension().unwrap_or_default();
+        let ext_str = ext.to_string_lossy().into();
+        let target_extension = self.latex
+            .get_extension_mapping()
+            .get(&ext_str)
+            .unwrap_or(&ext_str);
 
         let file_path = path::PathBuf::from(&settings.external_file_path)
-            .join(target_path.file_stem()
-            .expect("image path is empty!"))
+            .join(target_path
+                .with_extension(&target_extension)
+                .file_stem()
+                .expect("image path is empty!"))
             .to_string_lossy()
             .to_string();
         filename_to_make(&file_path)
