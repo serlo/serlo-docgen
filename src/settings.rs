@@ -49,14 +49,14 @@ pub struct Settings {
     /// A list of file prefixes which are ignored.
     pub file_prefixes: Vec<String>,
 
-    /// File extensions indicating images.
-    pub image_extensions: Vec<String>,
+    /// File extensions allowed for references to external files.
+    pub external_file_extensions: Vec<String>,
 
     /// Base path for web links to articles.
     pub article_url_base: String,
 
-    /// Path prefix for images.
-    pub image_path: String,
+    /// Path prefix for external files.
+    pub external_file_path: String,
 
     /// Path to the section file directory.
     pub section_path: String,
@@ -115,16 +115,18 @@ impl Default for Settings {
                 "liste" => "list"
             ],
             template_prefixes: string_vec![":mathe für nicht-freaks: vorlage:"],
-            image_extensions: string_vec![
+            external_file_extensions: string_vec![
                 "jpg",
                 "jpeg",
                 "png",
-                "gif",
                 "svg",
                 "eps",
-                "pdf"
+                "pdf",
+                "gif",
+                "webm",
+                "mp4"
             ],
-            image_path: "images".into(),
+            external_file_path: "media".into(),
             article_url_base: "https://de.wikibooks.org/wiki/".into(),
             section_path: "sections".into(),
             section_rev: "latest".into(),

@@ -62,7 +62,9 @@ impl Default for LatexTarget {
                 "eps" => "pdf",
                 "jpg" => "pdf",
                 "jpeg" => "pdf",
-                "gif" => "pdf"
+                "gif" => "eps",
+                "webm" => "eps",
+                "mp4" => "eps"
             ],
             page_trim: 0.0,
             page_width: 155.0,

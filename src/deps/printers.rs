@@ -54,16 +54,16 @@ impl<'a, 'b: 'a> Traversion<'a, &'b Settings> for FilesPrinter<'b, 'a> {
             let ext = target_path.extension().unwrap_or_default();
             let ext_str = ext.to_string_lossy().into();
 
-            let extensions = &settings.image_extensions;
-            let image_path = &settings.image_path;
+            let extensions = &settings.external_file_extensions;
+            let file_path = &settings.external_file_path;
             let target_extension = self.extension_map.get(&ext_str).unwrap_or(&ext_str);
 
             if extensions.contains(&ext_str) {
-                let ipath = PathBuf::from(&image_path)
+                let path = PathBuf::from(&file_path)
                     .join(&target_path)
                     .with_extension(target_extension);
-                let ipath = ipath.to_string_lossy().to_string();
-                write!(out, " \\\n\t{}", &filename_to_make(&ipath))?;
+                let path = path.to_string_lossy().to_string();
+                write!(out, " \\\n\t{}", &filename_to_make(&path))?;
             }
         };
         Ok(true)

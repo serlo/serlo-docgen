@@ -15,12 +15,12 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         let target_str = extract_plain_text(target);
         let target_path = path::Path::new(&target_str);
 
-        let image_path = path::PathBuf::from(&settings.image_path)
+        let file_path = path::PathBuf::from(&settings.external_file_path)
             .join(target_path.file_stem()
             .expect("image path is empty!"))
             .to_string_lossy()
             .to_string();
-        filename_to_make(&image_path)
+        filename_to_make(&file_path)
     }
 
     pub fn internal_ref(&mut self, root: &'e Element,
@@ -40,10 +40,10 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
             let ext_str = ext.to_string_lossy().into();
 
             let doctitle = &settings.document_title;
-            let img_exts = &settings.image_extensions;
+            let file_exts = &settings.external_file_extensions;
 
-            // file is an image
-            if img_exts.contains(&ext_str) {
+            // file is embedded as an image
+            if file_exts.contains(&ext_str) {
 
                 let image_path = self.build_image_path(target, settings);
 
