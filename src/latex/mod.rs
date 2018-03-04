@@ -57,14 +57,14 @@ impl Default for LatexTarget {
     fn default() -> LatexTarget {
         LatexTarget {
             deps_extension_mapping: string_map![
-                "png" => "pdf",
-                "svg" => "pdf",
-                "eps" => "pdf",
-                "jpg" => "pdf",
-                "jpeg" => "pdf",
-                "gif" => "gif.qr.eps",
-                "webm" => "webm.qr.eps",
-                "mp4" => "mp4.qr.eps"
+                "png" => "png.pdf",
+                "svg" => "svg.pdf",
+                "eps" => "eps.pdf",
+                "jpg" => "jpg.pdf",
+                "jpeg" => "jpg.pdf",
+                "gif" => "gif.qr.pdf",
+                "webm" => "webm.qr.pdf",
+                "mp4" => "mp4.qr.pdf"
             ],
             page_trim: 0.0,
             page_width: 155.0,
