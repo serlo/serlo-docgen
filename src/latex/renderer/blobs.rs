@@ -26,8 +26,18 @@ alias!(GENERIC_ENV, "\
 
 alias!(FIGURE_CONTENT, "\
 % image options: {:?}
+\\stepcounter{{imagelabel}}
+\\centering
+\\addxcontentsline{{lof}}{{section}}[]{{License Info not yet supported.}}
 \\adjincludegraphics[max width={}\\textwidth, max height={}\\textheight]{{{}}}
-\\caption{{{}}}\
+\\caption{{{} (\\arabic{{imagelabel}})}}\
+");
+
+alias!(FIGURE_INLINE, "
+% image options: {:?}
+\\stepcounter{{imagelabel}}
+\\addxcontentsline{{lof}}{{section}}[]{{License Info not yet supported.}}
+\\adjincludegraphics[height=\\lineheight]{{{}}}\
 ");
 
 alias!(INTERNAL_HREF, "\\href{{{}}}{{\\emph{{{}}}}}");

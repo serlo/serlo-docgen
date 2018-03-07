@@ -31,9 +31,11 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         filename_to_make(&file_path)
     }
 
-    pub fn internal_ref(&mut self, root: &'e Element,
-                    settings: &'s Settings,
-                    out: &mut io::Write) -> io::Result<bool> {
+    pub fn internal_ref(
+        &mut self, root: &'e Element,
+        settings: &'s Settings,
+        out: &mut io::Write
+    ) -> io::Result<bool> {
 
         if let Element::InternalReference {
             ref target,
@@ -61,26 +63,40 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                     image_options.push(extract_plain_text(option).trim().to_string());
                 }
 
-                // thumnails and inline images are not handled here
-                if !image_options.contains(&"center".to_owned()) {
-                    let msg = format!("No inline or thumnail images supported, yet!");
+                // thumnail images
+                if image_options.contains(&"thumb".to_owned()) {
+                    let msg = format!("Thumbnail images should have been moved into galleries.");
                     self.write_error(&msg, out)?;
                     return Ok(false)
                 }
 
-                self.write_def_location(position, doctitle, out)?;
-
                 let cap_content = caption.render(self, settings)?;
-                let fig_content = format!(
-                    FIGURE_CONTENT!(),
-                    &image_options,
-                    self.latex.image_width,
-                    self.latex.image_height,
-                    &image_path,
-                    &cap_content
-                );
 
-                self.environment("figure", &vec!["h"], &fig_content, out)?;
+                // centered images
+                if image_options.contains(&"center".to_owned()) {
+
+                    self.write_def_location(position, doctitle, out)?;
+
+                    let fig_content = format!(
+                        FIGURE_CONTENT!(),
+                        &image_options,
+                        self.latex.image_width,
+                        self.latex.image_height,
+                        &image_path,
+                        &cap_content
+                    );
+
+                    self.environment("figure", &vec!["h"], &fig_content, out)?;
+                // inline images
+                } else {
+                    writeln!(
+                        out,
+                        FIGURE_INLINE!(),
+                        &image_options,
+                        &image_path,
+                    )?;
+                }
+
                 return Ok(false)
             }
 
