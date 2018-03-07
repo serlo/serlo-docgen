@@ -38,7 +38,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
 
                         self.environment(
                             environment,
-                            &vec![title.trim()],
+                            &[title.trim()],
                             content.trim(),
                             out
                         )?;
@@ -81,7 +81,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
 
         self.environment(
             MATH_ENV!(),
-            &vec![],
+            &[],
             trimmed,
             out,
         )

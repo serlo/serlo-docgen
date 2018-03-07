@@ -223,7 +223,7 @@ impl<S> Renderable<S> for Element {
     ) -> io::Result<String> {
 
         let mut temp = vec![];
-        renderer.run(&self, settings, &mut temp)?;
+        renderer.run(self, settings, &mut temp)?;
         Ok(String::from_utf8(temp).unwrap())
     }
 }
@@ -236,7 +236,7 @@ impl<S> Renderable<S> for [Element] {
     ) -> io::Result<String> {
 
         let mut temp = vec![];
-        renderer.run_vec(&self, settings, &mut temp)?;
+        renderer.run_vec(self, settings, &mut temp)?;
         Ok(String::from_utf8(temp).unwrap())
     }
 }

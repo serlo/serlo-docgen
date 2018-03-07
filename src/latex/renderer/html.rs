@@ -9,10 +9,9 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                    settings: &'s Settings,
                    out: &mut io::Write) -> io::Result<bool> {
         if let Element::HtmlTag {
-            ref position,
             ref name,
-            ref attributes,
-            ref content
+            ref content,
+            ..
         } = *root {
             match name.to_lowercase().trim() {
                 "dfn" => {

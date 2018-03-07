@@ -11,11 +11,11 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         settings: &'s Settings,
         out: &mut io::Write) -> io::Result<bool> {
 
-        if let &Element::Gallery {
+        if let Element::Gallery {
             ref position,
             ref content,
             ..
-        } = root {
+        } = *root {
 
             let columns = "X".repeat(self.latex.gallery_images_per_row);
             let doctitle = &settings.document_title;
@@ -23,12 +23,12 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
             let mut rendered_images = vec![];
 
             for image in content {
-                if let &Element::InternalReference {
-                    ref position,
+                if let Element::InternalReference {
                     ref target,
                     ref options,
-                    ref caption
-                } = image {
+                    ref caption,
+                    ..
+                } = *image {
                     let path = self.build_image_path(target, settings);
                     let caption = caption.render(self, settings)?;
 
@@ -63,7 +63,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                 table_rows.push(row);
             }
 
-            self.write_def_location(position, &doctitle, out)?;
+            self.write_def_location(position, doctitle, out)?;
             writeln!(
                 out,
                 GALLERY!(),

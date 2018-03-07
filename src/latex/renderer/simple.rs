@@ -79,7 +79,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                     write!(out, ITALIC!(), &inner)?;
                 },
                 MarkupType::Math => {
-                    let inner = extract_plain_text(&content);
+                    let inner = extract_plain_text(content);
                     write!(out, MATH!(), &inner)?;
                 },
                 MarkupType::StrikeThrough => {

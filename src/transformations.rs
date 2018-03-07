@@ -141,7 +141,7 @@ pub fn normalize_math_formulas(mut root: Element, settings: &Settings) -> TResul
                     content.clear();
                     content.push(e);
                 },
-                e @ _ => return Ok(e),
+                e => return Ok(e),
             }
         }
     }
@@ -149,7 +149,11 @@ pub fn normalize_math_formulas(mut root: Element, settings: &Settings) -> TResul
 }
 
 /// Check a Tex formula, return normalized version or error
-fn check_formula(content: &Vec<Element>, position: &Span, settings: &Settings) -> Element {
+fn check_formula(
+    content: &[Element],
+    position: &Span,
+    settings: &Settings
+) -> Element {
     if content.len() != 1 {
         return Element::Error {
             message: "A formula must have exactly one content element!".into(),

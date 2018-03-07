@@ -71,7 +71,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         let line_width = self.latex.max_line_width;
 
         let arg_string: String = args.iter().map(|a| format!("[{}]", a)).collect();
-        let content = indent_and_trim(&content, indent, line_width);
+        let content = indent_and_trim(content, indent, line_width);
         write!(out, GENERIC_ENV!(), name, &arg_string, content, name)
     }
 
@@ -82,7 +82,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
     -> io::Result<()> {
 
         let message = escape_latex(message);
-        self.environment("error", &vec![], &message, out)
+        self.environment("error", &[], &message, out)
     }
 
     fn write_def_location(&self, pos: &Span, doctitle: &str,

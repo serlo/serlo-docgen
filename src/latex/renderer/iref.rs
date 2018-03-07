@@ -65,8 +65,8 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
 
                 // thumnail images
                 if image_options.contains(&"thumb".to_owned()) {
-                    let msg = format!("Thumbnail images should have been moved into galleries.");
-                    self.write_error(&msg, out)?;
+                    let msg = "Thumbnail images should have been moved into galleries.";
+                    self.write_error(msg, out)?;
                     return Ok(false)
                 }
 
@@ -86,7 +86,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                         &cap_content
                     );
 
-                    self.environment("figure", &vec!["h"], &fig_content, out)?;
+                    self.environment("figure", &["h"], &fig_content, out)?;
                 // inline images
                 } else {
                     writeln!(
