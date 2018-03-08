@@ -38,7 +38,7 @@ content:
     - type: text
       position: {}
       text: some text",
-"    some text
+"some text
 
 ");
 
@@ -59,7 +59,7 @@ content:
     - type: text
       position: {}
       text: \" end par\"",
-"    some text \\textbf{bold text} end par
+"some text \\textbf{bold text} end par
 
 ");
 
@@ -107,7 +107,8 @@ content:
       text: some text",
 "\\section{heading caption}
 
-some text");
+    some text
+");
 
 test_case!("latex", simple_ulist, "
 type: list
@@ -124,7 +125,6 @@ content:
 "\\begin{itemize}
     \\item item content 1
 \\end{itemize}
-
 ");
 
 test_case!("latex", simple_olist, "
@@ -151,7 +151,6 @@ content:
     \\item item content 1
     \\item item content 2
 \\end{enumerate}
-
 ");
 
 test_case!("latex", complex_list, "
@@ -172,7 +171,6 @@ content:
 "\\begin{itemize}
     \\item item content 1
 \\end{itemize}
-
 ");
 
 test_case!("latex", complex_olist, "
@@ -209,5 +207,4 @@ content:
     \\item item content 1
     \\item second item
 \\end{enumerate}
-
 ");
