@@ -38,6 +38,7 @@ impl<'e, 's: 'e, 't: 'e> Traversion<'e, &'s Settings> for LatexRenderer<'e, 't> 
             Element::List { .. } => self.list(root, settings, out)?,
             Element::HtmlTag { .. } => self.htmltag(root, settings, out)?,
             Element::Gallery { .. } => self.gallery(root, settings, out)?,
+            Element::ExternalReference { .. } => self.href(root, settings, out)?,
 
             // Leaf Elements
             Element::Text { .. } => self.text(root, settings, out)?,

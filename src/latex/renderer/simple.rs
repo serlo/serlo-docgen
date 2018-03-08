@@ -7,9 +7,11 @@ use super::LatexRenderer;
 
 impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
 
-    pub fn paragraph(&mut self, root: &'e Element,
-                     settings: &'s Settings,
-                     out: &mut io::Write) -> io::Result<bool> {
+    pub fn paragraph(
+        &mut self, root: &'e Element,
+        settings: &'s Settings,
+        out: &mut io::Write
+    ) -> io::Result<bool> {
 
         if let Element::Paragraph { ref content, .. } = *root {
 
@@ -19,9 +21,11 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         Ok(false)
     }
 
-    pub fn heading(&mut self, root: &'e Element,
-                   settings: &'s Settings,
-                   out: &mut io::Write) -> io::Result<bool> {
+    pub fn heading(
+        &mut self, root: &'e Element,
+        settings: &'s Settings,
+        out: &mut io::Write
+    ) -> io::Result<bool> {
 
         if let Element::Heading {depth, ref caption, ref content, .. } = *root {
 
@@ -40,9 +44,11 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         Ok(false)
     }
 
-    pub fn comment(&mut self, root: &'e Element,
-                   _: &'s Settings,
-                   out: &mut io::Write) -> io::Result<bool> {
+    pub fn comment(
+        &mut self, root: &'e Element,
+        _: &'s Settings,
+        out: &mut io::Write
+    ) -> io::Result<bool> {
 
         if let Element::Comment { ref text, .. } = *root {
             writeln!(out, "% {}", &escape_latex(text))?;
@@ -50,9 +56,11 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         Ok(false)
     }
 
-    pub fn text(&mut self, root: &'e Element,
-                _: &'s Settings,
-                out: &mut io::Write) -> io::Result<bool> {
+    pub fn text(
+        &mut self, root: &'e Element,
+        _: &'s Settings,
+        out: &mut io::Write
+    ) -> io::Result<bool> {
 
         if let Element::Text { ref text, .. } = *root {
             write!(out, "{}", &escape_latex(text))?;
@@ -60,9 +68,11 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         Ok(false)
     }
 
-    pub fn formatted(&mut self, root: &'e Element,
-                     settings: &'s Settings,
-                     out: &mut io::Write) -> io::Result<bool> {
+    pub fn formatted(
+        &mut self, root: &'e Element,
+        settings: &'s Settings,
+        out: &mut io::Write
+    ) -> io::Result<bool> {
 
         if let Element::Formatted { ref markup, ref content, .. } = *root {
 
@@ -93,6 +103,23 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                     self.write_error(&msg, out)?;
                 }
             }
+        }
+        Ok(false)
+    }
+
+    pub fn href(
+        &mut self, root: &'e Element,
+        settings: &'s Settings,
+        out: &mut io::Write
+    ) -> io::Result<bool> {
+
+        if let Element::ExternalReference {
+            ref target,
+            ref caption,
+            ..
+        } = *root {
+            let caption = caption.render(self, settings)?;
+            writeln!(out, INTERNAL_HREF!(), target, &caption)?;
         }
         Ok(false)
     }
