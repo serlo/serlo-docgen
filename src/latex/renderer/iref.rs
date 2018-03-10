@@ -80,8 +80,8 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                     let fig_content = format!(
                         FIGURE_CONTENT!(),
                         &image_options,
-                        self.latex.image_width,
-                        self.latex.image_height,
+                        self.latex.opts.image_width,
+                        self.latex.opts.image_height,
                         &image_path,
                         &cap_content
                     );

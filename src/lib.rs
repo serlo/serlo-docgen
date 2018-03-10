@@ -3,6 +3,7 @@ extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde_yaml;
+extern crate serde_json;
 
 use mediawiki_parser::transformations::TResult;
 use mediawiki_parser::Element;

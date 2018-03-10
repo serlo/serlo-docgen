@@ -4,6 +4,7 @@
 
 extern crate mediawiki_parser;
 extern crate serde_yaml;
+extern crate serde_json;
 extern crate argparse;
 extern crate mfnf_export;
 
@@ -22,6 +23,7 @@ use argparse::{ArgumentParser, StoreTrue, Store, Collect};
 #[derive(Debug)]
 struct Args {
     pub dump_config: bool,
+    pub write_config_json: bool,
     pub input_file: String,
     pub config_file: String,
     pub doc_title: String,
@@ -35,6 +37,7 @@ impl Default for Args {
     fn default() -> Self {
         Args {
             dump_config: false,
+            write_config_json: false,
             input_file: String::new(),
             config_file: String::new(),
             doc_title: "<no document name specified>".to_string(),
@@ -73,6 +76,11 @@ fn parse_args() -> Args {
             &["-d", "--dump-settings"],
             StoreTrue,
             "Dump the default settings to stdout."
+        );
+        ap.refer(&mut args.write_config_json).add_option(
+            &["-j", "--write-config-json"],
+            StoreTrue,
+            "Instead of running the target, output its configuration / metadata as json."
         );
         ap.refer(&mut args.config_file).add_option(
             &["-c", "--config"],
@@ -127,6 +135,20 @@ fn main() {
     if args.targets.is_empty() {
         eprintln!("No target specified!");
         process::exit(1);
+    }
+
+    if args.write_config_json {
+        for target in &args.targets {
+            match settings.targets.get(target) {
+                Some(t) => t.get_target().export_config_json(&mut io::stdout())
+                    .expect("error when writing config json!"),
+                None => {
+                    eprintln!("target not configured: {:?}", target);
+                    continue
+                }
+            };
+        }
+        process::exit(0);
     }
 
     if args.texvccheck_path.is_empty() {

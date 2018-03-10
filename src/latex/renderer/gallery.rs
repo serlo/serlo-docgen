@@ -17,7 +17,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
             ..
         } = *root {
 
-            let columns = "X".repeat(self.latex.gallery_images_per_row);
+            let columns = "X".repeat(self.latex.opts.gallery_images_per_row);
             let doctitle = &settings.document_title;
 
             let mut rendered_images = vec![];
@@ -41,14 +41,14 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                     let mut inner = format!(
                         GALLERY_CONTENT!(),
                         &image_options,
-                        self.latex.image_height,
-                        self.latex.image_height,
+                        self.latex.opts.image_height,
+                        self.latex.opts.image_height,
                         &path,
                         &caption,
                     );
 
-                    let indent = self.latex.indentation_depth;
-                    let line_width = self.latex.max_line_width;
+                    let indent = self.latex.opts.indentation_depth;
+                    let line_width = self.latex.opts.max_line_width;
                     inner = indent_and_trim(&inner, indent, line_width);
                     rendered_images.push(inner);
                 }
@@ -56,9 +56,9 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
 
             // partition gallery rows
             let mut table_rows = vec![];
-            for chunk in rendered_images.chunks(self.latex.gallery_images_per_row) {
+            for chunk in rendered_images.chunks(self.latex.opts.gallery_images_per_row) {
                 let mut row = chunk.join("&\n");
-                let missing = self.latex.gallery_images_per_row - chunk.len();
+                let missing = self.latex.opts.gallery_images_per_row - chunk.len();
                 row.push_str(&"&\n".repeat(missing));
                 table_rows.push(row);
             }

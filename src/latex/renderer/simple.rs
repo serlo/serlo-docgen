@@ -29,8 +29,8 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
 
         if let Element::Heading {depth, ref caption, ref content, .. } = *root {
 
-            let line_width = self.latex.max_line_width;
-            let indent = self.latex.indentation_depth;
+            let line_width = self.latex.opts.max_line_width;
+            let indent = self.latex.opts.indentation_depth;
 
             let caption = caption.render(self, settings)?;
             let mut content = content.render(self, settings)?;
