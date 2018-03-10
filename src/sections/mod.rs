@@ -48,15 +48,11 @@ impl Target for SectionsTarget {
 
             let mut filename = settings.document_revision.clone();
             let file_ext = &settings.section_ext;
-            let section_path = &settings.section_path;
-            let doctitle = &settings.document_title;
 
             filename.push('.');
             filename.push_str(file_ext);
 
-            let mut path = path::Path::new(&section_path)
-                .join(&filename_to_make(doctitle))
-                .join(&filename_to_make(&section.clone()));
+            let mut path = path::PathBuf::from(&filename_to_make(&section));
 
             DirBuilder::new()
                 .recursive(true)

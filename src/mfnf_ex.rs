@@ -28,6 +28,7 @@ struct Args {
     pub doc_revision: String,
     pub targets: Vec<String>,
     pub texvccheck_path: String,
+    pub sections_path: String,
 }
 
 impl Default for Args {
@@ -40,6 +41,7 @@ impl Default for Args {
             doc_revision: "latest".to_string(),
             targets: vec![],
             texvccheck_path: String::new(),
+            sections_path: "sections".into(),
         }
     }
 }
@@ -87,6 +89,11 @@ fn parse_args() -> Args {
             Store,
             "Path to the `texvccheck` executable."
         );
+        ap.refer(&mut args.sections_path).add_option(
+            &["-s", "--sections-path"],
+            Store,
+            "Path to the directory of included sections."
+        );
         ap.parse_args_or_exit();
     }
     args
@@ -109,6 +116,7 @@ fn main() {
 
     settings.document_title = args.doc_title.clone();
     settings.document_revision = args.doc_revision.clone();
+    settings.section_path = args.sections_path;
 
     if args.dump_config {
         println!("{}", serde_yaml::to_string(&settings)
