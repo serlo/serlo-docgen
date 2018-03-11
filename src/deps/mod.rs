@@ -15,7 +15,9 @@ use self::printers::*;
 
 /// Writes a list of `make` dependencies for each target.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(default)]
 pub struct DepsTarget {
+    #[serde(skip_serializing_if = "is_default")]
     extension_map_dummy: HashMap<String, String>,
 }
 

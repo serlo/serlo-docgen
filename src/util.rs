@@ -40,6 +40,19 @@ pub fn escape_latex(input: &str) -> String {
     res
 }
 
+macro_rules! ser_field_non_default {
+    ($self:ident, $field:ident, $default:ident, $ser:ident) => {
+        if $self.$field != $default.$field {
+            $ser.serialize_field(stringify!($field), &$self.$field)?;
+        }
+    }
+}
+
+/// Is a type just the default instance?
+pub fn is_default<T>(obj: &T) -> bool where T: PartialEq + Default {
+    return *obj == T::default();
+}
+
 /// Trim one pair of prefix and suffix from a string, ignoring input case.
 pub fn trim_enclosing<'a>(input: &'a str, prefix: &str, suffix: &str) -> &'a str {
     let lower_input = input.to_lowercase();

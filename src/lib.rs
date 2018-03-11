@@ -10,9 +10,9 @@ use mediawiki_parser::Element;
 
 mod target;
 #[macro_use]
-mod settings;
-#[macro_use]
 mod util;
+#[macro_use]
+mod settings;
 mod latex;
 mod deps;
 mod sections;

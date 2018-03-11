@@ -20,7 +20,9 @@ mod filter;
 
 /// Write marked document section to the filesystem.
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
+#[serde(default)]
 pub struct SectionsTarget {
+    #[serde(skip_serializing_if = "is_default")]
     pub extension_mapping: HashMap<String, String>,
 }
 

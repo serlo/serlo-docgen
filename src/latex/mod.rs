@@ -6,6 +6,7 @@
 use std::collections::HashMap;
 use preamble::*;
 use serde_json;
+use serde::ser::{Serialize, Serializer, SerializeStruct};
 
 mod trans;
 mod renderer;
@@ -13,7 +14,7 @@ mod renderer;
 use self::renderer::{LatexRenderer};
 
 /// Target-specifig LaTeX options
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct LatexOpts {
     /// Page trim in mm.
     page_trim: f32,
@@ -43,7 +44,8 @@ pub struct LatexOpts {
 }
 
 /// Data for LaTeX export.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
+#[serde(default)]
 pub struct LatexTarget {
     /// mapping of external file extensions to target extensions.
     /// this is useful if external dependencies should be processed by
@@ -59,6 +61,20 @@ pub struct LatexTarget {
     /// Any additional template attributes will be exported as
     /// subsequent environments, if listed here.
     environments: HashMap<String, Vec<String>>,
+}
+
+impl Serialize for LatexTarget {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: Serializer
+    {
+        let default = LatexTarget::default();
+
+        let mut state = serializer.serialize_struct("LatexTarget", 3)?;
+        ser_field_non_default!(self, deps_extension_mapping, default, state);
+        ser_field_non_default!(self, opts, default, state);
+        ser_field_non_default!(self, environments, default, state);
+        state.end()
+    }
 }
 
 impl Default for LatexOpts {
