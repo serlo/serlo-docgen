@@ -15,6 +15,7 @@ use self::renderer::{LatexRenderer};
 
 /// Target-specifig LaTeX options
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(default)]
 pub struct LatexOpts {
     /// Page trim in mm.
     page_trim: f32,

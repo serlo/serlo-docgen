@@ -109,18 +109,19 @@ fn parse_args() -> Args {
 
 fn main() {
     let args = parse_args();
-    let mut settings = Settings::default();
+
+    let mut settings = if !args.config_file.is_empty() {
+        let file = fs::File::open(&args.config_file)
+            .expect("Could not open config file!");
+        serde_yaml::from_reader(&file)
+            .expect("Could not parse config file!")
+    } else {
+        Settings::default()
+    };
 
     let orig_root: TResult;
     // section inclusion, etc. may fail, but deps shoud still be generated.
     let transformed_root: TResult;
-
-    /*
-    if !args.config_file.is_empty() {
-        settings.merge(config::File::with_name(&args.config_file))
-            .expect("Could not parse settings file!");
-    };
-    */
 
     settings.document_title = args.doc_title.clone();
     settings.document_revision = args.doc_revision.clone();
