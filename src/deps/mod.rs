@@ -22,8 +22,6 @@ pub struct DepsTarget {
 }
 
 impl Target for DepsTarget {
-    fn get_name(&self) -> &str { "dependencies" }
-
     fn get_target_extension(&self) -> &str { "dep" }
 
     fn get_extension_mapping(&self) -> &HashMap<String, String> {
@@ -32,16 +30,20 @@ impl Target for DepsTarget {
 
     /// Extract dependencies from a RAW source AST. Sections are
     /// not included at this point.
-    fn export<'a>(&self, root: &'a Element,
-                         settings: &Settings,
-                         out: &mut io::Write) -> io::Result<()> {
+    fn export<'a>(
+        &self,
+        root: &'a Element,
+        settings: &Settings,
+        args: &Vec<String>,
+        out: &mut io::Write) -> io::Result<()>
+    {
 
         let docrev = &settings.document_revision;
         for (name, target) in &settings.targets {
 
             let target = target.get_target();
 
-            if !target.do_generate_dependencies() {
+            if !args.contains(name) {
                 continue;
             }
 
@@ -55,6 +57,7 @@ impl Target for DepsTarget {
 
             file_collection.run(root, settings, out)?;
             section_collection.run(root, settings, out)?;
+            writeln!(out, "")?;
         }
         Ok(())
     }

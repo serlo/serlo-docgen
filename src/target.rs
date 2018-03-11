@@ -10,16 +10,13 @@ pub trait Target {
         &self,
         root: &Element,
         settings: &Settings,
+        args: &Vec<String>,
         out: &mut io::Write
     ) -> io::Result<()>;
-    /// get the name of this target.
-    fn get_name(&self) -> &str;
     /// does this target operate on the input tree directly or with
     /// mfnf transformations applied?
     fn do_include_sections(&self) -> bool { false }
     /// are make dependencies generated for this target?
-    fn do_generate_dependencies(&self) -> bool { false }
-    /// extension of the resulting file. Used for make dependency generation.
     fn get_target_extension(&self) -> &str;
     /// mapping of external file extensions to target extensions.
     /// this is useful if external dependencies should be processed by

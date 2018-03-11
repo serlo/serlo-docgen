@@ -28,7 +28,8 @@ struct Args {
     pub config_file: String,
     pub doc_title: String,
     pub doc_revision: String,
-    pub targets: Vec<String>,
+    pub target: String,
+    pub target_args: Vec<String>,
     pub texvccheck_path: String,
     pub sections_path: String,
 }
@@ -42,7 +43,8 @@ impl Default for Args {
             config_file: String::new(),
             doc_title: "<no document name specified>".to_string(),
             doc_revision: "latest".to_string(),
-            targets: vec![],
+            target: String::new(),
+            target_args: vec![],
             texvccheck_path: String::new(),
             sections_path: "sections".into(),
         }
@@ -87,11 +89,6 @@ fn parse_args() -> Args {
             Store,
             "A config file to override the default options."
         );
-        ap.refer(&mut args.targets).add_argument(
-            "targets",
-            Collect,
-            "List of targets to export. Currently supported: `latex`"
-        );
         ap.refer(&mut args.texvccheck_path).add_option(
             &["-p", "--texvccheck-path"],
             Store,
@@ -101,6 +98,16 @@ fn parse_args() -> Args {
             &["-s", "--sections-path"],
             Store,
             "Path to the directory of included sections."
+        );
+        ap.refer(&mut args.target).add_argument(
+            "target",
+            Store,
+            "The target to export, like `deps`, `sections`, `latex`, ..."
+        );
+        ap.refer(&mut args.target_args).add_argument(
+            "args",
+            Collect,
+            "Additional arguments for a target. (e.g. wantet targets for `deps`)"
         );
         ap.parse_args_or_exit();
     }
@@ -133,22 +140,15 @@ fn main() {
         process::exit(0);
     }
 
-    if args.targets.is_empty() {
-        eprintln!("No target specified!");
-        process::exit(1);
-    }
-
     if args.write_config_json {
-        for target in &args.targets {
-            match settings.targets.get(target) {
-                Some(t) => t.get_target().export_config_json(&mut io::stdout())
-                    .expect("error when writing config json!"),
-                None => {
-                    eprintln!("target not configured: {:?}", target);
-                    continue
-                }
-            };
-        }
+        match settings.targets.get(&args.target) {
+            Some(t) => t.get_target().export_config_json(&mut io::stdout())
+                .expect("error when writing config json!"),
+            None => {
+                eprintln!("target not configured: {:?}", &args.target);
+                process::exit(1);
+            }
+        };
         process::exit(0);
     }
 
@@ -171,24 +171,23 @@ fn main() {
     let root_clone = handle_transformation_result(&orig_root).clone();
     transformed_root = compose(root_clone, &settings);
 
-    for target in &args.targets {
-        let mut export_result = vec![];
-        let target = match settings.targets.get(target) {
-            Some(t) => t.get_target(),
-            None => {
-                eprintln!("target not configured: {:?}", target);
-                continue
-            }
-        };
-        let root = if target.do_include_sections() {
-            handle_transformation_result(&transformed_root)
-        } else {
-            handle_transformation_result(&orig_root)
-        };
-        target.export(root, &settings, &mut export_result)
-            .expect("target export failed!");
-        println!("{}", str::from_utf8(&export_result).unwrap());
-    }
+    // export target
+    let mut export_result = vec![];
+    let target = match settings.targets.get(&args.target) {
+        Some(t) => t.get_target(),
+        None => {
+            eprintln!("target not configured: {:?}", args.target);
+            process::exit(1);
+        }
+    };
+    let root = if target.do_include_sections() {
+        handle_transformation_result(&transformed_root)
+    } else {
+        handle_transformation_result(&orig_root)
+    };
+    target.export(root, &settings, &args.target_args, &mut export_result)
+        .expect("target export failed!");
+    println!("{}", str::from_utf8(&export_result).unwrap());
 }
 
 fn handle_transformation_result(result: &TResult) -> &mediawiki_parser::Element {

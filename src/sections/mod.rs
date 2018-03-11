@@ -27,9 +27,7 @@ pub struct SectionsTarget {
 }
 
 impl Target for SectionsTarget {
-    fn get_name(&self) -> &str { "sections" }
     fn do_include_sections(&self) -> bool { false }
-    fn do_generate_dependencies(&self) -> bool { false }
     fn get_target_extension(&self) -> &str { "yml" }
     fn get_extension_mapping(&self) -> &HashMap<String, String> {
         &self.extension_mapping
@@ -37,6 +35,7 @@ impl Target for SectionsTarget {
     fn export<'a>(&self,
                 root: &'a Element,
                 settings: &Settings,
+                _: &Vec<String>,
                 _: &mut io::Write) -> io::Result<()> {
 
         let sections = finder::SectionNameCollector::collect_from(root);

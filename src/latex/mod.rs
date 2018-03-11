@@ -136,9 +136,7 @@ impl Default for LatexTarget {
 
 impl Target for LatexTarget {
 
-    fn get_name(&self) -> &str { "latex" }
     fn do_include_sections(&self) -> bool { true }
-    fn do_generate_dependencies(&self) -> bool { true }
     fn get_target_extension(&self) -> &str { "tex" }
     fn get_extension_mapping(&self) -> &HashMap<String, String> {
         &self.deps_extension_mapping
@@ -146,6 +144,7 @@ impl Target for LatexTarget {
     fn export<'a>(&self,
                   root: &'a Element,
                   settings: &Settings,
+                  _: &Vec<String>,
                   out: &mut io::Write) -> io::Result<()> {
 
         // apply latex-specific transformations
