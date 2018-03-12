@@ -10,7 +10,7 @@ pub trait Target {
         &self,
         root: &Element,
         settings: &Settings,
-        args: &Vec<String>,
+        args: &[String],
         out: &mut io::Write
     ) -> io::Result<()>;
     /// does this target operate on the input tree directly or with

@@ -35,7 +35,7 @@ impl Target for SectionsTarget {
     fn export<'a>(&self,
                 root: &'a Element,
                 settings: &Settings,
-                _: &Vec<String>,
+                _: &[String],
                 _: &mut io::Write) -> io::Result<()> {
 
         let sections = finder::SectionNameCollector::collect_from(root);

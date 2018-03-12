@@ -17,7 +17,7 @@ macro_rules! test_case {
                 .expect("unknown target!")
                 .get_target();
             let mut res = vec![];
-            target.export(&root, &settings, &mut res)
+            target.export(&root, &settings, &[], &mut res)
                 .expect("export failed!");
             assert_eq!(&String::from_utf8_lossy(&res), $result);
         }

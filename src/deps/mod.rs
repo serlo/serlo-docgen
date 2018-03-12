@@ -34,7 +34,7 @@ impl Target for DepsTarget {
         &self,
         root: &'a Element,
         settings: &Settings,
-        args: &Vec<String>,
+        args: &[String],
         out: &mut io::Write) -> io::Result<()>
     {
 

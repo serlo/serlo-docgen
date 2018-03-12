@@ -144,7 +144,7 @@ impl Target for LatexTarget {
     fn export<'a>(&self,
                   root: &'a Element,
                   settings: &Settings,
-                  _: &Vec<String>,
+                  _: &[String],
                   out: &mut io::Write) -> io::Result<()> {
 
         // apply latex-specific transformations
