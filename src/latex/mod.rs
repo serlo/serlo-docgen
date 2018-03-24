@@ -5,47 +5,15 @@
 
 use std::collections::HashMap;
 use preamble::*;
-use serde_json;
-use serde::ser::{Serialize, Serializer, SerializeStruct};
 
 mod trans;
 mod renderer;
 
 use self::renderer::{LatexRenderer};
 
-/// Target-specifig LaTeX options
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[serde(default)]
-pub struct LatexOpts {
-    /// Page trim in mm.
-    page_trim: f32,
-    /// Paper width in mm.
-    page_width: f32,
-    /// Paper height in mm.
-    page_height: f32,
-    /// Font size in pt.
-    font_size: f32,
-    /// Baseline height in pt.
-    baseline_height: f32,
-    /// Paper border in mm as [top, bottom, outer, inner]
-    border: [f32; 4],
-    /// Document class options.
-    document_options: String,
-    /// Indentation depth for template content.
-    indentation_depth: usize,
-    /// Maximum line width (without indentation).
-    max_line_width: usize,
-    /// Maximum width of an image in a figure as fraction of \\textwidth
-    image_width: f32,
-    /// Maximum height of an imgae in a figure as fraction of \\textheight
-    image_height: f32,
-
-    /// Specifies how many images a gallery may have on one row.
-    gallery_images_per_row: usize,
-}
 
 /// Data for LaTeX export.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(default)]
 pub struct LatexTarget {
     /// mapping of external file extensions to target extensions.
@@ -53,8 +21,16 @@ pub struct LatexTarget {
     /// make for this target.
     deps_extension_mapping: HashMap<String, String>,
 
-    /// Latex-specific options
-    opts: LatexOpts,
+    /// Indentation depth for template content.
+    indentation_depth: usize,
+    /// Maximum line width (without indentation).
+    max_line_width: usize,
+    /// Specifies how many images a gallery may have on one row.
+    gallery_images_per_row: usize,
+    /// Maximum width of an image in a figure as fraction of \\textwidth
+    image_width: f32,
+    /// Maximum height of an imgae in a figure as fraction of \\textheight
+    image_height: f32,
 
     /// Templates which can be exported as an environment.
     /// The template may have a `title` attribute and a content
@@ -62,39 +38,6 @@ pub struct LatexTarget {
     /// Any additional template attributes will be exported as
     /// subsequent environments, if listed here.
     environments: HashMap<String, Vec<String>>,
-}
-
-impl Serialize for LatexTarget {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where S: Serializer
-    {
-        let default = LatexTarget::default();
-
-        let mut state = serializer.serialize_struct("LatexTarget", 3)?;
-        ser_field_non_default!(self, deps_extension_mapping, default, state);
-        ser_field_non_default!(self, opts, default, state);
-        ser_field_non_default!(self, environments, default, state);
-        state.end()
-    }
-}
-
-impl Default for LatexOpts {
-    fn default() -> LatexOpts {
-        LatexOpts {
-            page_trim: 0.0,
-            page_width: 155.0,
-            page_height: 235.0,
-            font_size: 9.0,
-            baseline_height: 12.0,
-            border: [20.5, 32.6, 22.0, 18.5],
-            document_options: "tocflat, listof=chapterentry".into(),
-            indentation_depth: 4,
-            max_line_width: 80,
-            image_width: 0.5,
-            image_height: 0.2,
-            gallery_images_per_row: 2,
-        }
-    }
 }
 
 impl Default for LatexTarget {
@@ -110,7 +53,11 @@ impl Default for LatexTarget {
                 "webm" => "webm.qr.pdf",
                 "mp4" => "mp4.qr.pdf"
             ],
-            opts: LatexOpts::default(),
+            indentation_depth: 4,
+            max_line_width: 80,
+            image_width: 0.5,
+            image_height: 0.2,
+            gallery_images_per_row: 2,
             environments: string_value_map![
                 "definition" => string_vec!["definition"],
                 "theorem" => string_vec!["theorem", "explanation", "example",
@@ -156,11 +103,6 @@ impl Target for LatexTarget {
 
         let mut renderer = LatexRenderer::new(self);
         renderer.run(&latex_tree, settings, out)
-    }
-
-    fn export_config_json(&self, out: &mut io::Write) -> io::Result<()> {
-        write!(out, "{}", serde_json::to_string_pretty(&self.opts)
-            .expect("Could not serialize LaTeX options!"))
     }
 }
 

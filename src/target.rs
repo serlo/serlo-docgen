@@ -22,13 +22,6 @@ pub trait Target {
     /// this is useful if external dependencies should be processed by
     /// make for this target.
     fn get_extension_mapping(&self) -> &HashMap<String, String>;
-    /// writes target-specific configuration / metadata to a JSON string.
-    /// this can be be supplied to a template engine to
-    /// do further modification of the target output.
-    fn export_config_json(
-        &self,
-        out: &mut io::Write
-    ) -> io::Result<()>;
 }
 
 

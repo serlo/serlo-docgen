@@ -68,8 +68,8 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         content: &str,
         out: &mut io::Write)
     -> io::Result<()> {
-        let indent = self.latex.opts.indentation_depth;
-        let line_width = self.latex.opts.max_line_width;
+        let indent = self.latex.indentation_depth;
+        let line_width = self.latex.max_line_width;
 
         let arg_string: String = args.iter().map(|a| format!("[{}]", a)).collect();
         let content = indent_and_trim(content, indent, line_width);

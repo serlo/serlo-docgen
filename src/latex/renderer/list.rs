@@ -57,8 +57,8 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                             format!(ITEM!(), child_content.trim())
                         };
 
-                        let line_width = self.latex.opts.max_line_width;
-                        let indent = self.latex.opts.indentation_depth;
+                        let line_width = self.latex.max_line_width;
+                        let indent = self.latex.indentation_depth;
 
                         definition_term = None;
                         items.push(indent_and_trim(&item, indent, line_width));

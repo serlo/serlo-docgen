@@ -79,11 +79,6 @@ fn parse_args() -> Args {
             StoreTrue,
             "Dump the default settings to stdout."
         );
-        ap.refer(&mut args.write_config_json).add_option(
-            &["-j", "--write-config-json"],
-            StoreTrue,
-            "Instead of running the target, output its configuration / metadata as json."
-        );
         ap.refer(&mut args.config_file).add_option(
             &["-c", "--config"],
             Store,
@@ -137,18 +132,6 @@ fn main() {
     if args.dump_config {
         println!("{}", serde_yaml::to_string(&settings)
             .expect("could not serialize default settings!"));
-        process::exit(0);
-    }
-
-    if args.write_config_json {
-        match settings.targets.get(&args.target) {
-            Some(t) => t.get_target().export_config_json(&mut io::stdout())
-                .expect("error when writing config json!"),
-            None => {
-                eprintln!("target not configured: {:?}", &args.target);
-                process::exit(1);
-            }
-        };
         process::exit(0);
     }
 

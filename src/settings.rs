@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use deps;
 use latex;
 use sections;
+use pdf;
 use MFNFTargets;
 
 use serde::ser::{Serialize, Serializer, SerializeStruct};
@@ -117,6 +118,8 @@ impl Default for Settings {
                     MFNFTargets::Latex(latex::LatexTarget::default()));
                 tmap.insert("sections".to_string(),
                     MFNFTargets::Sections(sections::SectionsTarget::default()));
+                tmap.insert("pdf".to_string(),
+                    MFNFTargets::PDF(pdf::PDFTarget::default()));
                 tmap
             },
             document_title: "<no document name specified>".into(),

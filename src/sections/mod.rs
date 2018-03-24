@@ -69,8 +69,4 @@ impl Target for SectionsTarget {
         }
         Ok(())
     }
-
-    fn export_config_json(&self, out: &mut io::Write) -> io::Result<()> {
-        write!(out, "{}", "{}")
-    }
 }

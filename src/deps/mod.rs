@@ -61,9 +61,5 @@ impl Target for DepsTarget {
         }
         Ok(())
     }
-
-    fn export_config_json(&self, out: &mut io::Write) -> io::Result<()> {
-        write!(out, "{}", "{}")
-    }
 }
 
