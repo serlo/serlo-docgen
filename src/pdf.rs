@@ -57,11 +57,19 @@ impl Target for PDFTarget {
     }
     fn export<'a>(&self,
                 _: &'a Element,
-                _: &Settings,
+                settings: &Settings,
                 _: &[String],
                 out: &mut io::Write) -> io::Result<()> {
 
-        writeln!(out, "{}", serde_yaml::to_string(self)
+        let mut data_table = serde_yaml::to_value(self)
+            .expect("could not construct value from PDFTarget!");
+
+        if let &mut serde_yaml::Value::Mapping(ref mut m) = &mut data_table {
+            m.insert("document_title".into(), settings.document_title.clone().into());
+            m.insert("document_revision".into(), settings.document_revision.clone().into());
+        }
+
+        writeln!(out, "{}", serde_yaml::to_string(&data_table)
             .expect("could not serialize the PDFTarget struct"))
     }
 }
