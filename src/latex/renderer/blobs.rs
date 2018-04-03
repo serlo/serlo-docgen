@@ -73,6 +73,7 @@ alias!(UNDERLINE, "\\ul{{{}}}");
 // --- Templates ---
 
 alias!(MATH_ENV, "align*");
+alias!(IMPORTANT_ENV, "important");
 
 // --- Galleries ---
 

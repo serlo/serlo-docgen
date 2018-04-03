@@ -55,6 +55,9 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                 "anchor" => {
                     write!(out, " {} ", escape_latex("<no anchors yet!>"))?;
                 }
+                "-" | "important" => {
+                    self.important(content, out)?;
+                }
                 _ => {
                     let message = format!("MISSING TEMPLATE: {}", template_name);
                     self.write_def_location(position, doctitle, out)?;
@@ -84,6 +87,16 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
             &[],
             trimmed,
             out,
+        )
+    }
+
+    fn important(&self, content: &[Element], out: &mut io::Write) -> io::Result<()> {
+
+        self.environment(
+            IMPORTANT_ENV!(),
+            &[],
+            extract_plain_text(content).trim(),
+            out
         )
     }
 
