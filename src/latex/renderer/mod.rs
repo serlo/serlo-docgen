@@ -12,6 +12,8 @@ mod iref;
 mod list;
 mod html;
 mod gallery;
+mod table;
+
 
 /// Recursively renders a syntax tree to latex.
 pub struct LatexRenderer<'e, 't> {
@@ -39,6 +41,9 @@ impl<'e, 's: 'e, 't: 'e> Traversion<'e, &'s Settings> for LatexRenderer<'e, 't> 
             Element::HtmlTag { .. } => self.htmltag(root, settings, out)?,
             Element::Gallery { .. } => self.gallery(root, settings, out)?,
             Element::ExternalReference { .. } => self.href(root, settings, out)?,
+            Element::Table { .. } => self.table(root, settings, out)?,
+            Element::TableRow { .. } => self.table_row(root, settings, out)?,
+
 
             // Leaf Elements
             Element::Text { .. } => self.text(root, settings, out)?,

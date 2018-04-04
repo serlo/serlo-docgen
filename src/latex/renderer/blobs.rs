@@ -98,3 +98,18 @@ alias!(GALLERY_CONTENT, "\
     \\end{{figure}}
 \\end{{minipage}}
 ");
+
+// --- Table ---
+alias!(TABLE, "\
+\\renewcommand{{\\arraystretch}}{{1.5}}
+\\begin{{longtabu}} to \\linewidth {{{}}}
+\\caption{{{}}}\\\\ \\toprule
+{}
+\\bottomrule
+\\end{{longtabu}}
+\\renewcommand{{\\arraystretch}}{{1.0}}
+");
+
+alias!(TABLE_WITH_HEADER, "{}\\midrule\n{}");
+alias!(TABLE_WITHOUT_HEADER, "{}");
+
