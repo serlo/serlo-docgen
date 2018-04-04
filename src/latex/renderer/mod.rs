@@ -43,6 +43,7 @@ impl<'e, 's: 'e, 't: 'e> Traversion<'e, &'s Settings> for LatexRenderer<'e, 't> 
             Element::ExternalReference { .. } => self.href(root, settings, out)?,
             Element::Table { .. } => self.table(root, settings, out)?,
             Element::TableRow { .. } => self.table_row(root, settings, out)?,
+            Element::TableCell { .. } => self.table_cell(root, settings, out)?,
 
 
             // Leaf Elements

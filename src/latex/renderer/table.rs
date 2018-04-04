@@ -12,11 +12,35 @@ struct TableInfo<'e> {
 
 impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
 
+    pub fn table_cell(
+        &mut self,
+        root: &'e Element,
+        settings: &'s Settings,
+        out: &mut io::Write
+    ) -> io::Result<bool> {
+
+        if let Element::TableCell {
+            ref content,
+            ..
+        } = *root {
+            // paragraphs in tables do not translate well for latex
+            for child in content {
+                if let Element::Paragraph { ref content, .. } = *child {
+                    self.run_vec(content, settings, out)?;
+                } else {
+                    self.run(child, settings, out)?;
+                }
+            }
+        }
+        Ok(false)
+    }
+
     pub fn table_row(
         &mut self,
         root: &'e Element,
         settings: &'s Settings,
-        out: &mut io::Write) -> io::Result<bool> {
+        out: &mut io::Write
+    ) -> io::Result<bool> {
 
         if let Element::TableRow {
             ref cells,
@@ -24,15 +48,10 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         } = *root {
 
             for (index, cell) in cells.iter().enumerate() {
-                if let Element::TableCell {
-                    ref content,
-                    ..
-                } = *cell {
-                    if index > 0 {
-                        write!(out, " & ")?;
-                    }
-                    self.run_vec(content, settings, out)?;
+                if index > 0 {
+                    write!(out, " & ")?;
                 }
+                self.run(cell, settings, out)?;
             }
             writeln!(out, "\\\\")?;
         }
