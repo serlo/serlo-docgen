@@ -47,6 +47,11 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                 return Ok(false);
             }
 
+            // script invocations are ignored
+            if template_name.starts_with("#invoke") {
+                return Ok(false);
+            }
+
             // any other template
             match &template_name[..] {
                 "formula" => {

@@ -22,6 +22,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                     let content = content.render(self, settings)?;
                     write!(out, HTML_REF!(), &content)?;
                 },
+                "section" => (),
                 _ => {
                     let msg = format!("no export function defined \
                         for html tag `{}`!", name);
