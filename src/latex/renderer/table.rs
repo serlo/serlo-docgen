@@ -24,13 +24,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
             ..
         } = *root {
             // paragraphs in tables do not translate well for latex
-            for child in content {
-                if let Element::Paragraph { ref content, .. } = *child {
-                    self.run_vec(content, settings, out)?;
-                } else {
-                    self.run(child, settings, out)?;
-                }
-            }
+            self.run_vec_nopar(content, settings, out)?;
         }
         Ok(false)
     }
@@ -95,9 +89,6 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
             }
         }
 
-        // only the first row can be header for now
-        eprintln!("last header index: {:?}", last_header_position);
-
         let rows_split = rows.split_at(last_header_position.unwrap_or(0));
         Ok(Some(TableInfo {
             width: table_width.unwrap_or(0),
@@ -147,7 +138,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                 TABLE!(),
                 columns,
                 caption.render(self, settings)?.trim(),
-                &indent_and_trim(&content, indent, line_width),
+                &indent_and_trim(content.trim(), indent, line_width),
             )?;
         }
         Ok(false)

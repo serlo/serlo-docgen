@@ -16,7 +16,11 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         if let Element::Paragraph { ref content, .. } = *root {
 
             let content = content.render(self, settings)?;
-            writeln!(out, "{}\n", content.trim())?;
+            if self.flatten_paragraphs {
+                write!(out, "{}", content.trim())?;
+            } else {
+                writeln!(out, "{}\n", content.trim())?;
+            }
         };
         Ok(false)
     }

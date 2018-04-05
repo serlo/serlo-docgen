@@ -19,6 +19,8 @@ mod table;
 pub struct LatexRenderer<'e, 't> {
     pub path: Vec<&'e Element>,
     pub latex: &'t LatexTarget,
+    /// Render paragraphs as normal text, without newline.
+    pub flatten_paragraphs: bool,
 }
 
 impl<'e, 's: 'e, 't: 'e> Traversion<'e, &'s Settings> for LatexRenderer<'e, 't> {
@@ -62,9 +64,38 @@ impl<'e, 's: 'e, 't: 'e> Traversion<'e, &'s Settings> for LatexRenderer<'e, 't> 
 impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
     pub fn new(target: &LatexTarget) -> LatexRenderer {
         LatexRenderer {
+            flatten_paragraphs: false,
             path: vec![],
             latex: target,
         }
+    }
+
+    /// Render an element with flat paragraphs.
+    fn run_nopar(
+        &mut self,
+        root: &'e Element,
+        settings: &'s Settings,
+        out: &mut io::Write
+    ) -> io::Result<()> {
+        let old_par_state = self.flatten_paragraphs;
+        self.flatten_paragraphs = true;
+        self.run(root, settings, out)?;
+        self.flatten_paragraphs = old_par_state;
+        Ok(())
+    }
+
+    /// Render elements with flat paragraphs.
+    fn run_vec_nopar(
+        &mut self,
+        root: &'e [Element],
+        settings: &'s Settings,
+        out: &mut io::Write
+    ) -> io::Result<()> {
+        let old_par_state = self.flatten_paragraphs;
+        self.flatten_paragraphs = true;
+        self.run_vec(root, settings, out)?;
+        self.flatten_paragraphs = old_par_state;
+        Ok(())
     }
 
     fn environment(
