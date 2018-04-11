@@ -90,7 +90,7 @@ template_spec!(
     }
 );
 
-pub fn is_math_tag(elems: &[Element]) -> bool {
+fn is_math_tag(elems: &[Element]) -> bool {
     if elems.len() != 1 {
         return false
     }
@@ -101,7 +101,7 @@ pub fn is_math_tag(elems: &[Element]) -> bool {
     }
 }
 
-pub fn is_text_only_paragraph(elems: &[Element]) -> bool {
+fn is_text_only_paragraph(elems: &[Element]) -> bool {
     fn shallow(elements: &[Element]) -> bool {
         for elem in elements {
             match *elem {

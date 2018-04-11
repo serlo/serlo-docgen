@@ -10,6 +10,7 @@ doc = true
 
 [dependencies]
 mediawiki_parser = { git = "https://github.com/vroland/mediawiki-peg-rust.git" }
+mfnf_commons = { path = "commons" }
 serde = "1.0"
 serde_derive = "1.0"
 serde_yaml = "0.7"

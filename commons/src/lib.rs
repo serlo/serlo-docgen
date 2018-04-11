@@ -6,7 +6,7 @@ extern crate serde;
 extern crate serde_derive;
 
 #[macro_use]
-mod util;
+pub mod util;
 #[macro_use]
 mod spec_utils;
 mod spec;

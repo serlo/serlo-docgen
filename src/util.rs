@@ -1,6 +1,8 @@
 //! Various utility functions and definitions.
 
 use mediawiki_parser::*;
+// re-export common util
+pub use mfnf_commons::util::*;
 use std::path::{PathBuf};
 use std::process;
 use settings::Settings;
@@ -120,27 +122,6 @@ pub fn find_arg<'a>(content: &'a [Element], arg_name: &str) -> Option<&'a Elemen
         }
     }
     None
-}
-
-
-/// Extract plain text (Paragraph and Text nodes) from a list of nodes and concatenate it.
-pub fn extract_plain_text(content: &[Element]) -> String {
-    let mut result = String::new();
-    for root in content {
-        match *root {
-            Element::Text { ref text, .. } => {
-                result.push_str(text);
-            },
-            Element::Paragraph { ref content, .. } => {
-                result.push_str(&extract_plain_text(content));
-            },
-            Element::TemplateArgument { ref value, .. } => {
-                result.push_str(&extract_plain_text(value));
-            },
-            _ => (),
-        };
-    }
-    result
 }
 
 /// Convert a filename to a make-friedly format.

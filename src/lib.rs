@@ -1,4 +1,5 @@
 extern crate mediawiki_parser;
+extern crate mfnf_commons;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;

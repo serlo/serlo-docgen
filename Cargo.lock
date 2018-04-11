@@ -45,12 +45,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "mfnf_commons"
+version = "0.1.0"
+dependencies = [
+ "mediawiki_parser 0.1.0 (git+https://github.com/vroland/mediawiki-peg-rust.git)",
+ "serde 1.0.37 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde_derive 1.0.37 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "mfnf_export"
 version = "0.1.0"
 dependencies = [
  "argparse 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "colored 1.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "mediawiki_parser 0.1.0 (git+https://github.com/vroland/mediawiki-peg-rust.git)",
+ "mfnf_commons 0.1.0",
  "serde 1.0.37 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_derive 1.0.37 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.13 (registry+https://github.com/rust-lang/crates.io-index)",
