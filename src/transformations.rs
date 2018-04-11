@@ -11,64 +11,68 @@ use serde_yaml;
 
 /// Convert template name paragraphs to lowercase text only.
 pub fn normalize_template_names(mut root: Element, settings: &Settings) -> TResult {
-if let Element::Template { ref mut name, ref mut content, ref position, .. } = root {
+    if let Element::Template { ref mut name, ref mut content, ref position, .. } = root {
 
-    let new_text = match name.drain(..).next() {
-        Some(Element::Paragraph { content, .. }) => {
-            content
-        },
-        Some(e) => { vec![e] },
-        None => { return Ok(Element::Error {
+        if name.is_empty() {
+            return Ok(Element::Error {
+                position: position.clone(),
+                message: "MFNF template name must not be empty!".to_string(),
+            })
+        };
+
+        let mut new_text = extract_plain_text(name).trim().to_owned();
+
+        for child in content {
+            if let Element::TemplateArgument { ref mut name, .. } = *child {
+                let lowercase = name.trim().to_lowercase();
+                name.clear();
+                name.push_str(&lowercase);
+            } else {
+                return Ok(Element::Error {
                     position: position.clone(),
-                    message: "MFNF template name must not be empty!".to_string(),
+                    message: "Only TemplateArguments are allowed as \
+                            children of templates!".into(),
                 })
+            }
         }
-    };
 
-    for child in content {
-        if let Element::TemplateArgument { ref mut name, .. } = *child {
-            let lowercase = name.trim().to_lowercase();
+        if !new_text.is_empty() {
+
+            // convert to lowercase and remove prefixes
+            if !new_text.starts_with('#') {
+                let mut temp_text = &new_text.to_lowercase()[..];
+                let prefixes = &settings.template_prefixes;
+                for prefix in prefixes {
+                    temp_text = trim_prefix(temp_text, prefix);
+                }
+                new_text = temp_text.to_owned();
+            }
+
+            let text = Element::Text {
+                position: Span {
+                    start: if let Some(e) = name.first() {
+                        e.get_position().start.clone()
+                    } else {
+                        position.start.clone()
+                    },
+                    end: if let Some(e) = name.last() {
+                        e.get_position().end.clone()
+                    } else {
+                        position.end.clone()
+                    }
+                },
+                text: new_text,
+            };
             name.clear();
-            name.push_str(&lowercase);
+            name.push(text);
         } else {
             return Ok(Element::Error {
                 position: position.clone(),
-                message: "Only TemplateArguments are allowed as children of templates!".to_string(),
-            })
+                message: "Template names cannot be empty!".into(),
+            });
         }
-    }
-
-    if let Some(&Element::Text { ref position, ref text }) = new_text.first() {
-        name.clear();
-        name.push(
-            Element::Text {
-                position: position.clone(),
-                text: if text.starts_with('#') {
-                    String::from(text.trim())
-                } else {
-                    // convert to lowercase and remove prefixes
-                    let mut temp_text = &text.trim().to_lowercase()[..];
-                    let prefixes = &settings.template_prefixes;
-                    for prefix in prefixes {
-                        temp_text = trim_prefix(temp_text, prefix);
-                    }
-                    String::from(temp_text)
-                },
-            }
-        );
-    } else {
-        return Ok(Element::Error {
-            position: if let Some(e) = new_text.first() {
-                e.get_position().clone()
-            } else {
-                position.clone()
-            },
-            message: "MFNF Template names must be plain strings \
-                    With no markup!".to_string(),
-        });
-    }
-};
-recurse_inplace(&normalize_template_names, root, settings)
+    };
+    recurse_inplace(&normalize_template_names, root, settings)
 }
 
 /// Translate template names and template attribute names.
