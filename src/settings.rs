@@ -144,7 +144,8 @@ impl Default for Settings {
                 "frage" => "question",
                 "antwort" => "answer",
                 "anker" => "anchor",
-                "liste" => "list"
+                "liste" => "list",
+                "aufgabe" => "exercise"
             ],
             template_prefixes: string_vec![":mathe für nicht-freaks: vorlage:"],
             external_file_extensions: string_vec![
