@@ -112,18 +112,6 @@ pub fn indent_and_trim(input: &str, depth: usize, max_line_width: usize) -> Stri
     lines.join("\n")
 }
 
-/// Returns the template argument with a given name from a list.
-pub fn find_arg<'a>(content: &'a [Element], arg_name: &str) -> Option<&'a Element> {
-    for child in content {
-        if let Element::TemplateArgument { ref name, .. } = *child {
-            if name == arg_name {
-                return Some(child);
-            }
-        }
-    }
-    None
-}
-
 /// Convert a filename to a make-friedly format.
 pub fn filename_to_make(input: &str) -> String {
     input.replace(" ", "_")

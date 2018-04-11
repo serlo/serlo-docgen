@@ -29,6 +29,22 @@ pub struct TemplateSpec<'p> {
     pub attributes: Vec<Attribute<'p>>,
 }
 
+/// Represents a template instance matching with a template listed in the spec.
+#[derive(Debug, Clone, Serialize)]
+pub struct TemplateInstance<'e> {
+    pub name: String,
+    pub format: Format,
+    pub attributes: Vec<AttributeInstance<'e>>,
+}
+
+/// A template attribute instance.
+#[derive(Debug, Clone, Serialize)]
+pub struct AttributeInstance<'e> {
+    pub name: String,
+    pub priority: Priority,
+    pub content: &'e Element,
+}
+
 /// Represents an attribute (or argument) of a template.
 #[derive(Clone, Serialize)]
 pub struct Attribute<'p> {
@@ -143,6 +159,43 @@ macro_rules! template_spec {
             attributes: [$($attr:expr),*]
         }
     ),*) => {
+
+        pub fn parse_template<'e>(elem: &'e Element) -> Option<TemplateInstance<'e>> {
+            if let Element::Template {
+                ref name,
+                ref content,
+                ..
+            } = *elem {
+                let name = extract_plain_text(&name);
+                let spec = if let Some(spec) = spec_of(&name) {
+                    spec
+                } else {
+                    return None
+                };
+
+                let mut args = vec![];
+                for attr in spec.attributes {
+                    let arg = find_arg(content, &attr.name);
+                    if arg.is_none() && attr.priority == Priority::Required {
+                        return None
+                    }
+                    if let Some(arg) = arg {
+                        args.push(AttributeInstance {
+                            name: attr.name.trim().to_lowercase(),
+                            priority: attr.priority,
+                            content: arg
+                        });
+                    }
+                }
+                return Some(TemplateInstance {
+                    name: spec.name.trim().to_lowercase(),
+                    format: spec.format,
+                    attributes: args
+                });
+            }
+            None
+        }
+
         pub fn spec<'p>() -> Vec<TemplateSpec<'p>> {
             vec![
                 $(
