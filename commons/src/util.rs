@@ -23,6 +23,9 @@ pub fn extract_plain_text(content: &[Element]) -> String {
             Element::Text { ref text, .. } => {
                 result.push_str(text);
             },
+            Element::Formatted { ref content, .. } => {
+                result.push_str(&extract_plain_text(content));
+            },
             Element::Paragraph { ref content, .. } => {
                 result.push_str(&extract_plain_text(content));
             },

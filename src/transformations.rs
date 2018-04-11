@@ -75,61 +75,6 @@ pub fn normalize_template_names(mut root: Element, settings: &Settings) -> TResu
     recurse_inplace(&normalize_template_names, root, settings)
 }
 
-/// Translate template names and template attribute names.
-pub fn translate_templates(mut root: Element, settings: &Settings) -> TResult {
-    if let Element::Template { ref mut name, ref mut content, .. } = root {
-        let translation_tab = &settings.translations;
-        if let Some(&mut Element::Text { ref mut text, .. }) = name.first_mut() {
-            if let Some(translation) = translation_tab.get(text) {
-                text.clear();
-                text.push_str(translation);
-            }
-        }
-        for child in content {
-            if let Element::TemplateArgument { ref mut name, .. } = *child {
-                if let Some(translation) = translation_tab.get(name) {
-                    name.clear();
-                    name.push_str(translation);
-                }
-            }
-        }
-    }
-    recurse_inplace(&translate_templates, root, settings)
-}
-
-/// Convert template attribute `title` to text only.
-pub fn normalize_template_title(mut root: Element, settings: &Settings) -> TResult {
-    if let Element::TemplateArgument { ref name, ref mut value, ref position } = root {
-        if name == "title" {
-            let mut last_value = value.pop();
-            // title is empty
-            if last_value.is_none() {
-                return Err(TransformationError {
-                    cause: "A template title must not be empty!".to_string(),
-                    position: position.clone(),
-                    transformation_name: "normalize_template_title".to_string(),
-                    tree: Element::TemplateArgument {
-                        name: name.clone(),
-                        value: vec![],
-                        position: position.clone(),
-                    }
-                })
-            }
-            if let Some(Element::Paragraph { ref mut content, .. }) = last_value {
-                if let Some(&Element::Text { ref text, ref position  }) = content.last() {
-                    value.clear();
-                    value.push(Element::Text {
-                        text: String::from(text.trim()),
-                        position: position.clone(),
-                    });
-                }
-            } else {
-                value.push(last_value.unwrap());
-            }
-        }
-    }
-    recurse_inplace(&normalize_template_title, root, settings)
-}
 
 /// Normalize math formulas with texvccheck
 pub fn normalize_math_formulas(mut root: Element, settings: &Settings) -> TResult {

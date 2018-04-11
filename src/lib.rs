@@ -65,8 +65,6 @@ pub fn normalize(mut root: Element,
                  settings: &settings::Settings) -> TResult {
 
     root = transformations::normalize_template_names(root, settings)?;
-    root = transformations::translate_templates(root, settings)?;
-    root = transformations::normalize_template_title(root, settings)?;
     root = transformations::remove_file_prefix(root, settings)?;
     root = transformations::convert_template_list(root, settings)?;
     root = transformations::normalize_math_formulas(root, settings)?;

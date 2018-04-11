@@ -43,10 +43,6 @@ pub struct Settings {
     /// Additional revision id of an article.
     pub document_revision: String,
 
-    /// Maps a template names and template attribute names to their translations.
-    /// E.g. german template names to their englisch translations.
-    pub translations: HashMap<String, String>,
-
     /// A list of lowercase template name prefixes which will be stripped if found.
     pub template_prefixes: Vec<String>,
 
@@ -91,7 +87,6 @@ impl Serialize for Settings {
         state.serialize_field("targets", &self.targets)?;
         ser_field_non_default!(self, document_title, default, state);
         ser_field_non_default!(self, document_revision, default, state);
-        ser_field_non_default!(self, translations, default, state);
         ser_field_non_default!(self, template_prefixes, default, state);
         ser_field_non_default!(self, file_prefixes, default, state);
         ser_field_non_default!(self, external_file_extensions, default, state);
@@ -125,30 +120,6 @@ impl Default for Settings {
             document_title: "<no document name specified>".into(),
             document_revision: "latest".into(),
             file_prefixes: string_vec!["file", "datei", "bild"],
-            translations: string_map![
-                "definition" => "definition",
-                "titel" => "title",
-                "beispiel" => "example",
-                "lösung" => "solution",
-                "fallunterscheidung" => "proofbycases",
-                "fall_list" => "cases",
-                "beweis_list" => "proofs",
-                "lösungsweg" => "solutionprocess",
-                "beweiszusammenfassung" => "proofsummary",
-                "zusammenfassung" => "summary",
-                "alternativer beweis" => "alternativeproof",
-                "beweisschritt" => "proofstep",
-                "formel" => "formula",
-                "satz" => "theorem",
-                "beweis" => "proof",
-                "warnung" => "warning",
-                "hinweis" => "hint",
-                "frage" => "question",
-                "antwort" => "answer",
-                "anker" => "anchor",
-                "liste" => "list",
-                "aufgabe" => "exercise"
-            ],
             template_prefixes: string_vec![":mathe für nicht-freaks: vorlage:"],
             external_file_extensions: string_vec![
                 "jpg",

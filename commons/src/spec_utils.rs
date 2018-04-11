@@ -65,6 +65,29 @@ impl<'p> fmt::Debug for Attribute<'p> {
     }
 }
 
+impl<'e> TemplateInstance<'e> {
+    pub fn get(&self, attribute_name: &str) -> Option<&AttributeInstance> {
+        for attr in &self.attributes {
+            if attr.name == attribute_name {
+                return Some(attr)
+            }
+        }
+        None
+    }
+
+    pub fn get_content(&self, attribute_name: &str) -> Option<&[Element]> {
+        if let Some(attr) = self.get(attribute_name) {
+            if let Element::TemplateArgument { ref value, .. } = *attr.content {
+                Some(value)
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
+}
+
 /// Checks a predicate for a given input tree.
 #[derive(Default)]
 pub struct TreeChecker<'path> {
