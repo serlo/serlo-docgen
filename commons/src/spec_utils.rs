@@ -26,12 +26,12 @@ pub struct TemplateSpec<'p, ID> {
     pub id: ID,
     pub names: Vec<String>,
     pub format: Format,
-    pub attributes: Vec<Attribute<'p>>,
+    pub attributes: Vec<AttributeSpec<'p>>,
 }
 
-/// Represents an attribute (or argument) of a template.
+/// Represents the specification of an attribute (or argument) of a template.
 #[derive(Clone, Serialize)]
-pub struct Attribute<'p> {
+pub struct AttributeSpec<'p> {
     pub names: Vec<String>,
     pub priority: Priority,
     #[serde(skip)]
@@ -39,7 +39,7 @@ pub struct Attribute<'p> {
     pub predicate_source: String,
 }
 
-impl<'p> fmt::Debug for Attribute<'p> {
+impl<'p> fmt::Debug for AttributeSpec<'p> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Attribute: {{ names {:?}, \
                    priority: {:?}, predicate: <predicate func>, \
@@ -167,12 +167,38 @@ macro_rules! template_spec {
                     format: Format,
                     $(
                         $attr_id: Option<&'e [Element]>
-                    ),*
+                    ),*,
+                    present: Vec<Attribute<'e>>,
                 }
             ),*
         }
 
+        /// Represents a concrete value of a template attribute.
+        #[derive(Debug, Clone, PartialEq, Serialize)]
+        pub struct Attribute<'e> {
+            pub name: String,
+            pub priority: Priority,
+            pub value: &'e [Element],
+        }
+
         impl<'e> Template<'e> {
+            /// All present attributes of a template.
+            pub fn present(&self) -> &Vec<Attribute<'e>> {
+                match *self {
+                    $(
+                        Template::$id { ref present, .. } => present
+                    ),*
+                }
+            }
+            pub fn find(&self, name: &str) -> Option<&Attribute<'e>> {
+                for attribute in self.present() {
+                    if attribute.name == name {
+                        return Some(attribute)
+                    }
+                }
+                None
+            }
+
             pub fn id(&self) -> &TemplateID {
                 match *self {
                     $(
@@ -202,6 +228,20 @@ macro_rules! template_spec {
                 ref content,
                 ..
             } = *elem {
+                let extract_content = | attr_names: &Vec<String> | {
+                    if let Some(arg) = find_arg(content, attr_names) {
+                        if let Element::TemplateArgument {
+                            ref value,
+                            ..
+                        } = *arg {
+                            Some(&value[..])
+                        } else {
+                            None
+                        }
+                    } else {
+                        None
+                    }
+                };
                 let name = extract_plain_text(&name).trim().to_lowercase();
                 $(
                     let names = [$($name.trim().to_lowercase()),*];
@@ -209,21 +249,27 @@ macro_rules! template_spec {
                         return Some(Template::$id {
                             id: TemplateID::$id,
                             $(
-                                $attr_id: if let Some(arg) = find_arg(content, &names) {
-                                    if let Element::TemplateArgument {
-                                        ref value,
-                                        ..
-                                    } = *arg {
-                                        Some(value)
-                                    } else {
-                                        None
-                                    }
-                                } else {
-                                    None
+                                $attr_id: {
+                                    let attr_names = vec![$($attr_name.trim().to_lowercase()),*];
+                                    extract_content(&attr_names)
                                 }
                             ),*,
                             names: names.to_vec(),
                             format: $format,
+                            present: {
+                                let mut present = vec![];
+                                $(
+                                    let attr_names = vec![$($attr_name.trim().to_lowercase()),*];
+                                    if let Some(value) = extract_content(&attr_names) {
+                                        present.push(Attribute {
+                                            name: stringify!($attr_id).into(),
+                                            priority: $priority,
+                                            value,
+                                        });
+                                    }
+                                )*
+                                present
+                            }
                         })
                     }
                 )*
@@ -239,7 +285,7 @@ macro_rules! template_spec {
                         names: vec![$($name.trim().to_lowercase()),*],
                         format: $format,
                         attributes: vec![$(
-                            Attribute {
+                            AttributeSpec {
                                 names: vec![$($attr_name.trim().to_lowercase()),*],
                                 priority: $priority,
                                 predicate: $predicate,
