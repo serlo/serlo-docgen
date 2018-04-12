@@ -278,7 +278,8 @@ pub fn remove_file_prefix(mut root: Element, settings: &Settings) -> TResult {
 /// Convert list templates (MFNF) to mediawiki lists.
 pub fn convert_template_list(mut root: Element, settings: &Settings) -> TResult {
     if let Element::Template { ref name, ref mut content, ref position } = root {
-        if extract_plain_text(name).trim().to_lowercase() == "list".to_string() {
+        let template_name = extract_plain_text(name).trim().to_lowercase();
+        if ["list", "liste"].contains(&template_name.as_str()) {
 
             let mut list_content = vec![];
 
