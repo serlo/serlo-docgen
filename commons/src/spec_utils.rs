@@ -1,6 +1,7 @@
 use mediawiki_parser::*;
 use std::io;
 use std::fmt;
+use std::fmt::Debug;
 
 /// Specifies wether a template represents a logical unit (`Block`)
 /// or simpler markup (`Inline`).
@@ -22,7 +23,7 @@ type Predicate = Fn(&[Element]) -> bool;
 
 /// Represents a (semantic) template.
 #[derive(Debug, Clone, Serialize)]
-pub struct TemplateSpec<'p, ID> {
+pub struct TemplateSpec<'p, ID: Debug> {
     pub id: ID,
     pub names: Vec<String>,
     pub format: Format,
@@ -45,6 +46,25 @@ impl<'p> fmt::Debug for AttributeSpec<'p> {
                    priority: {:?}, predicate: <predicate func>, \
                    predicate_source: {:?} }}", self.names,
                    self.priority, self.predicate_source)
+    }
+}
+
+impl<'p, ID: Debug> TemplateSpec<'p, ID> {
+    /// Returns the default / preferred name of this template.
+    /// This is the first name in the list.
+    pub fn default_name(&self) -> &str {
+        self.names.first()
+            .expect(&format!("template {:?} has no names! This is forbidden.",
+                self.id ))
+    }
+}
+
+impl<'p> AttributeSpec<'p> {
+    /// Returns the default / preferred name of this attribute.
+    /// This is the first name in the list.
+    pub fn default_name(&self) -> &str {
+        self.names.first()
+            .expect("This attribute has no names! This is forbidden.")
     }
 }
 
