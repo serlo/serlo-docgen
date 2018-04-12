@@ -44,6 +44,49 @@ template_spec!(
         ]
     },
     template {
+        id: Mainarticle,
+        names: ["main", "hauptartikel"],
+        format: Format::Inline,
+        attributes: [
+            {
+                ident: article1,
+                names: ["1"],
+                priority: Priority::Required,
+                predicate: &is_plain_text
+            },
+            {
+                ident: article2,
+                names: ["2"],
+                priority: Priority::Optional,
+                predicate: &is_plain_text
+            },
+            {
+                ident: article3,
+                names: ["3"],
+                priority: Priority::Optional,
+                predicate: &is_plain_text
+            },
+            {
+                ident: title1,
+                names: ["title1", "titel1"],
+                priority: Priority::Optional,
+                predicate: &is_plain_text
+            },
+            {
+                ident: title2,
+                names: ["title2", "titel2"],
+                priority: Priority::Optional,
+                predicate: &is_plain_text
+            },
+            {
+                ident: title3,
+                names: ["title3", "titel3"],
+                priority: Priority::Optional,
+                predicate: &is_plain_text
+            }
+        ]
+    },
+    template {
         id: Important,
         names: ["important", "-"],
         format: Format::Block,
