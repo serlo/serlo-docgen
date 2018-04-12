@@ -43,9 +43,6 @@ pub struct Settings {
     /// Additional revision id of an article.
     pub document_revision: String,
 
-    /// A list of lowercase template name prefixes which will be stripped if found.
-    pub template_prefixes: Vec<String>,
-
     /// A list of file prefixes which are ignored.
     pub file_prefixes: Vec<String>,
 
@@ -87,7 +84,6 @@ impl Serialize for Settings {
         state.serialize_field("targets", &self.targets)?;
         ser_field_non_default!(self, document_title, default, state);
         ser_field_non_default!(self, document_revision, default, state);
-        ser_field_non_default!(self, template_prefixes, default, state);
         ser_field_non_default!(self, file_prefixes, default, state);
         ser_field_non_default!(self, external_file_extensions, default, state);
         ser_field_non_default!(self, article_url_base, default, state);
@@ -120,7 +116,6 @@ impl Default for Settings {
             document_title: "<no document name specified>".into(),
             document_revision: "latest".into(),
             file_prefixes: string_vec!["file", "datei", "bild"],
-            template_prefixes: string_vec![":mathe für nicht-freaks: vorlage:"],
             external_file_extensions: string_vec![
                 "jpg",
                 "jpeg",

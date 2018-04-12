@@ -40,12 +40,7 @@ pub fn normalize_template_names(mut root: Element, settings: &Settings) -> TResu
 
             // convert to lowercase and remove prefixes
             if !new_text.starts_with('#') {
-                let mut temp_text = &new_text.to_lowercase()[..];
-                let prefixes = &settings.template_prefixes;
-                for prefix in prefixes {
-                    temp_text = trim_prefix(temp_text, prefix);
-                }
-                new_text = temp_text.to_owned();
+                new_text = new_text.trim().to_lowercase();
             }
 
             let text = Element::Text {
@@ -283,14 +278,14 @@ pub fn remove_file_prefix(mut root: Element, settings: &Settings) -> TResult {
 /// Convert list templates (MFNF) to mediawiki lists.
 pub fn convert_template_list(mut root: Element, settings: &Settings) -> TResult {
     if let Element::Template { ref name, ref mut content, ref position } = root {
-        if extract_plain_text(name) == "list" {
+        if extract_plain_text(name).trim().to_lowercase() == "list".to_string() {
 
             let mut list_content = vec![];
 
             let list_type = if let Some(&Element::TemplateArgument {
                 ref value,
                 ..
-            }) = find_arg(content, "type") {
+            }) = find_arg(content, &["type".into()]) {
                 extract_plain_text(value).to_lowercase()
             } else {
                 String::new()

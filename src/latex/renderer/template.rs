@@ -23,92 +23,60 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
             return Ok(false)
         };
 
-        /*
-        let envs = &self.latex.environments;
-
-        // export simple environment templates
-        if let Some(envs) = envs.get(&template_name) {
-
-            let title = if let Some(title) = find_arg(content, "title") {
-                title.render(self, settings)?
-            } else {
-                "".into()
-            };
-
-            for environment in envs {
-                if let Some(content) = find_arg(content, environment) {
-
-                    self.write_def_location(content.get_position(), doctitle, out)?;
-                    let content = content.render(self, settings)?;
-
-                    self.environment(
-                        environment,
-                        &[title.trim()],
-                        content.trim(),
-                        out
-                    )?;
-                }
-            }
-            return Ok(false);
-        }
-
-        // script invocations are ignored
-        if template_name.starts_with("#invoke") {
-            return Ok(false);
-        }
-        */
-        // any other template
-        match &parsed.name[..] {
-            "formula" => {
+        match *parsed.id() {
+            TemplateID::Formula => {
                 self.formula(&parsed, out)?;
             },
-            "anchor" => {
-                write!(out, " {} ", escape_latex("<no anchors yet!>"))?;
-            }
-            //"-" | "important" => {
-            //    self.important(content, out)?;
-            //}
-            _ => {
-                let message = format!("MISSING TEMPLATE: {}", parsed.name);
-                self.write_def_location(root.get_position(), doctitle, out)?;
-                self.write_error(&message, out)?;
+            TemplateID::Important => {
+                self.important(&parsed, out)?;
+            },
+            TemplateID::Definition
+            | TemplateID::Theorem
+            | TemplateID::Example
+             => {
+                self.environment_template(settings, &parsed, out)?;
             }
         };
         Ok(false)
     }
 
-    fn formula(&self, parsed: &TemplateInstance, out: &mut io::Write) -> io::Result<()> {
+    fn formula(&self, template: &Template, out: &mut io::Write) -> io::Result<()> {
 
-        let content = extract_plain_text(parsed.get_content("1").unwrap_or(&[]))
-            .trim().to_owned();
+        if let Template::Formula { ref formel, .. } = *template {
+            let content = extract_plain_text(formel.unwrap_or(&[])).trim().to_owned();
 
-        let mut trimmed = trim_enclosing(
-            &content,
-            "\\begin{align}",
-            "\\end{align}"
-        );
-        trimmed = trim_enclosing(
-            trimmed,
-            "\\begin{align*}",
-            "\\end{align*}"
-        ).trim();
+            let mut trimmed = trim_enclosing(
+                &content,
+                "\\begin{align}",
+                "\\end{align}"
+            );
+            trimmed = trim_enclosing(
+                trimmed,
+                "\\begin{align*}",
+                "\\end{align*}"
+            ).trim();
 
-        self.environment(
-            MATH_ENV!(),
-            &[],
-            trimmed,
-            out,
-        )
+            return self.environment(
+                MATH_ENV!(),
+                &[],
+                trimmed,
+                out,
+            );
+        }
+        unreachable!();
     }
 
-    fn important(&self, content: &[Element], out: &mut io::Write) -> io::Result<()> {
+    fn important(&self, template: &Template, out: &mut io::Write) -> io::Result<()> {
 
-        self.environment(
-            IMPORTANT_ENV!(),
-            &[],
-            extract_plain_text(content).trim(),
-            out
-        )
+        if let Template::Important { ref content, .. } = *template {
+            return self.environment(
+                IMPORTANT_ENV!(),
+                &[],
+                extract_plain_text(content.unwrap_or(&[])).trim(),
+                out
+            );
+        }
+        unreachable!();
     }
 
     pub fn template_arg(&mut self, root: &'e Element,
@@ -122,5 +90,33 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
             self.run_vec(value, settings, out)?;
         }
         Ok(false)
+    }
+
+    pub fn environment_template(
+        &mut self,
+        settings: &'s Settings,
+        template: &Template<'e>,
+        out: &mut io::Write
+    ) -> io::Result<bool> {
+        let title = if let Some(attr) = template.find("title") {
+            attr.value
+        } else {
+            &[]
+        };
+        let title_text = title.render(self, settings)?;
+        for attribute in template.present() {
+            if attribute.name == "title".to_string() {
+                continue
+            }
+
+            let content = attribute.value.render(self, settings)?;
+            self.environment(
+                &attribute.name,
+                &[title_text.trim()],
+                content.trim(),
+                out
+            )?;
+        }
+        Ok(true)
     }
 }
