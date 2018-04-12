@@ -163,7 +163,8 @@ fn is_math_tag(elems: &[Element]) -> bool {
     }
 }
 
-fn is_plain_text(elems: &[Element]) -> bool {
+/// Paragraphs or Text without any formatting or special contents.
+pub fn is_plain_text(elems: &[Element]) -> bool {
     fn shallow(elements: &[Element]) -> bool {
         for elem in elements {
             let allowed = match *elem {
