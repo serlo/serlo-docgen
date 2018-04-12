@@ -6,86 +6,110 @@ use mediawiki_parser::*;
 
 template_spec!(
     template {
-        name: "formula",
-        alt: ["formel", "Formel", "Formula"],
+        id: Formula,
+        names: ["formula", "formel"],
         format: Format::Inline,
         attributes: [
-            attribute!(
-                name: "1",
-                alt: ["formel"],
+            {
+                ident: formel,
+                names: ["1", "formel"],
                 priority: Priority::Required,
                 predicate: &is_math_tag
-            )
+            }
         ]
     },
     template {
-        name: "important",
-        alt: ["-"],
+        id: Important,
+        names: ["important", "-"],
         format: Format::Block,
         attributes: [
-            attribute!(
-                name: "1",
-                alt: ["content"],
+            {
+                ident: content,
+                names: ["1", "content"],
                 priority: Priority::Required,
                 predicate: &is_text_only_paragraph
-            )
+            }
         ]
     },
     template {
-        name: "definition",
-        alt: [":Mathe für Nicht-Freaks: Vorlage:Definition"],
+        id: Definition,
+        names: [":Mathe für Nicht-Freaks: Vorlage:Definition"],
         format: Format::Block,
         attributes: [
-            attribute!(
-                name: "title",
-                alt: ["titel"],
+            {
+                ident: title,
+                names: ["title", "titel"],
                 priority: Priority::Optional,
                 predicate: &is_text_only_paragraph
-            ),
-            attribute!(
-                name: "definition",
-                alt: [],
+            },
+            {
+                ident: definition,
+                names: ["definition"],
                 priority: Priority::Required,
                 predicate: &is_text_only_paragraph
-            )
+            }
         ]
     },
     template {
-        name: "theorem",
-        alt: [":Mathe für Nicht-Freaks: Vorlage:Satz"],
+        id: Theorem,
+        names: [":Mathe für Nicht-Freaks: Vorlage:Satz"],
         format: Format::Block,
         attributes: [
-            attribute!(
-                name: "title",
-                alt: ["titel"],
+            {
+                ident: title,
+                names: ["title", "titel"],
                 priority: Priority::Optional,
                 predicate: &is_text_only_paragraph
-            ),
-            attribute!(
-                name: "theorem",
-                alt: ["satz"],
+            },
+            {
+                ident: theorem,
+                names: ["theorem", "satz"],
                 priority: Priority::Required,
                 predicate: &is_text_only_paragraph
-            )
+            },
+            {
+                ident: explanation,
+                names: ["explanation", "erklärung"],
+                priority: Priority::Optional,
+                predicate: &is_text_only_paragraph
+            },
+            {
+                ident: solutionprocess,
+                names: ["solutionprocess", "lösungsweg"],
+                priority: Priority::Optional,
+                predicate: &is_text_only_paragraph
+            },
+            {
+                ident: summary,
+                names: ["summary", "zusammenfassung"],
+                priority: Priority::Optional,
+                predicate: &is_text_only_paragraph
+            },
+            {
+                ident: proof,
+                names: ["proof", "beweis"],
+                priority: Priority::Optional,
+                predicate: &is_text_only_paragraph
+            }
         ]
     },
     template {
-        name: "example",
-        alt: [":Mathe für Nicht-Freaks: Vorlage:Beispiel"],
+        id: Example,
+        names: [":Mathe für Nicht-Freaks: Vorlage:Beispiel"],
         format: Format::Block,
         attributes: [
-            attribute!(
-                name: "title",
-                alt: ["titel"],
+            {
+                ident: title,
+                names: ["title", "titel"],
                 priority: Priority::Optional,
                 predicate: &is_text_only_paragraph
-            ),
-            attribute!(
-                name: "example",
-                alt: ["beispiel"],
+            },
+            {
+                ident: example,
+                names: ["example", "beispiel"],
                 priority: Priority::Required,
                 predicate: &is_text_only_paragraph
-            )
+            }
         ]
     }
 );

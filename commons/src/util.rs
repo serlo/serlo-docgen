@@ -38,11 +38,11 @@ pub fn extract_plain_text(content: &[Element]) -> String {
     result
 }
 
-/// Returns the template argument with a given name from a list.
-pub fn find_arg<'a>(content: &'a [Element], arg_name: &str) -> Option<&'a Element> {
+/// Returns the template argument with a matching name (lowercase) from a list.
+pub fn find_arg<'a>(content: &'a [Element], names: &[String]) -> Option<&'a Element> {
     for child in content {
         if let Element::TemplateArgument { ref name, .. } = *child {
-            if name.trim().to_lowercase() == arg_name.trim().to_lowercase() {
+            if names.contains(&name.trim().to_lowercase()) {
                 return Some(child);
             }
         }

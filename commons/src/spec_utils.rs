@@ -22,34 +22,17 @@ type Predicate = Fn(&[Element]) -> bool;
 
 /// Represents a (semantic) template.
 #[derive(Debug, Clone, Serialize)]
-pub struct TemplateSpec<'p> {
-    pub name: String,
-    pub alternative_names: Vec<String>,
+pub struct TemplateSpec<'p, ID> {
+    pub id: ID,
+    pub names: Vec<String>,
     pub format: Format,
     pub attributes: Vec<Attribute<'p>>,
-}
-
-/// Represents a template instance matching with a template listed in the spec.
-#[derive(Debug, Clone, Serialize)]
-pub struct TemplateInstance<'e> {
-    pub name: String,
-    pub format: Format,
-    pub attributes: Vec<AttributeInstance<'e>>,
-}
-
-/// A template attribute instance.
-#[derive(Debug, Clone, Serialize)]
-pub struct AttributeInstance<'e> {
-    pub name: String,
-    pub priority: Priority,
-    pub content: &'e Element,
 }
 
 /// Represents an attribute (or argument) of a template.
 #[derive(Clone, Serialize)]
 pub struct Attribute<'p> {
-    pub name: String,
-    pub alternative_names: Vec<String>,
+    pub names: Vec<String>,
     pub priority: Priority,
     #[serde(skip)]
     pub predicate: &'p Predicate,
@@ -58,33 +41,10 @@ pub struct Attribute<'p> {
 
 impl<'p> fmt::Debug for Attribute<'p> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Attribute: {{ name: {:?}, alternative_names {:?}, \
+        write!(f, "Attribute: {{ names {:?}, \
                    priority: {:?}, predicate: <predicate func>, \
-                   predicate_source: {:?} }}", self.name, self.alternative_names,
+                   predicate_source: {:?} }}", self.names,
                    self.priority, self.predicate_source)
-    }
-}
-
-impl<'e> TemplateInstance<'e> {
-    pub fn get(&self, attribute_name: &str) -> Option<&AttributeInstance> {
-        for attr in &self.attributes {
-            if attr.name == attribute_name {
-                return Some(attr)
-            }
-        }
-        None
-    }
-
-    pub fn get_content(&self, attribute_name: &str) -> Option<&[Element]> {
-        if let Some(attr) = self.get(attribute_name) {
-            if let Element::TemplateArgument { ref value, .. } = *attr.content {
-                Some(value)
-            } else {
-                None
-            }
-        } else {
-            None
-        }
     }
 }
 
@@ -176,97 +136,129 @@ pub fn check_name(name: &[Element]) -> Option<&str> {
 macro_rules! template_spec {
     ($(
         template {
-            name: $name:expr,
-            alt: [$($altname:expr),*],
+            id: $id:ident,
+            names: [$($name:expr),*],
             format: $format:expr,
-            attributes: [$($attr:expr),*]
+            attributes: [$(
+                {
+                    ident: $attr_id:ident,
+                    names: [$($attr_name:expr),*],
+                    priority: $priority:expr,
+                    predicate: $predicate:expr
+                }
+            ),*]
         }
     ),*) => {
+        /// The templates availabe.
+        #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+        pub enum TemplateID {
+            $(
+                $id
+            ),*
+        }
 
-        pub fn parse_template<'e>(elem: &'e Element) -> Option<TemplateInstance<'e>> {
+        /// Full template information.
+        #[derive(Debug, Clone, PartialEq, Serialize)]
+        pub enum Template<'e> {
+            $(
+                $id {
+                    id: TemplateID,
+                    names: Vec<String>,
+                    format: Format,
+                    $(
+                        $attr_id: Option<&'e [Element]>
+                    ),*
+                }
+            ),*
+        }
+
+        impl<'e> Template<'e> {
+            pub fn id(&self) -> &TemplateID {
+                match *self {
+                    $(
+                        Template::$id { ref id, .. } => id
+                    ),*
+                }
+            }
+            pub fn format(&self) -> &Format {
+                match *self {
+                    $(
+                        Template::$id { ref format, .. } => format
+                    ),*
+                }
+            }
+            pub fn names(&self) -> &[String] {
+                match *self {
+                    $(
+                        Template::$id { ref names, .. } => names
+                    ),*
+                }
+            }
+        }
+
+        pub fn parse_template<'e>(elem: &'e Element) -> Option<Template<'e>> {
             if let Element::Template {
                 ref name,
                 ref content,
                 ..
             } = *elem {
-                let name = extract_plain_text(&name);
-                let spec = if let Some(spec) = spec_of(&name) {
-                    spec
-                } else {
-                    return None
-                };
-
-                let mut args = vec![];
-                for attr in spec.attributes {
-                    let arg = find_arg(content, &attr.name);
-                    if arg.is_none() && attr.priority == Priority::Required {
-                        return None
+                let name = extract_plain_text(&name).trim().to_lowercase();
+                $(
+                    let names = [$($name.trim().to_lowercase()),*];
+                    if names.contains(&name) {
+                        return Some(Template::$id {
+                            id: TemplateID::$id,
+                            $(
+                                $attr_id: if let Some(arg) = find_arg(content, &names) {
+                                    if let Element::TemplateArgument {
+                                        ref value,
+                                        ..
+                                    } = *arg {
+                                        Some(value)
+                                    } else {
+                                        None
+                                    }
+                                } else {
+                                    None
+                                }
+                            ),*,
+                            names: names.to_vec(),
+                            format: $format,
+                        })
                     }
-                    if let Some(arg) = arg {
-                        args.push(AttributeInstance {
-                            name: attr.name.trim().to_lowercase(),
-                            priority: attr.priority,
-                            content: arg
-                        });
-                    }
-                }
-                return Some(TemplateInstance {
-                    name: spec.name.trim().to_lowercase(),
-                    format: spec.format,
-                    attributes: args
-                });
+                )*
             }
             None
         }
 
-        pub fn spec<'p>() -> Vec<TemplateSpec<'p>> {
+        pub fn spec<'p>() -> Vec<TemplateSpec<'p, TemplateID>> {
             vec![
                 $(
                     TemplateSpec {
-                        name: $name.trim().into(),
-                        alternative_names: vec![$($altname.trim().into()),*],
+                        id: TemplateID::$id,
+                        names: vec![$($name.trim().to_lowercase()),*],
                         format: $format,
-                        attributes: vec![$($attr),*]
+                        attributes: vec![$(
+                            Attribute {
+                                names: vec![$($attr_name.trim().to_lowercase()),*],
+                                priority: $priority,
+                                predicate: $predicate,
+                                predicate_source: stringify!($predicate).into()
+                            }
+                        ),*]
                     }
                 ),*
             ]
         }
 
-        pub fn spec_of(name: &str) -> Option<TemplateSpec> {
+        pub fn spec_of<'p>(name: &str) -> Option<TemplateSpec<'p, TemplateID>> {
             let name = name.trim().to_lowercase();
-            $(
-                let mut names = vec![$($altname.trim().to_lowercase()),*];
-                names.insert(0, $name.trim().to_lowercase());
-
-                if names.contains(&name) {
-                    return Some(
-                        TemplateSpec {
-                            name: $name.trim().into(),
-                            alternative_names: vec![$($altname.trim().into()),*],
-                            format: $format,
-                            attributes: vec![$($attr),*]
-                        }
-                    );
+            for spec in spec() {
+                if spec.names.contains(&name) {
+                    return Some(spec)
                 }
-            )*
+            }
             None
-        }
-    }
-}
-
-macro_rules! attribute {
-    (
-        name: $name:expr,
-        alt: [$($altname:expr),*],
-        priority: $priority:expr,
-        predicate: $predicate:expr
-    ) => {
-        Attribute {
-            name: $name.trim().into(),
-            alternative_names: vec![$($altname.trim().into()),*],
-            priority: $priority,
-            predicate: $predicate,
-            predicate_source: stringify!($predicate).into()
         }
     }
 }
