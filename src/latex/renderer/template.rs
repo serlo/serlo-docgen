@@ -24,21 +24,14 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         };
 
         match *parsed.id() {
-            TemplateID::Formula => {
-                self.formula(&parsed, out)?;
-            },
-            TemplateID::Important => {
-                self.important(&parsed, out)?;
-            },
+            TemplateID::Formula => self.formula(&parsed, out)?,
+            TemplateID::Important => self.important(&parsed, out)?,
             TemplateID::Definition
             | TemplateID::Theorem
             | TemplateID::Example
-             => {
-                self.environment_template(settings, &parsed, out)?;
-            }
-            TemplateID::Anchor => {
-                self.anchor(&parsed, out)?;
-            }
+             => self.environment_template(settings, &parsed, out)?,
+            TemplateID::Anchor => self.anchor(&parsed, out)?,
+            TemplateID::Mainarticle => self.mainarticle(settings, &parsed, out)?,
         };
         Ok(false)
     }
@@ -89,6 +82,24 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         Ok(())
     }
 
+    fn mainarticle(
+        &mut self,
+        settings: &'s Settings,
+        template: &Template<'e>,
+        out: &mut io::Write
+     ) -> io::Result<()> {
+        if let Template::Mainarticle { ref article, .. } = *template {
+            let name = extract_plain_text(&article.unwrap_or(&[]))
+                .trim().to_owned();
+            let mut url = settings.article_url_base.to_owned();
+            url.push_str(&name);
+            url = url.replace(' ', "_");
+
+            return write!(out, MAINARTICLE!(), &url, &name)
+        }
+        Ok(())
+    }
+
     pub fn template_arg(&mut self, root: &'e Element,
                     settings: &'s Settings,
                     out: &mut io::Write) -> io::Result<bool> {
@@ -107,12 +118,8 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         settings: &'s Settings,
         template: &Template<'e>,
         out: &mut io::Write
-    ) -> io::Result<bool> {
-        let title = if let Some(attr) = template.find("title") {
-            attr.value
-        } else {
-            &[]
-        };
+    ) -> io::Result<()> {
+        let title = template.find("title").map(|a| a.value).unwrap_or(&[]);
         let title_text = title.render(self, settings)?;
         for attribute in template.present() {
             if attribute.name == "title".to_string() {
@@ -127,6 +134,6 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                 out
             )?;
         }
-        Ok(true)
+        Ok(())
     }
 }

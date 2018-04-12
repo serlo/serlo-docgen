@@ -113,5 +113,8 @@ alias!(TABLE, "\
 alias!(TABLE_WITH_HEADER, "{}\\midrule\n{}");
 alias!(TABLE_WITHOUT_HEADER, "{}");
 
-// --- Anchors ---
+// --- Anchor ---
 alias!(LABEL, "\\label{{{}}}");
+
+// --- Main Article ---
+alias!(MAINARTICLE, "$\\rightarrow$ \\href{{{}}}{{\\emph{{{}}}}}");
