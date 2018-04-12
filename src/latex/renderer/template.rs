@@ -36,6 +36,9 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
              => {
                 self.environment_template(settings, &parsed, out)?;
             }
+            TemplateID::Anchor => {
+                self.anchor(&parsed, out)?;
+            }
         };
         Ok(false)
     }
@@ -77,6 +80,13 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
             );
         }
         unreachable!();
+    }
+
+    fn anchor(&self, template: &Template, out: &mut io::Write) -> io::Result<()> {
+        for reference in template.present() {
+            write!(out, LABEL!(), extract_plain_text(&reference.value).trim())?;
+        }
+        Ok(())
     }
 
     pub fn template_arg(&mut self, root: &'e Element,

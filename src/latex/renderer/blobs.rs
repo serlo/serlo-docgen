@@ -113,3 +113,5 @@ alias!(TABLE, "\
 alias!(TABLE_WITH_HEADER, "{}\\midrule\n{}");
 alias!(TABLE_WITHOUT_HEADER, "{}");
 
+// --- Anchors ---
+alias!(LABEL, "\\label{{{}}}");
