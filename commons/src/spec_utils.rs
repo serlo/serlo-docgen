@@ -171,6 +171,7 @@ macro_rules! template_spec {
                     ),*
                 }
             }
+            /// Get a template attribute by name.
             pub fn find(&self, name: &str) -> Option<&Attribute<'e>> {
                 for attribute in self.present() {
                     if attribute.name == name {
@@ -179,7 +180,7 @@ macro_rules! template_spec {
                 }
                 None
             }
-
+            /// Get the template id of an instance.
             pub fn id(&self) -> &TemplateID {
                 match *self {
                     $(
@@ -187,6 +188,7 @@ macro_rules! template_spec {
                     ),*
                 }
             }
+            /// Get the format of an instance.
             pub fn format(&self) -> &Format {
                 match *self {
                     $(
@@ -194,6 +196,7 @@ macro_rules! template_spec {
                     ),*
                 }
             }
+            /// Get the list of possible names for a template.
             pub fn names(&self) -> &[String] {
                 match *self {
                     $(
@@ -203,6 +206,7 @@ macro_rules! template_spec {
             }
         }
 
+        /// Try to create a `Template` variant from an element, using the specification.
         pub fn parse_template<'e>(elem: &'e Element) -> Option<Template<'e>> {
             if let Element::Template {
                 ref name,
@@ -257,6 +261,7 @@ macro_rules! template_spec {
             None
         }
 
+        /// Get the specification of all existing templates.
         pub fn spec<'p>() -> Vec<TemplateSpec<'p, TemplateID>> {
             vec![
                 $(
@@ -277,6 +282,7 @@ macro_rules! template_spec {
             ]
         }
 
+        /// Get the specification of a specific template, if it exists.
         pub fn spec_of<'p>(name: &str) -> Option<TemplateSpec<'p, TemplateID>> {
             let name = name.trim().to_lowercase();
             for spec in spec() {
