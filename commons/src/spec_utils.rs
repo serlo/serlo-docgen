@@ -114,25 +114,6 @@ impl<'p> TreeChecker<'p> {
     }
 }
 
-pub fn check_name(name: &[Element]) -> Option<&str> {
-    if name.len() != 1 {
-        return None
-    }
-    match name.first() {
-        Some(&Element::Text { ref text, .. }) => return Some(text.trim()),
-        Some(&Element::Paragraph { ref content, .. }) => {
-            if content.len() != 1 {
-                return None
-            }
-            if let Some(&Element::Text { ref text, .. }) = content.first() {
-                return Some(text.trim())
-            }
-        },
-        _ => (),
-    };
-    None
-}
-
 macro_rules! template_spec {
     ($(
         template {

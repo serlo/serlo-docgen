@@ -19,6 +19,31 @@ template_spec!(
         ]
     },
     template {
+        id: Anchor,
+        names: ["anchor", "anker"],
+        format: Format::Inline,
+        attributes: [
+            {
+                ident: ref1,
+                names: ["1"],
+                priority: Priority::Required,
+                predicate: &is_plain_text
+            },
+            {
+                ident: ref2,
+                names: ["2"],
+                priority: Priority::Optional,
+                predicate: &is_plain_text
+            },
+            {
+                ident: ref3,
+                names: ["3"],
+                priority: Priority::Optional,
+                predicate: &is_plain_text
+            }
+        ]
+    },
+    template {
         id: Important,
         names: ["important", "-"],
         format: Format::Block,
@@ -123,6 +148,23 @@ fn is_math_tag(elems: &[Element]) -> bool {
     } else {
         false
     }
+}
+
+fn is_plain_text(elems: &[Element]) -> bool {
+    fn shallow(elements: &[Element]) -> bool {
+        for elem in elements {
+            let allowed = match *elem {
+                Element::Paragraph { .. }
+                | Element::Text { .. } => true,
+                _ => false
+            };
+            if !allowed {
+                return false
+            }
+        }
+        true
+    }
+    TreeChecker::all(elems, &shallow)
 }
 
 fn is_text_only_paragraph(elems: &[Element]) -> bool {
