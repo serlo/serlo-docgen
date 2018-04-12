@@ -211,18 +211,13 @@ macro_rules! template_spec {
             } = *elem {
                 let extract_content = | attr_names: &Vec<String> | {
                     if let Some(arg) = find_arg(content, attr_names) {
-                        if let Element::TemplateArgument {
-                            ref value,
-                            ..
-                        } = *arg {
-                            Some(&value[..])
-                        } else {
-                            None
+                        if let Element::TemplateArgument { ref value, .. } = *arg {
+                            return Some(value.as_slice())
                         }
-                    } else {
-                        None
                     }
+                    None
                 };
+
                 let name = extract_plain_text(&name).trim().to_lowercase();
                 $(
                     let names = [$($name.trim().to_lowercase()),*];
@@ -231,7 +226,9 @@ macro_rules! template_spec {
                             id: TemplateID::$id,
                             $(
                                 $attr_id: {
-                                    let attr_names = vec![$($attr_name.trim().to_lowercase()),*];
+                                    let attr_names = vec![
+                                        $($attr_name.trim().to_lowercase()
+                                    ),*];
                                     extract_content(&attr_names)
                                 }
                             ),*,
@@ -240,7 +237,9 @@ macro_rules! template_spec {
                             present: {
                                 let mut present = vec![];
                                 $(
-                                    let attr_names = vec![$($attr_name.trim().to_lowercase()),*];
+                                    let attr_names = vec![
+                                        $($attr_name.trim().to_lowercase()
+                                    ),*];
                                     if let Some(value) = extract_content(&attr_names) {
                                         present.push(Attribute {
                                             name: stringify!($attr_id).into(),
