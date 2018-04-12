@@ -1,6 +1,9 @@
+//! Common utilities for mfnf tools.
+
 use mediawiki_parser::*;
 
 /// generates getters and setters for a path member of a traversion.
+#[macro_export]
 macro_rules! path_methods {
     ($lt:tt) => {
         fn path_push(&mut self, root: &$lt Element) {
