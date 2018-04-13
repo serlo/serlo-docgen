@@ -61,18 +61,37 @@ fn check_template(template: &SpecTemplate) -> (Ident, Vec<LitStr>, Ident, LitStr
 }
 
 fn implement_template_id(templates: &[SpecTemplate]) -> Tokens {
-    let variants = templates.iter().map(|template| {
+    let variants: Vec<Ident> = templates.iter().map(|template| {
         let (name, _, _, _) = check_template(template);
-
+        name
+    }).collect();
+    let enum_variants = variants.iter().map(|name|
         quote! {
             #name(#name<'e>)
         }
-    });
+    );
+    let present_variants = variants.iter();
     quote! {
         /// The available template types.
         #[derive(Debug, Clone, PartialEq, Serialize)]
         pub enum Template<'e> {
-            #( #variants ),*
+            #( #enum_variants ),*
+        }
+
+        impl<'e> Template<'e> {
+            pub fn present(&self) -> &Vec<Attribute<'e>> {
+                match *self {
+                    #( Template::#present_variants(ref t) => &t.present ),*
+                }
+            }
+            pub fn find(&self, name: &str) -> Option<&Attribute<'e>> {
+                for attribute in self.present() {
+                    if &attribute.name == name {
+                        return Some(attribute)
+                    }
+                }
+                None
+            }
         }
     }
 }
