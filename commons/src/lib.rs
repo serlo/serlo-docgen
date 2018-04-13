@@ -4,6 +4,8 @@ extern crate mediawiki_parser;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
+#[macro_use]
+extern crate mfnf_derive;
 
 #[macro_use]
 pub mod util;

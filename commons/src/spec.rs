@@ -4,153 +4,12 @@ pub use spec_utils::*;
 use util::*;
 use mediawiki_parser::*;
 
-template_spec!(
-    template {
-        id: Formula,
-        names: ["formula", "formel"],
-        format: Format::Inline,
-        attributes: [
-            {
-                ident: formel,
-                names: ["1", "formel"],
-                priority: Priority::Required,
-                predicate: &is_math_tag
-            }
-        ]
-    },
-    template {
-        id: Anchor,
-        names: ["anchor", "anker"],
-        format: Format::Inline,
-        attributes: [
-            {
-                ident: ref1,
-                names: ["1"],
-                priority: Priority::Required,
-                predicate: &is_plain_text
-            },
-            {
-                ident: ref2,
-                names: ["2"],
-                priority: Priority::Optional,
-                predicate: &is_plain_text
-            },
-            {
-                ident: ref3,
-                names: ["3"],
-                priority: Priority::Optional,
-                predicate: &is_plain_text
-            }
-        ]
-    },
-    template {
-        id: Mainarticle,
-        names: [":Mathe für Nicht-Freaks: Vorlage:Hauptartikel"],
-        format: Format::Inline,
-        attributes: [
-            {
-                ident: article,
-                names: ["1"],
-                priority: Priority::Required,
-                predicate: &is_plain_text
-            }
-        ]
-    },
-    template {
-        id: Important,
-        names: ["important", "-"],
-        format: Format::Block,
-        attributes: [
-            {
-                ident: content,
-                names: ["1", "content"],
-                priority: Priority::Required,
-                predicate: &is_text_only_paragraph
-            }
-        ]
-    },
-    template {
-        id: Definition,
-        names: [":Mathe für Nicht-Freaks: Vorlage:Definition"],
-        format: Format::Block,
-        attributes: [
-            {
-                ident: title,
-                names: ["title", "titel"],
-                priority: Priority::Optional,
-                predicate: &is_text_only_paragraph
-            },
-            {
-                ident: definition,
-                names: ["definition"],
-                priority: Priority::Required,
-                predicate: &is_text_only_paragraph
-            }
-        ]
-    },
-    template {
-        id: Theorem,
-        names: [":Mathe für Nicht-Freaks: Vorlage:Satz"],
-        format: Format::Block,
-        attributes: [
-            {
-                ident: title,
-                names: ["title", "titel"],
-                priority: Priority::Optional,
-                predicate: &is_text_only_paragraph
-            },
-            {
-                ident: theorem,
-                names: ["theorem", "satz"],
-                priority: Priority::Required,
-                predicate: &is_text_only_paragraph
-            },
-            {
-                ident: explanation,
-                names: ["explanation", "erklärung"],
-                priority: Priority::Optional,
-                predicate: &is_text_only_paragraph
-            },
-            {
-                ident: solutionprocess,
-                names: ["solutionprocess", "lösungsweg"],
-                priority: Priority::Optional,
-                predicate: &is_text_only_paragraph
-            },
-            {
-                ident: summary,
-                names: ["summary", "zusammenfassung"],
-                priority: Priority::Optional,
-                predicate: &is_text_only_paragraph
-            },
-            {
-                ident: proof,
-                names: ["proof", "beweis"],
-                priority: Priority::Optional,
-                predicate: &is_text_only_paragraph
-            }
-        ]
-    },
-    template {
-        id: Example,
-        names: [":Mathe für Nicht-Freaks: Vorlage:Beispiel"],
-        format: Format::Block,
-        attributes: [
-            {
-                ident: title,
-                names: ["title", "titel"],
-                priority: Priority::Optional,
-                predicate: &is_text_only_paragraph
-            },
-            {
-                ident: example,
-                names: ["example", "beispiel"],
-                priority: Priority::Required,
-                predicate: &is_text_only_paragraph
-            }
-        ]
-    }
-);
+#[cfg(debug_assertions)]
+const _SPEC: &'static str = include_str!("templates.yml");
+
+#[derive(TemplateSpec)]
+#[spec = "templates.yml"]
+struct DummySpec;
 
 fn is_math_tag(elems: &[Element]) -> bool {
     if elems.len() != 1 {
@@ -209,3 +68,4 @@ fn is_text_only_paragraph(elems: &[Element]) -> bool {
     };
     TreeChecker::all(elems, &shallow)
 }
+
