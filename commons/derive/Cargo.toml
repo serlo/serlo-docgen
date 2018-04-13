@@ -1,0 +1,15 @@
+[package]
+name = "mfnf_derive"
+version = "0.1.0"
+authors = ["Valentin Roland <valentin@vroland.de>"]
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = { version = "0.13" , features = ["derive"]} 
+serde = "1.0"
+serde_derive = "1.0"
+serde_yaml = "0.7"
+quote = "0.5"
+proc-macro2 = "0.3"
