@@ -23,60 +23,53 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
             return Ok(false)
         };
 
-        match *parsed.id() {
-            TemplateID::Formula => self.formula(&parsed, out)?,
-            TemplateID::Important => self.important(&parsed, out)?,
-            TemplateID::Definition
-            | TemplateID::Theorem
-            | TemplateID::Example
+        match parsed {
+            Template::Formula(formula) => self.formula(&formula, out)?,
+            Template::Important(important) => self.important(&important, out)?,
+            Template::Definition(_)
+            | Template::Theorem(_)
+            | Template::Example(_)
              => self.environment_template(settings, &parsed, out)?,
-            TemplateID::Anchor => self.anchor(&parsed, out)?,
-            TemplateID::Mainarticle => self.mainarticle(settings, &parsed, out)?,
+            Template::Anchor(anchor) => self.anchor(&anchor, out)?,
+            Template::Mainarticle(article) => self.mainarticle(settings, &article, out)?,
         };
         Ok(false)
     }
 
-    fn formula(&self, template: &Template, out: &mut io::Write) -> io::Result<()> {
+    fn formula(&self, formula: &Formula, out: &mut io::Write) -> io::Result<()> {
+        let content = extract_plain_text(formula.formula).trim().to_owned();
 
-        if let Template::Formula { ref formel, .. } = *template {
-            let content = extract_plain_text(formel.unwrap_or(&[])).trim().to_owned();
+        let mut trimmed = trim_enclosing(
+            &content,
+            "\\begin{align}",
+            "\\end{align}"
+        );
+        trimmed = trim_enclosing(
+            trimmed,
+            "\\begin{align*}",
+            "\\end{align*}"
+        ).trim();
 
-            let mut trimmed = trim_enclosing(
-                &content,
-                "\\begin{align}",
-                "\\end{align}"
-            );
-            trimmed = trim_enclosing(
-                trimmed,
-                "\\begin{align*}",
-                "\\end{align*}"
-            ).trim();
-
-            return self.environment(
-                MATH_ENV!(),
-                &[],
-                trimmed,
-                out,
-            );
-        }
-        unreachable!();
+        self.environment(
+            MATH_ENV!(),
+            &[],
+            trimmed,
+            out,
+        )
     }
 
-    fn important(&self, template: &Template, out: &mut io::Write) -> io::Result<()> {
+    fn important(&self, template: &Important, out: &mut io::Write) -> io::Result<()> {
 
-        if let Template::Important { ref content, .. } = *template {
-            return self.environment(
-                IMPORTANT_ENV!(),
-                &[],
-                extract_plain_text(content.unwrap_or(&[])).trim(),
-                out
-            );
-        }
-        unreachable!();
+        self.environment(
+            IMPORTANT_ENV!(),
+            &[],
+            extract_plain_text(template.content).trim(),
+            out
+        )
     }
 
-    fn anchor(&self, template: &Template, out: &mut io::Write) -> io::Result<()> {
-        for reference in template.present() {
+    fn anchor(&self, template: &Anchor, out: &mut io::Write) -> io::Result<()> {
+        for reference in &template.present {
             write!(out, LABEL!(), extract_plain_text(&reference.value).trim())?;
         }
         Ok(())
@@ -85,19 +78,17 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
     fn mainarticle(
         &mut self,
         settings: &'s Settings,
-        template: &Template<'e>,
+        template: &Mainarticle<'e>,
         out: &mut io::Write
      ) -> io::Result<()> {
-        if let Template::Mainarticle { ref article, .. } = *template {
-            let name = extract_plain_text(&article.unwrap_or(&[]))
-                .trim().to_owned();
-            let mut url = settings.article_url_base.to_owned();
-            url.push_str(&name);
-            url = url.replace(' ', "_");
 
-            return write!(out, MAINARTICLE!(), &url, &name)
-        }
-        Ok(())
+        let name = extract_plain_text(template.article)
+            .trim().to_owned();
+        let mut url = settings.article_url_base.to_owned();
+        url.push_str(&name);
+        url = url.replace(' ', "_");
+
+        write!(out, MAINARTICLE!(), &url, &name)
     }
 
     pub fn template_arg(&mut self, root: &'e Element,
