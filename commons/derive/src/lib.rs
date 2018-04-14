@@ -204,20 +204,18 @@ fn implement_template_parsing(templates: &[SpecTemplate]) -> Tokens {
 
     quote! {
         /// Try to create a `KnownTemplate` variant from an element, using the specification.
-        pub fn parse_template<'e>(elem: &'e Element) -> Option<KnownTemplate<'e>> {
-            if let Element::Template(ref template) = *elem {
-                let extract_content = | attr_names: &[String] | {
-                    if let Some(arg) = find_arg(&template.content, attr_names) {
-                        if let Element::TemplateArgument(ref arg) = *arg {
-                            return Some(arg.value.as_slice())
-                        }
+        pub fn parse_template<'e>(template: &'e Template) -> Option<KnownTemplate<'e>> {
+            let extract_content = | attr_names: &[String] | {
+                if let Some(arg) = find_arg(&template.content, attr_names) {
+                    if let Element::TemplateArgument(ref arg) = *arg {
+                        return Some(arg.value.as_slice())
                     }
-                    None
-                };
-
-                let name = extract_plain_text(&template.name).trim().to_lowercase();
-                #( #template_kinds )*
+                }
+                None
             };
+
+            let name = extract_plain_text(&template.name).trim().to_lowercase();
+            #( #template_kinds )*
             None
         }
     }
