@@ -23,17 +23,17 @@ pub fn extract_plain_text(content: &[Element]) -> String {
     let mut result = String::new();
     for root in content {
         match *root {
-            Element::Text { ref text, .. } => {
-                result.push_str(text);
+            Element::Text(ref e) => {
+                result.push_str(&e.text);
             },
-            Element::Formatted { ref content, .. } => {
-                result.push_str(&extract_plain_text(content));
+            Element::Formatted(ref e) => {
+                result.push_str(&extract_plain_text(&e.content));
             },
-            Element::Paragraph { ref content, .. } => {
-                result.push_str(&extract_plain_text(content));
+            Element::Paragraph(ref e) => {
+                result.push_str(&extract_plain_text(&e.content));
             },
-            Element::TemplateArgument { ref value, .. } => {
-                result.push_str(&extract_plain_text(value));
+            Element::TemplateArgument(ref e) => {
+                result.push_str(&extract_plain_text(&e.value));
             },
             _ => (),
         };
@@ -44,8 +44,8 @@ pub fn extract_plain_text(content: &[Element]) -> String {
 /// Returns the template argument with a matching name (lowercase) from a list.
 pub fn find_arg<'a>(content: &'a [Element], names: &[String]) -> Option<&'a Element> {
     for child in content {
-        if let Element::TemplateArgument { ref name, .. } = *child {
-            if names.contains(&name.trim().to_lowercase()) {
+        if let Element::TemplateArgument(ref e) = *child {
+            if names.contains(&e.name.trim().to_lowercase()) {
                 return Some(child);
             }
         }

@@ -15,8 +15,8 @@ fn is_math_tag(elems: &[Element]) -> bool {
     if elems.len() != 1 {
         return false
     }
-    if let Some(&Element::Formatted { ref markup, .. }) = elems.first() {
-        *markup == MarkupType::Math
+    if let Some(&Element::Formatted(ref fmt)) = elems.first() {
+        fmt.markup == MarkupType::Math
     } else {
         false
     }
@@ -27,8 +27,8 @@ pub fn is_plain_text(elems: &[Element]) -> bool {
     fn shallow(elements: &[Element]) -> bool {
         for elem in elements {
             let allowed = match *elem {
-                Element::Paragraph { .. }
-                | Element::Text { .. } => true,
+                Element::Paragraph(_)
+                | Element::Text(_) => true,
                 _ => false
             };
             if !allowed {
@@ -44,8 +44,8 @@ fn is_text_only_paragraph(elems: &[Element]) -> bool {
     fn shallow(elements: &[Element]) -> bool {
         for elem in elements {
             match *elem {
-                Element::Template { ref name, .. } => {
-                    let name = extract_plain_text(name);
+                Element::Template(ref template) => {
+                    let name = extract_plain_text(&template.name);
                     if let Some(spec) = spec_of(&name) {
                         if spec.format != Format::Inline {
                             return false
@@ -54,12 +54,12 @@ fn is_text_only_paragraph(elems: &[Element]) -> bool {
                         return false
                     }
                 },
-                Element::Gallery { .. }
-                | Element::Heading { .. }
-                | Element::Table { .. }
-                | Element::TableRow { .. }
-                | Element::TableCell { .. }
-                | Element::InternalReference { .. }
+                Element::Gallery(_)
+                | Element::Heading(_)
+                | Element::Table(_)
+                | Element::TableRow(_)
+                | Element::TableCell(_)
+                | Element::InternalReference(_)
                 => return false,
                 _ => (),
             }
