@@ -28,7 +28,7 @@ mod preamble {
     pub use mediawiki_parser::Traversion;
     pub use target::Target;
     pub use settings::Settings;
-    pub use mediawiki_parser::Element;
+    pub use mediawiki_parser::*;
     pub use std::io;
     pub use util::*;
 }

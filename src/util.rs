@@ -133,15 +133,10 @@ fn is_plain_file(path: &PathBuf) -> bool {
 }
 
 /// Returns wether an image is semantically a thumbnail image.
-pub fn is_thumb(image: &Element) -> bool {
-    if let Element::InternalReference {
-        ref options,
-        ..
-    } = *image {
-        for option in options {
-            if extract_plain_text(option).to_lowercase().trim() == "thumb" {
-                return true
-            }
+pub fn is_thumb(image: &InternalReference) -> bool {
+    for option in &image.options {
+        if extract_plain_text(option).to_lowercase().trim() == "thumb" {
+            return true
         }
     }
     false
@@ -228,40 +223,39 @@ impl<S> Renderable<S> for [Element] {
 /// in a semantically useful order.
 pub fn extract_content(root: Element) -> Option<Vec<Element>> {
     match root {
-        Element::Document { content, .. }
-        | Element::Formatted { content, .. }
-        | Element::Paragraph { content, .. }
-        | Element::ListItem { content, .. }
-        | Element::List { content, .. }
-        | Element::TableCell { content, .. }
-        | Element::HtmlTag { content, .. }
-        | Element::Gallery { content, .. }
-        => Some(content),
-        Element::Heading { mut caption, mut content, .. } => {
-            caption.append(&mut content);
-            Some(caption)
+        Element::Document(e) => Some(e.content),
+        Element::Formatted(e) => Some(e.content),
+        Element::Paragraph(e) => Some(e.content),
+        Element::ListItem(e) => Some(e.content),
+        Element::List(e) => Some(e.content),
+        Element::TableCell(e) => Some(e.content),
+        Element::HtmlTag(e) => Some(e.content),
+        Element::Gallery(e) => Some(e.content),
+        Element::Heading(mut e) => {
+            e.caption.append(&mut e.content);
+            Some(e.caption)
         },
-        Element::Template { mut name, mut content, .. } => {
-            name.append(&mut content);
-            Some(name)
+        Element::Template(mut e) => {
+            e.name.append(&mut e.content);
+            Some(e.name)
         },
-        Element::TemplateArgument { value, .. } => Some(value),
-        Element::InternalReference { mut target, options, mut caption, .. } => {
-            for mut option in options {
-                target.append(&mut option);
+        Element::TemplateArgument(e) => Some(e.value),
+        Element::InternalReference(mut e) => {
+            for mut option in &mut e.options {
+                e.target.append(&mut option);
             }
-            target.append(&mut caption);
-            Some(target)
+            e.target.append(&mut e.caption);
+            Some(e.target)
         },
-        Element::ExternalReference { caption, .. } => Some(caption),
-        Element::Table { mut caption, mut rows, .. } => {
-            caption.append(&mut rows);
-            Some(caption)
+        Element::ExternalReference(e) => Some(e.caption),
+        Element::Table(mut e) => {
+            e.caption.append(&mut e.rows);
+            Some(e.caption)
         }
-        Element::TableRow { cells, .. } => Some(cells),
-        Element::Text { .. }
-        | Element::Comment { .. }
-        | Element::Error { .. }
+        Element::TableRow(e) => Some(e.cells),
+        Element::Text(_)
+        | Element::Comment(_)
+        | Element::Error(_)
         => None,
     }
 }

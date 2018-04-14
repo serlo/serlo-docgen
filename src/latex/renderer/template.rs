@@ -6,32 +6,33 @@ use mfnf_commons::*;
 
 impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
 
-    pub fn template(&mut self, root: &'e Element,
-                       settings: &'s Settings,
-                       out: &mut io::Write) -> io::Result<bool> {
+    pub fn template(
+        &mut self,
+        root: &'e Template,
+        settings: &'s Settings,
+        out: &mut io::Write
+    ) -> io::Result<bool> {
 
         let doctitle = &settings.document_title;
-        let parsed = if let Some(parsed) = parse_template(root) {
+        let parsed = if let Some(parsed) = parse_template(&root) {
             parsed
         } else {
-            self.write_def_location(root.get_position(), doctitle, out)?;
+            self.write_def_location(&root.position, doctitle, out)?;
             self.write_error(&format!("template unknown or malformed: {:?}",
-                &(if let Element::Template { ref name, .. } = *root {
-                    extract_plain_text(name).trim().to_lowercase()
-                } else { "not a template".into() })
+                &extract_plain_text(&root.name).trim().to_lowercase()
             ), out)?;
             return Ok(false)
         };
 
         match parsed {
-            Template::Formula(formula) => self.formula(&formula, out)?,
-            Template::Important(important) => self.important(&important, out)?,
-            Template::Definition(_)
-            | Template::Theorem(_)
-            | Template::Example(_)
+            KnownTemplate::Formula(formula) => self.formula(&formula, out)?,
+            KnownTemplate::Important(important) => self.important(&important, out)?,
+            KnownTemplate::Definition(_)
+            | KnownTemplate::Theorem(_)
+            | KnownTemplate::Example(_)
              => self.environment_template(settings, &parsed, out)?,
-            Template::Anchor(anchor) => self.anchor(&anchor, out)?,
-            Template::Mainarticle(article) => self.mainarticle(settings, &article, out)?,
+            KnownTemplate::Anchor(anchor) => self.anchor(&anchor, out)?,
+            KnownTemplate::Mainarticle(article) => self.mainarticle(settings, &article, out)?,
         };
         Ok(false)
     }
@@ -91,23 +92,20 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         write!(out, MAINARTICLE!(), &url, &name)
     }
 
-    pub fn template_arg(&mut self, root: &'e Element,
-                    settings: &'s Settings,
-                    out: &mut io::Write) -> io::Result<bool> {
-
-        if let Element::TemplateArgument {
-            ref value,
-            ..
-        } = *root {
-            self.run_vec(value, settings, out)?;
-        }
+    pub fn template_arg(
+        &mut self,
+        root: &'e TemplateArgument,
+        settings: &'s Settings,
+        out: &mut io::Write
+    ) -> io::Result<bool> {
+        self.run_vec(&root.value, settings, out)?;
         Ok(false)
     }
 
     pub fn environment_template(
         &mut self,
         settings: &'s Settings,
-        template: &Template<'e>,
+        template: &KnownTemplate<'e>,
         out: &mut io::Write
     ) -> io::Result<()> {
         let title = template.find("title").map(|a| a.value).unwrap_or(&[]);

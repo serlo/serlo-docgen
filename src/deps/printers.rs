@@ -18,14 +18,14 @@ impl<'a, 'b: 'a> Traversion<'a, &'b Settings> for InclusionPrinter<'a> {
     fn work(&mut self, root: &Element, settings: &'b Settings,
             out: &mut io::Write) -> io::Result<bool> {
 
-        if let Element::Template { ref name, ref content, .. } = *root {
+        if let Element::Template(ref template) = *root {
             let prefix: &str = &settings.section_inclusion_prefix;
-            let template_name = extract_plain_text(name);
+            let template_name = extract_plain_text(&template.name);
 
             // section transclusion
             if template_name.to_lowercase().starts_with(&prefix) {
                 let article = trim_prefix(&template_name, prefix);
-                let section_name = extract_plain_text(content);
+                let section_name = extract_plain_text(&template.content);
                 let path = get_section_path(article, &section_name, settings);
                 write!(out, " \\\n\t{}", &path)?;
             }
@@ -48,8 +48,8 @@ impl<'a, 'b: 'a> Traversion<'a, &'b Settings> for FilesPrinter<'b, 'a> {
     fn work(&mut self, root: &Element, settings: &'b Settings,
             out: &mut io::Write) -> io::Result<bool> {
 
-        if let Element::InternalReference { ref target, .. } = *root {
-            let target = extract_plain_text(target);
+        if let Element::InternalReference(ref iref) = *root {
+            let target = extract_plain_text(&iref.target);
             let target_path = PathBuf::from(target);
             let ext = target_path.extension().unwrap_or_default();
             let ext_str = ext.to_string_lossy().into();

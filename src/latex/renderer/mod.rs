@@ -2,7 +2,6 @@
 
 use preamble::*;
 use latex::LatexTarget;
-use mediawiki_parser::Span;
 #[macro_use]
 mod blobs;
 
@@ -32,26 +31,26 @@ impl<'e, 's: 'e, 't: 'e> Traversion<'e, &'s Settings> for LatexRenderer<'e, 't> 
 
         Ok(match *root {
             // Node elements
-            Element::Document { .. } => true,
-            Element::Heading { .. } => self.heading(root, settings, out)?,
-            Element::Formatted { .. } => self.formatted(root, settings, out)?,
-            Element::Paragraph { .. } => self.paragraph(root, settings, out)?,
-            Element::Template { .. } => self.template(root, settings, out)?,
-            Element::TemplateArgument { .. } => self.template_arg(root, settings, out)?,
-            Element::InternalReference { .. } => self.internal_ref(root, settings, out)?,
-            Element::List { .. } => self.list(root, settings, out)?,
-            Element::HtmlTag { .. } => self.htmltag(root, settings, out)?,
-            Element::Gallery { .. } => self.gallery(root, settings, out)?,
-            Element::ExternalReference { .. } => self.href(root, settings, out)?,
-            Element::Table { .. } => self.table(root, settings, out)?,
-            Element::TableRow { .. } => self.table_row(root, settings, out)?,
-            Element::TableCell { .. } => self.table_cell(root, settings, out)?,
+            Element::Document(_) => true,
+            Element::Heading(ref root) => self.heading(root, settings, out)?,
+            Element::Formatted(ref root) => self.formatted(root, settings, out)?,
+            Element::Paragraph(ref root) => self.paragraph(root, settings, out)?,
+            Element::Template(ref root) => self.template(root, settings, out)?,
+            Element::TemplateArgument(ref root) => self.template_arg(root, settings, out)?,
+            Element::InternalReference(ref root) => self.internal_ref(root, settings, out)?,
+            Element::List(ref root) => self.list(root, settings, out)?,
+            Element::HtmlTag(ref root) => self.htmltag(root, settings, out)?,
+            Element::Gallery(ref root) => self.gallery(root, settings, out)?,
+            Element::ExternalReference(ref root) => self.href(root, settings, out)?,
+            Element::Table(ref root) => self.table(root, settings, out)?,
+            Element::TableRow(ref root) => self.table_row(root, settings, out)?,
+            Element::TableCell(ref root) => self.table_cell(root, settings, out)?,
 
 
             // Leaf Elements
-            Element::Text { .. } => self.text(root, settings, out)?,
-            Element::Comment { .. } => self.comment(root, settings, out)?,
-            Element::Error { .. } => self.error(root, settings, out)?,
+            Element::Text(ref root) => self.text(root, settings, out)?,
+            Element::Comment(ref root) => self.comment(root, settings, out)?,
+            Element::Error(ref root) => self.error(root, settings, out)?,
             _ => {
                 self.write_error(&format!("export for element `{}` not implemented!",
                     root.get_variant_name()), out)?;
@@ -132,14 +131,12 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
     }
 
     fn error(&self,
-        root: &Element,
+        root: &Error,
         settings: &Settings,
         out: &mut io::Write
     ) -> io::Result<bool> {
-        if let Element::Error { ref position, ref message } = *root {
-            self.write_def_location(position, &settings.document_title, out)?;
-            self.write_error(message, out)?;
-        }
+        self.write_def_location(&root.position, &settings.document_title, out)?;
+        self.write_error(&root.message, out)?;
         Ok(true)
     }
 }

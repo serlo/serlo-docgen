@@ -19,9 +19,9 @@ impl<'e> Traversion<'e, ()> for SectionNameCollector<'e> {
             _: (),
             _: &mut io::Write) -> io::Result<bool> {
 
-        if let Element::HtmlTag { ref name, ref attributes, .. } = *root {
-            if name.to_lowercase() == "section"  {
-                for attr in attributes {
+        if let Element::HtmlTag(ref tag) = *root {
+            if tag.name.to_lowercase() == "section"  {
+                for attr in &tag.attributes {
                     if attr.key == "begin" {
                         self.sections.push(attr.value.trim().into());
                     }
@@ -69,9 +69,9 @@ impl<'e, 'a> Traversion<'e, ()> for SectionFinder<'e, 'a> {
             return Ok(false)
         }
 
-        if let Element::HtmlTag { ref name, ref attributes, .. } = *root {
-            if name.to_lowercase() == "section" {
-                for attr in attributes {
+        if let Element::HtmlTag(ref tag) = *root {
+            if tag.name.to_lowercase() == "section" {
+                for attr in &tag.attributes {
                     if attr.key.to_lowercase() == if self.begin {"begin"} else {"end"}
                         && attr.value.to_lowercase() == self.label.to_lowercase() {
                         self.result = self.path.clone();

@@ -8,123 +8,108 @@ use super::LatexRenderer;
 impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
 
     pub fn paragraph(
-        &mut self, root: &'e Element,
+        &mut self,
+        root: &'e Paragraph,
         settings: &'s Settings,
         out: &mut io::Write
     ) -> io::Result<bool> {
 
-        if let Element::Paragraph { ref content, .. } = *root {
-
-            let content = content.render(self, settings)?;
-            if self.flatten_paragraphs {
-                write!(out, "{}", content.trim())?;
-            } else {
-                writeln!(out, "{}\n", content.trim())?;
-            }
-        };
+        let content = root.content.render(self, settings)?;
+        if self.flatten_paragraphs {
+            write!(out, "{}", content.trim())?;
+        } else {
+            writeln!(out, "{}\n", content.trim())?;
+        }
         Ok(false)
     }
 
     pub fn heading(
-        &mut self, root: &'e Element,
+        &mut self,
+        root: &'e Heading,
         settings: &'s Settings,
         out: &mut io::Write
     ) -> io::Result<bool> {
 
-        if let Element::Heading {depth, ref caption, ref content, .. } = *root {
+        let line_width = self.latex.max_line_width;
+        let indent = self.latex.indentation_depth;
 
-            let line_width = self.latex.max_line_width;
-            let indent = self.latex.indentation_depth;
+        let caption = root.caption.render(self, settings)?;
+        let content = root.content.render(self, settings)?;
 
-            let caption = caption.render(self, settings)?;
-            let mut content = content.render(self, settings)?;
+        let content = indent_and_trim(&content, indent, line_width);
+        let depth_string = "sub".repeat(root.depth - 1);
 
-            content = indent_and_trim(&content, indent, line_width);
-            let depth_string = "sub".repeat(depth - 1);
-
-            writeln!(out, SECTION!(), depth_string, caption.trim())?;
-            writeln!(out, "{}", &content)?;
-        };
+        writeln!(out, SECTION!(), depth_string, caption.trim())?;
+        writeln!(out, "{}", &content)?;
         Ok(false)
     }
 
     pub fn comment(
-        &mut self, root: &'e Element,
+        &mut self,
+        root: &'e Comment,
         _: &'s Settings,
         out: &mut io::Write
     ) -> io::Result<bool> {
-
-        if let Element::Comment { ref text, .. } = *root {
-            writeln!(out, "% {}", &escape_latex(text))?;
-        }
+        writeln!(out, "% {}", &escape_latex(&root.text))?;
         Ok(false)
     }
 
     pub fn text(
-        &mut self, root: &'e Element,
+        &mut self,
+        root: &'e Text,
         _: &'s Settings,
         out: &mut io::Write
     ) -> io::Result<bool> {
-
-        if let Element::Text { ref text, .. } = *root {
-            write!(out, "{}", &escape_latex(text))?;
-        }
+        write!(out, "{}", &escape_latex(&root.text))?;
         Ok(false)
     }
 
     pub fn formatted(
-        &mut self, root: &'e Element,
+        &mut self,
+        root: &'e Formatted,
         settings: &'s Settings,
         out: &mut io::Write
     ) -> io::Result<bool> {
 
-        if let Element::Formatted { ref markup, ref content, .. } = *root {
+        let inner = root.content.render(self, settings)?;
 
-            let inner = content.render(self, settings)?;
-
-            match *markup {
-                MarkupType::NoWiki => {
-                    write!(out, "{}", &inner)?;
-                },
-                MarkupType::Bold => {
-                    write!(out, BOLD!(), &inner)?;
-                },
-                MarkupType::Italic => {
-                    write!(out, ITALIC!(), &inner)?;
-                },
-                MarkupType::Math => {
-                    let inner = extract_plain_text(content);
-                    write!(out, MATH!(), &inner)?;
-                },
-                MarkupType::StrikeThrough => {
-                    write!(out, STRIKE_THROUGH!(), &inner)?;
-                },
-                MarkupType::Underline => {
-                    write!(out, UNDERLINE!(), &inner)?;
-                },
-                _ => {
-                    let msg = format!("MarkupType not implemented: {:?}", &markup);
-                    self.write_error(&msg, out)?;
-                }
+        match root.markup {
+            MarkupType::NoWiki => {
+                write!(out, "{}", &inner)?;
+            },
+            MarkupType::Bold => {
+                write!(out, BOLD!(), &inner)?;
+            },
+            MarkupType::Italic => {
+                write!(out, ITALIC!(), &inner)?;
+            },
+            MarkupType::Math => {
+                let inner = extract_plain_text(&root.content);
+                write!(out, MATH!(), &inner)?;
+            },
+            MarkupType::StrikeThrough => {
+                write!(out, STRIKE_THROUGH!(), &inner)?;
+            },
+            MarkupType::Underline => {
+                write!(out, UNDERLINE!(), &inner)?;
+            },
+            _ => {
+                let msg = format!("MarkupType not implemented: {:?}", &root.markup);
+                self.write_error(&msg, out)?;
             }
         }
         Ok(false)
     }
 
     pub fn href(
-        &mut self, root: &'e Element,
+        &mut self,
+        root: &'e ExternalReference,
         settings: &'s Settings,
         out: &mut io::Write
     ) -> io::Result<bool> {
 
-        if let Element::ExternalReference {
-            ref target,
-            ref caption,
-            ..
-        } = *root {
-            let caption = caption.render(self, settings)?;
-            writeln!(out, INTERNAL_HREF!(), target, &caption)?;
-        }
+        let caption = root.caption.render(self, settings)?;
+        writeln!(out, INTERNAL_HREF!(), &root.target, &caption)?;
         Ok(false)
     }
 }

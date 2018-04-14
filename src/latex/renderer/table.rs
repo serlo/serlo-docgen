@@ -14,41 +14,30 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
 
     pub fn table_cell(
         &mut self,
-        root: &'e Element,
+        root: &'e TableCell,
         settings: &'s Settings,
         out: &mut io::Write
     ) -> io::Result<bool> {
 
-        if let Element::TableCell {
-            ref content,
-            ..
-        } = *root {
-            // paragraphs in tables do not translate well for latex
-            self.run_vec_nopar(content, settings, out)?;
-        }
+        // paragraphs in tables do not translate well for latex
+        self.run_vec_nopar(&root.content, settings, out)?;
         Ok(false)
     }
 
     pub fn table_row(
         &mut self,
-        root: &'e Element,
+        root: &'e TableRow,
         settings: &'s Settings,
         out: &mut io::Write
     ) -> io::Result<bool> {
 
-        if let Element::TableRow {
-            ref cells,
-            ..
-        } = *root {
-
-            for (index, cell) in cells.iter().enumerate() {
-                if index > 0 {
-                    write!(out, " & ")?;
-                }
-                self.run(cell, settings, out)?;
+        for (index, cell) in root.cells.iter().enumerate() {
+            if index > 0 {
+                write!(out, " & ")?;
             }
-            writeln!(out, "\\\\")?;
+            self.run(cell, settings, out)?;
         }
+        writeln!(out, "\\\\")?;
         Ok(false)
     }
 
@@ -62,16 +51,16 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         let mut last_header_position = None;
 
         for (index, row) in rows.iter().enumerate() {
-            let current_width = if let Element::TableRow { ref cells, .. } = *row {
+            let current_width = if let Element::TableRow(ref row) = *row {
 
-                let is_header_row = cells.iter().fold(true, | con, e |
-                    con && if let Element::TableCell { header, .. } = *e { header } else {false}
+                let is_header_row = row.cells.iter().fold(true, | con, e |
+                    con && if let Element::TableCell(ref c) = *e { c.header } else {false}
                 );
 
                 if is_header_row {
                     last_header_position = Some(index + 1);
                 };
-                cells.len()
+                row.cells.len()
             } else {
                 self.write_error("row element is not TableRows!", out)?;
                 return Ok(None)
@@ -99,48 +88,42 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
 
     pub fn table(
         &mut self,
-        root: &'e Element,
+        root: &'e Table,
         settings: &'s Settings,
-        out: &mut io::Write) -> io::Result<bool> {
+        out: &mut io::Write
+    ) -> io::Result<bool> {
 
-        if let Element::Table {
-            ref position,
-            ref caption,
-            ref rows,
-            ..
-        } = *root {
+        self.write_def_location(&root.position, &settings.document_title, out)?;
+        let table_info = if let Some(info) = self.get_table_params(&root.rows, out)? {
+            info
+        } else {
+            return Ok(false)
+        };
 
-            self.write_def_location(position, &settings.document_title, out)?;
-            let table_info = if let Some(info) = self.get_table_params(rows, out)? {
-                info
-            } else {
-                return Ok(false)
-            };
+        let columns = "X[l]".repeat(table_info.width);
 
-            let columns = "X[l]".repeat(table_info.width);
+        let content = if let Some(header) = table_info.header {
+            format!(TABLE_WITH_HEADER!(),
+                header.render(self, settings)?,
+                table_info.body.render(self, settings)?,
+            )
+        } else {
+            format!(TABLE_WITHOUT_HEADER!(),
+                table_info.body.render(self, settings)?,
+            )
+        };
 
-            let content = if let Some(header) = table_info.header {
-                format!(TABLE_WITH_HEADER!(),
-                    header.render(self, settings)?,
-                    table_info.body.render(self, settings)?,
-                )
-            } else {
-                format!(TABLE_WITHOUT_HEADER!(),
-                    table_info.body.render(self, settings)?,
-                )
-            };
+        let line_width = self.latex.max_line_width;
+        let indent = self.latex.indentation_depth;
 
-            let line_width = self.latex.max_line_width;
-            let indent = self.latex.indentation_depth;
+        writeln!(
+            out,
+            TABLE!(),
+            columns,
+            root.caption.render(self, settings)?.trim(),
+            &indent_and_trim(content.trim(), indent, line_width),
+        )?;
 
-            writeln!(
-                out,
-                TABLE!(),
-                columns,
-                caption.render(self, settings)?.trim(),
-                &indent_and_trim(content.trim(), indent, line_width),
-            )?;
-        }
         Ok(false)
     }
 }
