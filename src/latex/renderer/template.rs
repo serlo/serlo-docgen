@@ -26,7 +26,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
 
         match parsed {
             KnownTemplate::Formula(formula) => self.formula(&formula, out)?,
-            KnownTemplate::Important(important) => self.important(&important, out)?,
+            KnownTemplate::Important(important) => self.important(settings, &important, out)?,
             KnownTemplate::Definition(_)
             | KnownTemplate::Theorem(_)
             | KnownTemplate::Example(_)
@@ -59,12 +59,18 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         )
     }
 
-    fn important(&self, template: &Important, out: &mut io::Write) -> io::Result<()> {
+    fn important(
+        &mut self,
+        settings: &'s Settings,
+        template: &Important<'e>,
+        out: &mut io::Write
+    ) -> io::Result<()> {
 
+        let content = template.content.render(self, settings)?;
         self.environment(
             IMPORTANT_ENV!(),
             &[],
-            extract_plain_text(template.content).trim(),
+            content.trim(),
             out
         )
     }
