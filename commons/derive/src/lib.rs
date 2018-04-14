@@ -74,14 +74,14 @@ fn implement_template_id(templates: &[SpecTemplate]) -> Tokens {
     quote! {
         /// The available template types.
         #[derive(Debug, Clone, PartialEq, Serialize)]
-        pub enum Template<'e> {
+        pub enum KnownTemplate<'e> {
             #( #enum_variants ),*
         }
 
-        impl<'e> Template<'e> {
+        impl<'e> KnownTemplate<'e> {
             pub fn present(&self) -> &Vec<Attribute<'e>> {
                 match *self {
-                    #( Template::#present_variants(ref t) => &t.present ),*
+                    #( KnownTemplate::#present_variants(ref t) => &t.present ),*
                 }
             }
             pub fn find(&self, name: &str) -> Option<&Attribute<'e>> {
@@ -192,7 +192,7 @@ fn implement_parsing_match(template: &SpecTemplate) -> Tokens {
                     present
                 }
             };
-            return Some(Template::#name(template));
+            return Some(KnownTemplate::#name(template));
         }
     }
 }
@@ -203,23 +203,19 @@ fn implement_template_parsing(templates: &[SpecTemplate]) -> Tokens {
         .map(|t| implement_parsing_match(t));
 
     quote! {
-        /// Try to create a `Template` variant from an element, using the specification.
-        pub fn parse_template<'e>(elem: &'e Element) -> Option<Template<'e>> {
-            if let Element::Template {
-                ref name,
-                ref content,
-                ..
-            } = *elem {
+        /// Try to create a `KnownTemplate` variant from an element, using the specification.
+        pub fn parse_template<'e>(elem: &'e Element) -> Option<KnownTemplate<'e>> {
+            if let Element::Template(ref template) = *elem {
                 let extract_content = | attr_names: &[String] | {
-                    if let Some(arg) = find_arg(content, attr_names) {
-                        if let Element::TemplateArgument { ref value, .. } = *arg {
-                            return Some(value.as_slice())
+                    if let Some(arg) = find_arg(&template.content, attr_names) {
+                        if let Element::TemplateArgument(ref arg) = *arg {
+                            return Some(arg.value.as_slice())
                         }
                     }
                     None
                 };
 
-                let name = extract_plain_text(&name).trim().to_lowercase();
+                let name = extract_plain_text(&template.name).trim().to_lowercase();
                 #( #template_kinds )*
             };
             None
