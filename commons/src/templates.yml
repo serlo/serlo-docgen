@@ -3,7 +3,7 @@
 - id: Formula
   names: ["formula", "formel"]
   description: Make some math distinct from the surrounding text.
-  format: block
+  format: inline
   attributes:
     - id: formula
       names: ["1", "formel"]
