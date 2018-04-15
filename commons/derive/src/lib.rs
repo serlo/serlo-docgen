@@ -155,9 +155,14 @@ fn implement_parsing_match(template: &SpecTemplate) -> Tokens {
         let alt_names = str_to_lower_lit(&attr.names);
         match attr.priority {
             SpecPriority::Required => quote! {
-                #attr_name: extract_content(&[ #( #alt_names.into() ),* ])
-                    .expect("This is an implementation error: Required \
-                             Arguments should always be available after parsing!")
+                #attr_name: {
+                    // abort template parsing if required argument is missing.
+                    if let Some(c) = extract_content(&[ #( #alt_names.into() ),* ]) {
+                        c
+                    } else {
+                        return None
+                    }
+                }
             },
             SpecPriority::Optional => quote! {
                 #attr_name: extract_content(&[ #( #alt_names.into() ),* ])
