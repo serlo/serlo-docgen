@@ -1,10 +1,13 @@
 use std::collections::HashMap;
+use std::sync::Mutex;
+
 use deps;
 use latex;
 use sections;
 use pdf;
 use MFNFTargets;
 
+use mfnf_commons::util::CachedTexChecker;
 use serde::ser::{Serialize, Serializer, SerializeStruct};
 
 macro_rules! string_vec {
@@ -29,7 +32,7 @@ macro_rules! string_value_map {
 
 
 /// General MFNF transformation settings for all targets.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 #[serde(default)]
 pub struct Settings {
     /// The targets defined on the settings.
@@ -67,11 +70,9 @@ pub struct Settings {
     /// Template name prefix indication section inclusion
     pub section_inclusion_prefix: String,
 
-    /// Path to the texvccheck executable
-    pub texvccheck_path: String,
-
-    /// Whether Tex formulas should be checked with texvccheck
-    pub check_tex_formulas: bool,
+    /// Currently used text checker
+    #[serde(skip, default)]
+    pub tex_checker: Option<Mutex<CachedTexChecker>>,
 }
 
 impl Serialize for Settings {
@@ -80,7 +81,7 @@ impl Serialize for Settings {
     {
         let default = Settings::default();
 
-        let mut state = serializer.serialize_struct("Settings", 15)?;
+        let mut state = serializer.serialize_struct("Settings", 10)?;
         state.serialize_field("targets", &self.targets)?;
         ser_field_non_default!(self, document_title, default, state);
         ser_field_non_default!(self, document_revision, default, state);
@@ -92,8 +93,6 @@ impl Serialize for Settings {
         ser_field_non_default!(self, section_rev, default, state);
         ser_field_non_default!(self, section_ext, default, state);
         ser_field_non_default!(self, section_inclusion_prefix, default, state);
-        ser_field_non_default!(self, texvccheck_path, default, state);
-        ser_field_non_default!(self, check_tex_formulas, default, state);
         state.end()
     }
 }
@@ -133,8 +132,7 @@ impl Default for Settings {
             section_rev: "latest".into(),
             section_ext: "yml".into(),
             section_inclusion_prefix: "#lst:".into(),
-            texvccheck_path: "mk/bin/texvccheck".into(),
-            check_tex_formulas: false,
+            tex_checker: None,
         }
     }
 }

@@ -1,6 +1,7 @@
 use mediawiki_parser::transformations::*;
 use mediawiki_parser::*;
 use preamble::*;
+use mfnf_commons::util::TexResult;
 use std::fs::File;
 use std::process::Command;
 use serde_yaml;
@@ -95,12 +96,10 @@ fn check_formula(
     }
     let checked_formula = match content[0] {
         Element::Text(ref text) => {
-            if settings.check_tex_formulas {
-                texvccheck(&text.text, settings)
+            if let Some(ref mutex) = settings.tex_checker {
+                mutex.lock().unwrap().check(&text.text)
             } else {
-                let mut ret = "+".to_owned();
-                ret.push_str(&text.text);
-                ret
+                return content[0].clone();
             }
         },
         _ => return Element::Error(Error {
@@ -108,32 +107,23 @@ fn check_formula(
             position: position.clone(),
         })
     };
-    let error_cause = match checked_formula.chars().next() {
-        Some('+') => return Element::Text(Text {
-            position: position.clone(),
-            text: checked_formula.replacen('+', "", 1),
-        }),
-        Some('S') => "syntax error".into(),
-        Some('E') => "lexing error".into(),
-        Some('F') => format!("unknown function `{}`",
-            checked_formula.chars().skip(1).collect::<String>()),
-        Some('-') => "other error".into(),
-        None => "empty string".into(),
-        _ => "unknown error".into(),
+    let cause = match checked_formula {
+        TexResult::Ok(content) => {
+            return Element::Text(Text {
+                position: position.clone(),
+                text: content,
+            });
+        },
+        TexResult::UnknownFunction(func) => format!("unknown latex function `{}`!", func),
+        TexResult::SyntaxError => "latex syntax error!".into(),
+        TexResult::LexingError => "latex lexer error!".into(),
+        TexResult::UnknownError => "unknown latex error!".into(),
     };
+
     Element::Error(Error {
-        message: error_cause,
+        message: cause,
         position: position.clone(),
     })
-}
-
-/// Call the external program `texvccheck` to check a Tex formula
-fn texvccheck(formula: &str, settings: &Settings) -> String {
-    let output = Command::new(&settings.texvccheck_path)
-                         .arg(formula)
-                         .output()
-                         .expect("Failed to launch texvccheck!");
-    String::from_utf8(output.stdout).expect("Corrupted texvccheck output!")
 }
 
 pub fn include_sections(

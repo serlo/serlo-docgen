@@ -7,13 +7,16 @@ extern crate serde_yaml;
 extern crate serde_json;
 extern crate argparse;
 extern crate mfnf_export;
+extern crate mfnf_commons;
 
 use std::str;
 use std::process;
 use std::io;
 use std::fs;
+use std::sync::Mutex;
 
 use mfnf_export::*;
+use mfnf_commons::util::CachedTexChecker;
 use mediawiki_parser::transformations::TResult;
 
 use argparse::{ArgumentParser, StoreTrue, Store, Collect};
@@ -138,8 +141,9 @@ fn main() {
     if args.texvccheck_path.is_empty() {
         eprintln!("Warning: no texvccheck path, won't perform checks!");
     } else {
-        settings.texvccheck_path = args.texvccheck_path.clone();
-        settings.check_tex_formulas = true;
+        settings.tex_checker = Some(Mutex::new(CachedTexChecker::new(
+            &args.texvccheck_path, 10_000
+        )));
     }
 
     let root = (if !args.input_file.is_empty() {
