@@ -3,6 +3,7 @@
 use mediawiki_parser::*;
 use std::collections::HashMap;
 use std::process::Command;
+use std::sync::Mutex;
 
 /// generates getters and setters for a path member of a traversion.
 #[macro_export]
@@ -53,14 +54,14 @@ pub enum TexResult {
 }
 
 pub trait TexChecker {
-    fn check(&mut self, source: &str) -> TexResult;
+    fn check(&self, source: &str) -> TexResult;
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug)]
 pub struct CachedTexChecker {
     pub texvccheck_path: String,
     pub max_size: usize,
-    pub cache: HashMap<String, TexResult>,
+    pub cache: Mutex<HashMap<String, TexResult>>,
 }
 
 impl CachedTexChecker {
@@ -68,7 +69,7 @@ impl CachedTexChecker {
         CachedTexChecker {
             texvccheck_path: path.into(),
             max_size: size,
-            cache: HashMap::with_capacity(size),
+            cache: Mutex::new(HashMap::with_capacity(size)),
         }
     }
 
@@ -82,8 +83,9 @@ impl CachedTexChecker {
 }
 
 impl TexChecker for CachedTexChecker {
-    fn check(&mut self, source: &str) -> TexResult {
-        if let Some(result) = self.cache.get(source) {
+    fn check(&self, source: &str) -> TexResult {
+        let mut cache = self.cache.lock().unwrap();
+        if let Some(result) = cache.get(source) {
             return result.clone()
         }
 
@@ -104,14 +106,14 @@ impl TexChecker for CachedTexChecker {
             _ => TexResult::UnknownError,
         };
 
-        if self.cache.len() > self.max_size {
+        if cache.len() > self.max_size {
             let mut count = 0;
-            self.cache.retain(|_, _| {
+            cache.retain(|_, _| {
                 count += 1;
                 count % 10 != 1
             });
         }
-        self.cache.insert(source.into(), result.clone());
+        cache.insert(source.into(), result.clone());
         result
     }
 }
