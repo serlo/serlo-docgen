@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::sync::Mutex;
 
 use deps;
 use latex;
@@ -72,7 +71,7 @@ pub struct Settings {
 
     /// Currently used text checker
     #[serde(skip, default)]
-    pub tex_checker: Option<Mutex<CachedTexChecker>>,
+    pub tex_checker: Option<CachedTexChecker>,
 }
 
 impl Serialize for Settings {

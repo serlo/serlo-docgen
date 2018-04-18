@@ -13,7 +13,6 @@ use std::str;
 use std::process;
 use std::io;
 use std::fs;
-use std::sync::Mutex;
 
 use mfnf_export::*;
 use mfnf_commons::util::CachedTexChecker;
@@ -141,9 +140,9 @@ fn main() {
     if args.texvccheck_path.is_empty() {
         eprintln!("Warning: no texvccheck path, won't perform checks!");
     } else {
-        settings.tex_checker = Some(Mutex::new(CachedTexChecker::new(
+        settings.tex_checker = Some(CachedTexChecker::new(
             &args.texvccheck_path, 10_000
-        )));
+        ));
     }
 
     let root = (if !args.input_file.is_empty() {

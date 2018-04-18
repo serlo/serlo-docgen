@@ -3,7 +3,6 @@ use mediawiki_parser::*;
 use preamble::*;
 use mfnf_commons::util::TexResult;
 use std::fs::File;
-use std::process::Command;
 use serde_yaml;
 
 
@@ -97,7 +96,7 @@ fn check_formula(
     let checked_formula = match content[0] {
         Element::Text(ref text) => {
             if let Some(ref mutex) = settings.tex_checker {
-                mutex.lock().unwrap().check(&text.text)
+                mutex.check(&text.text)
             } else {
                 return content[0].clone();
             }
