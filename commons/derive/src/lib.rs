@@ -299,7 +299,7 @@ pub fn create_template_spec(input: TokenStream) -> TokenStream {
         }
 
         /// A function to determine wether a given element is allowed.
-        type Predicate = Fn(&[Element]) -> bool;
+        type Predicate = Fn(&[Element]) -> bool + Sync;
 
         /// Represents a (semantic) template.
         #[derive(Clone, Serialize)]
