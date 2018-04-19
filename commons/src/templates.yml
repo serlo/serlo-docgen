@@ -209,3 +209,18 @@
       names: ["proof", "beweis"]
       priority: required
       predicate: is_text_only_paragraph
+
+- id: ProofSummary
+  names: [":Mathe für Nicht-Freaks: Vorlage:Beweiszusammenfassung"]
+  description: A summary of a proof.
+  format: block
+  attributes:
+    - id: title
+      names: ["title", "titel"]
+      priority: optional
+      predicate: is_text_only_paragraph
+
+    - id: summary
+      names: ["summary", "zusammenfassung"]
+      priority: required
+      predicate: is_text_only_paragraph
