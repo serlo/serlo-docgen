@@ -120,3 +120,42 @@
       priority: required
       predicate: is_text_only_paragraph
 
+- id: Exercise
+  names: [":Mathe für Nicht-Freaks: Vorlage:Aufgabe"]
+  description: An exercise.
+  format: block
+  attributes:
+    - id: title
+      names: ["title", "titel"]
+      priority: optional
+      predicate: is_text_only_paragraph
+
+    - id: exercise
+      names: ["exercise", "aufgabe"]
+      priority: required
+      predicate: is_text_only_paragraph
+
+    - id: explanation
+      names: ["explanation", "erklärung"]
+      priority: optional
+      predicate: is_text_only_paragraph
+
+    - id: summary
+      names: ["summary", "zusammenfassung"]
+      priority: optional
+      predicate: is_text_only_paragraph
+
+    - id: solutionprocess
+      names: ["solutionprocess", "lösungsweg"]
+      priority: optional
+      predicate: is_text_only_paragraph
+
+    - id: solution
+      names: ["solution", "lösung"]
+      priority: optional
+      predicate: is_text_only_paragraph
+
+    - id: proof
+      names: ["proof", "beweis"]
+      priority: optional
+      predicate: is_text_only_paragraph
