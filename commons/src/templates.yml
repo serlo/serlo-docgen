@@ -39,7 +39,7 @@
   names: [":Mathe für Nicht-Freaks: Vorlage:Hauptartikel"]
   description: Link to an article covering this sections more deeply.
   format: inline
-  attributes: 
+  attributes:
     - id: article
       names: ["1"]
       priority: required
@@ -49,7 +49,7 @@
   names: ["important", "-"]
   description: Highlight an important block of text.
   format: block
-  attributes: 
+  attributes:
     - id: content
       names: ["1", "content"]
       priority: required
@@ -59,7 +59,7 @@
   names: [":Mathe für Nicht-Freaks: Vorlage:Definition"]
   description: A definition block.
   format: block
-  attributes: 
+  attributes:
     - id: title
       names: ["title", "titel"]
       priority: optional
@@ -74,7 +74,7 @@
   names: [":Mathe für Nicht-Freaks: Vorlage:Satz"]
   description: A theorem block.
   format: block
-  attributes: 
+  attributes:
     - id: title
       names: ["title", "titel"]
       priority: optional
@@ -109,7 +109,7 @@
   names: [":Mathe für Nicht-Freaks: Vorlage:Beispiel"]
   description: An example block.
   format: block
-  attributes: 
+  attributes:
     - id: title
       names: ["title", "titel"]
       priority: optional
