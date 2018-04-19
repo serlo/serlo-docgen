@@ -36,6 +36,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
             | KnownTemplate::Proof(_)
             | KnownTemplate::AlternativeProof(_)
             | KnownTemplate::ProofSummary(_)
+            | KnownTemplate::Solution(_)
              => self.environment_template(settings, &parsed, out)?,
             KnownTemplate::Anchor(anchor) => self.anchor(&anchor, out)?,
             KnownTemplate::Mainarticle(article) => self.mainarticle(settings, &article, out)?,
