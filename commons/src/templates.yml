@@ -159,3 +159,23 @@
       names: ["proof", "beweis"]
       priority: optional
       predicate: is_text_only_paragraph
+
+- id: Hint
+  names: [":Mathe für Nicht-Freaks: Vorlage:Hinweis"]
+  description: A hint.
+  format: block
+  attributes:
+    - id: hint
+      names: ["1"]
+      priority: required
+      predicate: is_text_only_paragraph
+
+- id: Warning
+  names: [":Mathe für Nicht-Freaks: Vorlage:Warnung"]
+  description: A warning.
+  format: block
+  attributes:
+    - id: warning
+      names: ["1"]
+      priority: required
+      predicate: is_text_only_paragraph

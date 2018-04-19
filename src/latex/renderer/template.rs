@@ -31,6 +31,8 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
             | KnownTemplate::Theorem(_)
             | KnownTemplate::Example(_)
             | KnownTemplate::Exercise(_)
+            | KnownTemplate::Hint(_)
+            | KnownTemplate::Warning(_)
              => self.environment_template(settings, &parsed, out)?,
             KnownTemplate::Anchor(anchor) => self.anchor(&anchor, out)?,
             KnownTemplate::Mainarticle(article) => self.mainarticle(settings, &article, out)?,
