@@ -179,3 +179,33 @@
       names: ["1"]
       priority: required
       predicate: is_text_only_paragraph
+
+- id: Proof
+  names: [":Mathe für Nicht-Freaks: Vorlage:Beweis"]
+  description: A proof.
+  format: block
+  attributes:
+    - id: title
+      names: ["title", "titel"]
+      priority: optional
+      predicate: is_text_only_paragraph
+
+    - id: proof
+      names: ["proof", "beweis"]
+      priority: required
+      predicate: is_text_only_paragraph
+
+- id: AlternativeProof
+  names: [":Mathe für Nicht-Freaks: Vorlage:Alternativer Beweis"]
+  description: An alternative proof.
+  format: block
+  attributes:
+    - id: title
+      names: ["title", "titel"]
+      priority: optional
+      predicate: is_text_only_paragraph
+
+    - id: proof
+      names: ["proof", "beweis"]
+      priority: required
+      predicate: is_text_only_paragraph
