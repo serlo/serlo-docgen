@@ -2,7 +2,7 @@
 
 use mediawiki_parser::*;
 // re-export common util
-pub use mfnf_commons::util::*;
+pub use mwparser_utils::util::*;
 use std::path::{PathBuf};
 use std::process;
 use settings::Settings;

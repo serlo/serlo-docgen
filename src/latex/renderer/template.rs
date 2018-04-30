@@ -2,7 +2,7 @@
 
 use preamble::*;
 use super::LatexRenderer;
-use mfnf_commons::*;
+use mwparser_utils::*;
 
 impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
 

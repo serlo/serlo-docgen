@@ -10,7 +10,7 @@ doc = true
 
 [dependencies]
 mediawiki_parser = "0.3"
-mfnf_commons = { path = "commons" }
+mwparser_utils = { git = "https://github.com/vroland/mediawiki-parser-utils" }
 serde = "1.0"
 serde_derive = "1.0"
 serde_yaml = "0.7"

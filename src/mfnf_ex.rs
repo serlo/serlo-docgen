@@ -7,7 +7,7 @@ extern crate serde_yaml;
 extern crate serde_json;
 extern crate argparse;
 extern crate mfnf_export;
-extern crate mfnf_commons;
+extern crate mwparser_utils;
 
 use std::str;
 use std::process;
@@ -15,7 +15,7 @@ use std::io;
 use std::fs;
 
 use mfnf_export::*;
-use mfnf_commons::util::CachedTexChecker;
+use mwparser_utils::util::CachedTexChecker;
 use mediawiki_parser::transformations::TResult;
 
 use argparse::{ArgumentParser, StoreTrue, Store, Collect};

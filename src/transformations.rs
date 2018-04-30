@@ -1,7 +1,7 @@
 use mediawiki_parser::transformations::*;
 use mediawiki_parser::*;
 use preamble::*;
-use mfnf_commons::util::TexResult;
+use mwparser_utils::util::TexResult;
 use std::fs::File;
 use serde_yaml;
 

@@ -1,5 +1,5 @@
 extern crate mediawiki_parser;
-extern crate mfnf_commons;
+extern crate mwparser_utils;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
@@ -66,7 +66,7 @@ pub fn normalize(mut root: Element,
 
     root = transformations::normalize_template_names(root, settings)?;
     root = transformations::remove_file_prefix(root, settings)?;
-    root = mfnf_commons::transformations::convert_template_list(root, ())?;
+    root = mwparser_utils::transformations::convert_template_list(root)?;
     root = transformations::normalize_math_formulas(root, settings)?;
     Ok(root)
 }

@@ -6,7 +6,7 @@ use sections;
 use pdf;
 use MFNFTargets;
 
-use mfnf_commons::util::CachedTexChecker;
+use mwparser_utils::util::CachedTexChecker;
 use serde::ser::{Serialize, Serializer, SerializeStruct};
 
 macro_rules! string_vec {
