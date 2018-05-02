@@ -81,7 +81,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                     &cap_content
                 );
 
-                self.environment("figure", &["h"], &fig_content, out)?;
+                self.environment("figure", &["H"], &fig_content, out)?;
             // inline images
             } else {
                 writeln!(
