@@ -14,7 +14,7 @@ use self::renderer::{LatexRenderer};
 
 /// Data for LaTeX export.
 #[derive(Debug, Clone, Deserialize, Serialize)]
-#[serde(default)]
+#[serde(default, deny_unknown_fields)]
 pub struct LatexTarget {
     /// mapping of external file extensions to target extensions.
     /// this is useful if external dependencies should be processed by
