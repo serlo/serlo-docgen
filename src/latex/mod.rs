@@ -31,6 +31,8 @@ pub struct LatexTarget {
     image_width: f32,
     /// Maximum height of an imgae in a figure as fraction of \\textheight
     image_height: f32,
+    /// Show caption for embedded images?
+    centered_image_captions: bool,
 
     /// Templates which can be exported as an environment.
     /// The template may have a `title` attribute and a content
@@ -58,6 +60,7 @@ impl Default for LatexTarget {
             image_width: 0.5,
             image_height: 0.2,
             gallery_images_per_row: 2,
+            centered_image_captions: true,
             environments: string_value_map![
                 "definition" => string_vec!["definition"],
                 "example" => string_vec!["example"],

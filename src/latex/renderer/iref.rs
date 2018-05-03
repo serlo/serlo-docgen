@@ -72,14 +72,18 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
 
                 self.write_def_location(&root.position, doctitle, out)?;
 
-                let fig_content = format!(
+                let mut fig_content = format!(
                     FIGURE_CONTENT!(),
                     &image_options,
                     self.latex.image_width,
                     self.latex.image_height,
                     &image_path,
-                    &cap_content
                 );
+
+                if self.latex.centered_image_captions {
+                    fig_content.push('\n');
+                    fig_content.push_str(&format!(FIGURE_CAPTION!(), &cap_content));
+                }
 
                 self.environment("figure", &["H"], &fig_content, out)?;
             // inline images

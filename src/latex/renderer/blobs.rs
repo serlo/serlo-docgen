@@ -29,10 +29,10 @@ alias!(FIGURE_CONTENT, "\
 \\stepcounter{{imagelabel}}
 \\centering
 \\addxcontentsline{{lof}}{{section}}[]{{License Info not yet supported.}}
-\\adjincludegraphics[max width={}\\textwidth, max height={}\\textheight]{{{}}}
-\\caption{{{} (\\arabic{{imagelabel}})}}\
+\\adjincludegraphics[max width={}\\textwidth, max height={}\\textheight]{{{}}}\
 ");
 
+alias!(FIGURE_CAPTION, "\\caption{{{} (\\arabic{{imagelabel}})}}");
 alias!(FIGURE_INLINE, "
 % image options: {:?}
 \\stepcounter{{imagelabel}}
