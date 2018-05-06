@@ -38,6 +38,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
             | KnownTemplate::ProofSummary(_)
             | KnownTemplate::Solution(_)
              => self.environment_template(settings, &parsed, out)?,
+            KnownTemplate::ProofStep(step) => self.proofstep(&step, settings, out)?,
             KnownTemplate::Anchor(anchor) => self.anchor(&anchor, out)?,
             KnownTemplate::Mainarticle(article) => self.mainarticle(settings, &article, out)?,
         };
@@ -64,6 +65,18 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
             trimmed,
             out,
         )
+    }
+
+    fn proofstep(
+        &mut self,
+        step: &ProofStep<'e>,
+        settings: &'s Settings,
+        out: &mut io::Write
+    ) -> io::Result<()> {
+        let name = step.name.render(self, settings)?;
+        let goal = step.goal.render(self, settings)?;
+        writeln!(out, PROOF_STEP_CAPTION!(), name.trim(), goal.trim())?;
+        self.run_vec(&step.step, settings, out)
     }
 
     fn important(

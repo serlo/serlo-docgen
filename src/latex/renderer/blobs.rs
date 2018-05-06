@@ -74,6 +74,7 @@ alias!(UNDERLINE, "\\ul{{{}}}");
 
 alias!(MATH_ENV, "align*");
 alias!(IMPORTANT_ENV, "important*");
+alias!(PROOF_STEP_CAPTION, "\\textbf{{{}}}: {}:\n");
 
 // --- Galleries ---
 
