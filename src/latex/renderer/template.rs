@@ -73,7 +73,10 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         settings: &'s Settings,
         out: &mut io::Write
     ) -> io::Result<()> {
-        let name = step.name.render(self, settings)?;
+        let name = match step.name {
+            Some(name) => name.render(self, settings)?,
+            None => "<Poof Step>".into()
+        };
         let goal = step.goal.render(self, settings)?;
         writeln!(out, PROOF_STEP_CAPTION!(), name.trim(), goal.trim())?;
         self.run_vec(&step.step, settings, out)
