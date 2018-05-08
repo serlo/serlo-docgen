@@ -159,7 +159,7 @@ pub fn get_section_path(article: &str, section: &str, settings: &Settings) -> St
         process::exit(1);
     }
 
-    let section_file = &settings.section_rev;
+    let section_file = filename_to_make(&settings.section_rev);
     let section_ext = &settings.section_ext;
     let section_path = &settings.section_path;
     let path = PathBuf::new()
@@ -168,7 +168,7 @@ pub fn get_section_path(article: &str, section: &str, settings: &Settings) -> St
         .join(&section)
         .join(&section_file)
         .with_extension(&section_ext);
-    filename_to_make(&path.to_string_lossy())
+    path.to_string_lossy().to_string()
 }
 
 /// generates getters and setters for a path member of a traversion.

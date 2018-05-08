@@ -13,7 +13,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         settings: &Settings
     ) -> String {
 
-        let target_str = extract_plain_text(target);
+        let target_str = filename_to_make(&extract_plain_text(target));
         let target_path = path::Path::new(&target_str);
         let ext = target_path.extension().unwrap_or_default();
         let ext_str = ext.to_string_lossy().into();
@@ -22,14 +22,13 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
             .get(&ext_str)
             .unwrap_or(&ext_str);
 
-        let file_path = path::PathBuf::from(&settings.external_file_path)
+        path::PathBuf::from(&settings.external_file_path)
             .join(target_path
                 .with_extension(&target_extension)
                 .file_stem()
                 .expect("image path is empty!"))
             .to_string_lossy()
-            .to_string();
-        filename_to_make(&file_path)
+            .to_string()
     }
 
     pub fn internal_ref(

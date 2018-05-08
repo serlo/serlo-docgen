@@ -24,9 +24,9 @@ impl<'a, 'b: 'a> Traversion<'a, &'b Settings> for InclusionPrinter<'a> {
 
             // section transclusion
             if template_name.to_lowercase().starts_with(&prefix) {
-                let article = trim_prefix(&template_name, prefix);
-                let section_name = extract_plain_text(&template.content);
-                let path = get_section_path(article, &section_name, settings);
+                let article = filename_to_make(&trim_prefix(&template_name, prefix));
+                let section_name = filename_to_make(&extract_plain_text(&template.content));
+                let path = get_section_path(&article, &section_name, settings);
                 write!(out, " \\\n\t{}", &path)?;
             }
         };
@@ -49,7 +49,7 @@ impl<'a, 'b: 'a> Traversion<'a, &'b Settings> for FilesPrinter<'b, 'a> {
             out: &mut io::Write) -> io::Result<bool> {
 
         if let Element::InternalReference(ref iref) = *root {
-            let target = extract_plain_text(&iref.target);
+            let target = filename_to_make(&extract_plain_text(&iref.target));
             let target_path = PathBuf::from(target);
             let ext = target_path.extension().unwrap_or_default();
             let ext_str = ext.to_string_lossy().into();
@@ -63,7 +63,7 @@ impl<'a, 'b: 'a> Traversion<'a, &'b Settings> for FilesPrinter<'b, 'a> {
                     .join(&target_path)
                     .with_extension(target_extension);
                 let path = path.to_string_lossy().to_string();
-                write!(out, " \\\n\t{}", &filename_to_make(&path))?;
+                write!(out, " \\\n\t{}", &path)?;
             }
         };
         Ok(true)
