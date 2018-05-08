@@ -118,6 +118,9 @@ pub fn filename_to_make(input: &str) -> String {
         .replace(":", "@COLON@")
         .replace("(", "@LBR@")
         .replace(")", "@RBR@")
+        .replace("/", "@SLASH@")
+        .replace("'", "@SQUOTE@")
+        .replace('"', "@DQUOTE@")
 }
 
 /// verifies a given "path" is only a plain filename without directory structure.
