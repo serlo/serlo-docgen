@@ -38,7 +38,7 @@ impl Target for DepsTarget {
         out: &mut io::Write) -> io::Result<()>
     {
 
-        let docrev = &settings.document_revision;
+        let doctitle = &settings.document_title;
         for (name, target) in &settings.targets {
 
             let target = target.get_target();
@@ -47,14 +47,9 @@ impl Target for DepsTarget {
                 continue;
             }
 
-            let target_ext = target.get_target_extension();
-
-            writeln!(out, "# dependencies for {}", &name)?;
-            write!(out, "{}.{}:", &docrev, target_ext)?;
-
             let mut file_collection = FilesPrinter::new(target.get_extension_mapping());
             let mut section_collection = InclusionPrinter::default();
-
+            //write!(out, "{}_deps:", &filename_to_make(&doctitle))?;
             file_collection.run(root, settings, out)?;
             section_collection.run(root, settings, out)?;
             writeln!(out, "")?;

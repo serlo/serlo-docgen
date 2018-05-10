@@ -27,7 +27,7 @@ impl<'a, 'b: 'a> Traversion<'a, &'b Settings> for InclusionPrinter<'a> {
                 let article = filename_to_make(&trim_prefix(&template_name, prefix));
                 let section_name = filename_to_make(&extract_plain_text(&template.content));
                 let path = get_section_path(&article, &section_name, settings);
-                write!(out, " \\\n\t{}", &path)?;
+                write!(out, " {}", &path)?;
             }
         };
         Ok(true)
@@ -63,7 +63,7 @@ impl<'a, 'b: 'a> Traversion<'a, &'b Settings> for FilesPrinter<'b, 'a> {
                     .join(&target_path)
                     .with_extension(target_extension);
                 let path = path.to_string_lossy().to_string();
-                write!(out, " \\\n\t{}", &path)?;
+                write!(out, " {}", &path)?;
             }
         };
         Ok(true)
