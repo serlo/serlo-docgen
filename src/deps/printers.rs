@@ -24,8 +24,8 @@ impl<'a, 'b: 'a> Traversion<'a, &'b Settings> for InclusionPrinter<'a> {
 
             // section transclusion
             if template_name.to_lowercase().starts_with(&prefix) {
-                let article = filename_to_make(&trim_prefix(&template_name, prefix));
-                let section_name = filename_to_make(&extract_plain_text(&template.content));
+                let article = filename_to_make(trim_prefix(&template_name, prefix).trim_matches('"').trim_matches('\''));
+                let section_name = filename_to_make(extract_plain_text(&template.content).trim_matches('"').trim_matches('\''));
                 let path = get_section_path(&article, &section_name, settings);
                 write!(out, " {}", &path)?;
             }
