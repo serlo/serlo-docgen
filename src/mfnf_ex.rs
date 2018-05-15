@@ -40,6 +40,9 @@ struct Args {
     /// Path to the article sections directory.
     #[structopt(parse(from_os_str), short = "s", long = "section-path")]
     section_path: Option<PathBuf>,
+    /// Path to the media (external) file directory.
+    #[structopt(parse(from_os_str), short = "e", long = "externals-path")]
+    externals_path: Option<PathBuf>,
     /// Path to article markers (includes / excludes).
     #[structopt(parse(from_os_str), short = "m", long = "markers")]
     marker_path: Option<PathBuf>,
@@ -89,6 +92,10 @@ fn main() -> Result<(), std::io::Error> {
 
     if let Some(section_path) = args.section_path {
         settings.general.section_path = section_path
+    }
+
+    if let Some(externals_path) = args.externals_path {
+        settings.general.external_file_path = externals_path
     }
 
     if args.dump_config {
