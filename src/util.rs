@@ -199,6 +199,8 @@ pub fn get_section_path(article: &str, section: &str, settings: &Settings) -> St
     }
 
     let section_file = filename_to_make(&settings.general.section_rev);
+    let article = filename_to_make(&article);
+    let section = filename_to_make(&section);
     let section_ext = &settings.general.section_ext;
     let section_path = &settings.general.section_path;
     let path = PathBuf::new()
