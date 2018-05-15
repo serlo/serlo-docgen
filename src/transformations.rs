@@ -283,10 +283,25 @@ fn remove_exclusions_vec<'a>(
                 .find(|h| h.trim().to_lowercase() == caption)
                 .is_some();
 
-            if include && in_params || !include && !in_params {
-                result.push(
-                    trans(Element::Heading(heading), settings)?
-                );
+            let is_heading = |e: &Element | {
+                if let Element::Heading(_) = e {true} else {false}
+            };
+            let new_heading = Element::Heading(heading);
+
+            // if heading is not in list, inclusion depends on children
+            if !in_params {
+                let new_heading = trans(new_heading, settings)?;
+                let contains_headings = if let Element::Heading(ref h) = new_heading {
+                    h.content.iter().any(|e| tree_contains(e, &is_heading))
+                } else {
+                    unreachable!();
+                };
+                if contains_headings && include || !include {
+                    result.push(new_heading)
+                }
+            // otherwise, only include heading when marked as include.
+            } else if include {
+                result.push(new_heading);
             }
         } else {
             result.push(trans(elem, settings)?);

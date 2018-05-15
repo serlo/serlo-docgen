@@ -42,6 +42,22 @@ pub fn escape_latex(input: &str) -> String {
     res
 }
 
+
+/// generates getters and setters for a path member of a traversion.
+macro_rules! path_methods {
+    ($lt:tt) => {
+        fn path_push(&mut self, root: &$lt Element) {
+            self.path.push(root);
+        }
+        fn path_pop(&mut self) -> Option<&$lt Element> {
+            self.path.pop()
+        }
+        fn get_path(&self) -> &Vec<&$lt Element> {
+            &self.path
+        }
+    }
+}
+
 /// Is a type just the default instance?
 pub fn is_default<T>(obj: &T) -> bool where T: PartialEq + Default {
     return *obj == T::default();
@@ -115,6 +131,37 @@ pub fn filename_to_make(input: &str) -> String {
         .replace('"', "@DQUOTE@")
 }
 
+struct TreeMatcher<'e, 'c> {
+    pub result: bool,
+    pub path: Vec<&'e Element>,
+    pub predicate: &'c Fn(&Element) -> bool,
+}
+
+impl<'e, 'c> Traversion<'e, ()> for TreeMatcher<'e, 'c> {
+    path_methods!('e);
+
+    fn work(&mut self, root: &Element, _: (), _: &mut io::Write) -> io::Result<bool> {
+        if (self.predicate)(root) {
+            self.result = true;
+            Ok(false)
+        } else {
+            Ok(true)
+        }
+    }
+}
+
+/// recursively tests a predicate for a AST.
+pub fn tree_contains(tree: &Element, predicate: &Fn(&Element) -> bool) -> bool {
+    let mut matcher = TreeMatcher {
+        result: false,
+        path: vec![],
+        predicate: predicate,
+    };
+    matcher.run(tree, (), &mut vec![])
+        .expect("unexptected tree matcher IO error:");
+    matcher.result
+}
+
 /// verifies a given "path" is only a plain filename without directory structure.
 fn is_plain_file(path: &PathBuf) -> bool {
     let components = path.components();
@@ -161,21 +208,6 @@ pub fn get_section_path(article: &str, section: &str, settings: &Settings) -> St
         .join(&section_file)
         .with_extension(&section_ext);
     path.to_string_lossy().to_string()
-}
-
-/// generates getters and setters for a path member of a traversion.
-macro_rules! path_methods {
-    ($lt:tt) => {
-        fn path_push(&mut self, root: &$lt Element) {
-            self.path.push(root);
-        }
-        fn path_pop(&mut self) -> Option<&$lt Element> {
-            self.path.pop()
-        }
-        fn get_path(&self) -> &Vec<&$lt Element> {
-            &self.path
-        }
-    }
 }
 
 /// This object can be rendered by a traversion.
