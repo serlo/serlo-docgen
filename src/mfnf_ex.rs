@@ -73,6 +73,7 @@ fn main() -> Result<(), std::io::Error> {
 
     let mut settings = Settings::default();
     settings.general = general_settings;
+    settings.runtime.target_name = args.target.clone();
 
     let orig_root: TResult;
     // section inclusion, etc. may fail, but deps shoud still be generated.
@@ -94,6 +95,12 @@ fn main() -> Result<(), std::io::Error> {
         println!("{}", serde_yaml::to_string(&settings.general)
             .expect("could not serialize default settings!"));
         process::exit(0);
+    }
+
+    if let Some(path) = args.marker_path {
+        let file = fs::File::open(&path)?;
+        settings.runtime.markers = serde_yaml::from_reader(&file)
+            .expect("Error reading markers:")
     }
 
     if let Some(path) = args.texvccheck_path {
@@ -124,6 +131,7 @@ fn main() -> Result<(), std::io::Error> {
             process::exit(1);
         }
     };
+
     let root = if target.do_include_sections() {
         handle_transformation_result(&transformed_root)
     } else {
