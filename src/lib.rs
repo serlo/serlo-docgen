@@ -1,5 +1,6 @@
 extern crate mediawiki_parser;
 extern crate mwparser_utils;
+extern crate mfnf_sitemap;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
@@ -35,7 +36,7 @@ mod preamble {
 
 // public exports
 pub use target::Target;
-pub use settings::Settings;
+pub use settings::{Settings, GeneralSettings, RuntimeSettings};
 
 
 /// Available targets for mfnf-export.
@@ -77,5 +78,6 @@ pub fn compose(mut root: Element,
 
     root = transformations::include_sections(root, settings)?;
     root = transformations::normalize_heading_depths(root, settings)?;
+    root = transformations::remove_exclusions(root, settings)?;
     Ok(root)
 }

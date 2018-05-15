@@ -1,5 +1,6 @@
 use mediawiki_parser::transformations::*;
 use mediawiki_parser::*;
+use mfnf_sitemap::{Subtarget};
 use preamble::*;
 use mwparser_utils::util::TexResult;
 use std::fs::File;
@@ -95,7 +96,7 @@ fn check_formula(
     }
     let checked_formula = match content[0] {
         Element::Text(ref text) => {
-            if let Some(ref mutex) = settings.tex_checker {
+            if let Some(ref mutex) = settings.runtime.tex_checker {
                 mutex.check(&text.text)
             } else {
                 return content[0].clone();
@@ -142,7 +143,7 @@ pub fn include_sections_vec<'a>(
     for mut child in root_content.drain(..) {
 
         if let Element::Template(ref template) = child {
-            let prefix = &settings.section_inclusion_prefix;
+            let prefix = &settings.general.section_inclusion_prefix;
             let template_name = extract_plain_text(&template.name);
 
             // section transclusion
@@ -234,7 +235,7 @@ fn normalize_heading_depths_traverse(
 pub fn remove_file_prefix(mut root: Element, settings: &Settings) -> TResult {
     if let Element::InternalReference(ref mut iref) = root {
         if let Some(&mut Element::Text(ref mut text)) = iref.target.first_mut() {
-            for prefix in &settings.file_prefixes {
+            for prefix in &settings.general.file_prefixes {
                 let prefix_str = format!("{}:", &prefix);
                 let new_text = String::from(trim_prefix(&text.text, &prefix_str));
                 text.text.clear();
@@ -243,4 +244,60 @@ pub fn remove_file_prefix(mut root: Element, settings: &Settings) -> TResult {
         }
     }
     recurse_inplace(&remove_file_prefix, root, settings)
+}
+
+
+fn remove_exclusions_vec<'a>(
+    trans: &TFuncInplace<&'a Settings>,
+    root_content: &mut Vec<Element>,
+    settings: &'a Settings) -> TListResult {
+
+    let mut result = vec![];
+    let (subtarget, include) = {
+        let is_current_subtarget = |s: &&Subtarget| -> bool {
+            s.name == settings.runtime.target_name
+                .trim().to_lowercase()
+        };
+
+        let include_subtarget = settings.runtime.markers.include.subtargets
+            .iter()
+            .find(&is_current_subtarget);
+        let exclude_subtarget = settings.runtime.markers.exclude.subtargets
+            .iter()
+            .find(&is_current_subtarget);
+
+        if let Some(subtarget) = include_subtarget {
+            (subtarget, true)
+        } else if let Some(subtarget) = exclude_subtarget {
+            (subtarget, false)
+        } else {
+            result.append(root_content);
+            return Ok(result);
+        }
+    };
+
+    for elem in root_content.drain(..) {
+        if let Element::Heading(heading) = elem {
+            let caption = extract_plain_text(&heading.caption).trim().to_lowercase();
+            let in_params = subtarget.parameters.iter()
+                .find(|h| h.trim().to_lowercase() == caption)
+                .is_some();
+
+            if include && in_params || !include && !in_params {
+                result.push(
+                    trans(Element::Heading(heading), settings)?
+                );
+            }
+        } else {
+            result.push(trans(elem, settings)?);
+        }
+    }
+
+    Ok(result)
+}
+
+/// Strip excluded headings.
+pub fn remove_exclusions(mut root: Element, settings: &Settings) -> TResult {
+    root = recurse_inplace_template(&remove_exclusions, root, settings, &remove_exclusions_vec)?;
+    Ok(root)
 }
