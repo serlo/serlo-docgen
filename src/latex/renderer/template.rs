@@ -13,7 +13,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         out: &mut io::Write
     ) -> io::Result<bool> {
 
-        let doctitle = &settings.document_title;
+        let doctitle = &settings.runtime.document_title;
         let parsed = if let Some(parsed) = parse_template(&root) {
             parsed
         } else {
@@ -114,7 +114,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
 
         let name = extract_plain_text(template.article)
             .trim().to_owned();
-        let mut url = settings.article_url_base.to_owned();
+        let mut url = settings.general.article_url_base.to_owned();
         url.push_str(&name);
         url = url.replace(' ', "_");
 

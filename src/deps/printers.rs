@@ -19,7 +19,7 @@ impl<'a, 'b: 'a> Traversion<'a, &'b Settings> for InclusionPrinter<'a> {
             out: &mut io::Write) -> io::Result<bool> {
 
         if let Element::Template(ref template) = *root {
-            let prefix: &str = &settings.section_inclusion_prefix;
+            let prefix: &str = &settings.general.section_inclusion_prefix;
             let template_name = extract_plain_text(&template.name);
 
             // section transclusion
@@ -54,8 +54,8 @@ impl<'a, 'b: 'a> Traversion<'a, &'b Settings> for FilesPrinter<'b, 'a> {
             let ext = target_path.extension().unwrap_or_default();
             let ext_str = ext.to_string_lossy().into();
 
-            let extensions = &settings.external_file_extensions;
-            let file_path = &settings.external_file_path;
+            let extensions = &settings.general.external_file_extensions;
+            let file_path = &settings.general.external_file_path;
             let target_extension = self.extension_map.get(&ext_str).unwrap_or(&ext_str);
 
             if extensions.contains(&ext_str) {

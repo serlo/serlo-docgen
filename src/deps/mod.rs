@@ -37,9 +37,7 @@ impl Target for DepsTarget {
         args: &[String],
         out: &mut io::Write) -> io::Result<()>
     {
-
-        let doctitle = &settings.document_title;
-        for (name, target) in &settings.targets {
+        for (name, target) in &settings.general.targets {
 
             let target = target.get_target();
 

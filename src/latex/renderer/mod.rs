@@ -135,7 +135,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         settings: &Settings,
         out: &mut io::Write
     ) -> io::Result<bool> {
-        self.write_def_location(&root.position, &settings.document_title, out)?;
+        self.write_def_location(&root.position, &settings.runtime.document_title, out)?;
         self.write_error(&root.message, out)?;
         Ok(true)
     }

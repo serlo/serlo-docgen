@@ -64,9 +64,11 @@ impl Target for PDFTarget {
         let mut data_table = serde_yaml::to_value(self)
             .expect("could not construct value from PDFTarget!");
 
+        let title = &settings.runtime.document_title;
+        let revision = &settings.runtime.document_revision;
         if let &mut serde_yaml::Value::Mapping(ref mut m) = &mut data_table {
-            m.insert("document_title".into(), settings.document_title.clone().into());
-            m.insert("document_revision".into(), settings.document_revision.clone().into());
+            m.insert("document_title".into(), title.clone().into());
+            m.insert("document_revision".into(), revision.clone().into());
         }
 
         writeln!(out, "{}", serde_yaml::to_string(&data_table)

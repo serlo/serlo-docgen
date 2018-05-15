@@ -13,7 +13,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
     ) -> io::Result<bool> {
 
         let columns = "X".repeat(self.latex.gallery_images_per_row);
-        let doctitle = &settings.document_title;
+        let doctitle = &settings.runtime.document_title;
 
         let mut rendered_images = vec![];
 

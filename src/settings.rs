@@ -1,4 +1,6 @@
 use std::collections::HashMap;
+use std::path::PathBuf;
+use mfnf_sitemap::Markers;
 
 use deps;
 use latex;
@@ -7,7 +9,6 @@ use pdf;
 use MFNFTargets;
 
 use mwparser_utils::util::CachedTexChecker;
-use serde::ser::{Serialize, Serializer, SerializeStruct};
 
 macro_rules! string_vec {
     ($($x:expr),*) => (vec![$($x.to_string()),*]);
@@ -30,20 +31,41 @@ macro_rules! string_value_map {
 }
 
 
-/// General MFNF transformation settings for all targets.
-#[derive(Debug, Deserialize)]
-#[serde(default)]
+/// MFNF transformation settings object.
+#[derive(Debug, Default)]
 pub struct Settings {
-    /// The targets defined on the settings.
-    /// Maps a target name to a target definition.
-    /// This allows for multiple targets of the same type with different parameters.
-    pub targets: HashMap<String, MFNFTargets>,
+    pub runtime: RuntimeSettings,
+    pub general: GeneralSettings,
+}
+
+/// Runtime (instance-specific) settings.
+#[derive(Debug)]
+pub struct RuntimeSettings {
+
+    /// Currently used text checker
+    pub tex_checker: Option<CachedTexChecker>,
+
+    /// Article markers (excludes / includes)
+    pub markers: Markers,
 
     /// Title of the current document.
     pub document_title: String,
 
     /// Additional revision id of an article.
     pub document_revision: String,
+
+    /// The current target name (index into defined targets).
+    pub target_name: String,
+}
+
+/// General MFNF transformation settings for all targets.
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(default)]
+pub struct GeneralSettings {
+    /// The targets defined on the settings.
+    /// Maps a target name to a target definition.
+    /// This allows for multiple targets of the same type with different parameters.
+    pub targets: HashMap<String, MFNFTargets>,
 
     /// A list of file prefixes which are ignored.
     pub file_prefixes: Vec<String>,
@@ -55,10 +77,10 @@ pub struct Settings {
     pub article_url_base: String,
 
     /// Path prefix for external files.
-    pub external_file_path: String,
+    pub external_file_path: PathBuf,
 
     /// Path to the section file directory.
-    pub section_path: String,
+    pub section_path: PathBuf,
 
     /// Default revision number of included sections (always `latest`)
     pub section_rev: String,
@@ -68,37 +90,24 @@ pub struct Settings {
 
     /// Template name prefix indication section inclusion
     pub section_inclusion_prefix: String,
-
-    /// Currently used text checker
-    #[serde(skip, default)]
-    pub tex_checker: Option<CachedTexChecker>,
 }
 
-impl Serialize for Settings {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where S: Serializer
-    {
-        let default = Settings::default();
 
-        let mut state = serializer.serialize_struct("Settings", 10)?;
-        state.serialize_field("targets", &self.targets)?;
-        ser_field_non_default!(self, document_title, default, state);
-        ser_field_non_default!(self, document_revision, default, state);
-        ser_field_non_default!(self, file_prefixes, default, state);
-        ser_field_non_default!(self, external_file_extensions, default, state);
-        ser_field_non_default!(self, article_url_base, default, state);
-        ser_field_non_default!(self, external_file_path, default, state);
-        ser_field_non_default!(self, section_path, default, state);
-        ser_field_non_default!(self, section_rev, default, state);
-        ser_field_non_default!(self, section_ext, default, state);
-        ser_field_non_default!(self, section_inclusion_prefix, default, state);
-        state.end()
+impl Default for RuntimeSettings {
+    fn default() -> RuntimeSettings {
+        RuntimeSettings {
+            document_title: "<no document name specified>".into(),
+            document_revision: "latest".into(),
+            tex_checker: None,
+            markers: Markers::default(),
+            target_name: "".into(),
+        }
     }
 }
 
-impl Default for Settings {
-    fn default() -> Settings {
-        Settings {
+impl Default for GeneralSettings {
+    fn default() -> GeneralSettings {
+        GeneralSettings {
             targets: {
                 let mut tmap = HashMap::new();
                 tmap.insert("deps".to_string(),
@@ -111,8 +120,6 @@ impl Default for Settings {
                     MFNFTargets::PDF(pdf::PDFTarget::default()));
                 tmap
             },
-            document_title: "<no document name specified>".into(),
-            document_revision: "latest".into(),
             file_prefixes: string_vec!["file", "datei", "bild"],
             external_file_extensions: string_vec![
                 "jpg",
@@ -131,7 +138,6 @@ impl Default for Settings {
             section_rev: "latest".into(),
             section_ext: "yml".into(),
             section_inclusion_prefix: "#lst:".into(),
-            tex_checker: None,
         }
     }
 }

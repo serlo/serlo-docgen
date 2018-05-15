@@ -47,8 +47,8 @@ impl Target for SectionsTarget {
 
             let inter = filter::SectionFilter::extract(&section, root);
 
-            let mut filename = settings.document_revision.clone();
-            let file_ext = &settings.section_ext;
+            let mut filename = settings.runtime.document_revision.clone();
+            let file_ext = &settings.general.section_ext;
 
             filename.push('.');
             filename.push_str(file_ext);

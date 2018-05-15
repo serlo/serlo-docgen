@@ -13,7 +13,7 @@ macro_rules! test_case {
                 .expect("normalization transformation error!");
             root = compose(root, &settings)
                 .expect("compose transformation error!");
-            let target = settings.targets.get($target)
+            let target = settings.general.targets.get($target)
                 .expect("unknown target!")
                 .get_target();
             let mut res = vec![];

@@ -42,14 +42,6 @@ pub fn escape_latex(input: &str) -> String {
     res
 }
 
-macro_rules! ser_field_non_default {
-    ($self:ident, $field:ident, $default:ident, $ser:ident) => {
-        if $self.$field != $default.$field {
-            $ser.serialize_field(stringify!($field), &$self.$field)?;
-        }
-    }
-}
-
 /// Is a type just the default instance?
 pub fn is_default<T>(obj: &T) -> bool where T: PartialEq + Default {
     return *obj == T::default();
@@ -159,9 +151,9 @@ pub fn get_section_path(article: &str, section: &str, settings: &Settings) -> St
         process::exit(1);
     }
 
-    let section_file = filename_to_make(&settings.section_rev);
-    let section_ext = &settings.section_ext;
-    let section_path = &settings.section_path;
+    let section_file = filename_to_make(&settings.general.section_rev);
+    let section_ext = &settings.general.section_ext;
+    let section_path = &settings.general.section_path;
     let path = PathBuf::new()
         .join(&section_path)
         .join(&article)

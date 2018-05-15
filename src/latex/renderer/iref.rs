@@ -22,7 +22,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
             .get(&ext_str)
             .unwrap_or(&ext_str);
 
-        path::PathBuf::from(&settings.external_file_path)
+        path::PathBuf::from(&settings.general.external_file_path)
             .join(target_path
                 .with_extension(&target_extension)
                 .file_stem()
@@ -43,8 +43,8 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         let ext = target_path.extension().unwrap_or_default();
         let ext_str = ext.to_string_lossy().into();
 
-        let doctitle = &settings.document_title;
-        let file_exts = &settings.external_file_extensions;
+        let doctitle = &settings.runtime.document_title;
+        let file_exts = &settings.general.external_file_extensions;
 
         // file is embedded as an image
         if file_exts.contains(&ext_str) {
@@ -103,7 +103,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
 
             let cap_content = root.caption.render(self, settings)?;
 
-            let mut url = settings.article_url_base.to_owned();
+            let mut url = settings.general.article_url_base.to_owned();
             url.push_str(&target_str);
             url = url.replace(' ', "_");
 

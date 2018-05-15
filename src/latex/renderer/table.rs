@@ -93,7 +93,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         out: &mut io::Write
     ) -> io::Result<bool> {
 
-        self.write_def_location(&root.position, &settings.document_title, out)?;
+        self.write_def_location(&root.position, &settings.runtime.document_title, out)?;
         let table_info = if let Some(info) = self.get_table_params(&root.rows, out)? {
             info
         } else {
