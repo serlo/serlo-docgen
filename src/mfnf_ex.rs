@@ -5,7 +5,8 @@
 extern crate mediawiki_parser;
 extern crate serde_yaml;
 extern crate serde_json;
-extern crate argparse;
+#[macro_use]
+extern crate structopt;
 extern crate mfnf_export;
 extern crate mwparser_utils;
 
@@ -13,145 +14,102 @@ use std::str;
 use std::process;
 use std::io;
 use std::fs;
+use std::path::PathBuf;
+use structopt::StructOpt;
 
 use mfnf_export::*;
 use mwparser_utils::util::CachedTexChecker;
 use mediawiki_parser::transformations::TResult;
 
-use argparse::{ArgumentParser, StoreTrue, Store, Collect};
 
-
-/// Program options and arguments
-#[derive(Debug)]
+#[derive(Debug, StructOpt)]
+#[structopt(name = "mfnf_ex", about = "This program renders an article syntax tree to a serial format (like LaTeX).")]
 struct Args {
-    pub dump_config: bool,
-    pub write_config_json: bool,
-    pub input_file: String,
-    pub config_file: String,
-    pub doc_title: String,
-    pub doc_revision: String,
-    pub target: String,
-    pub target_args: Vec<String>,
-    pub texvccheck_path: String,
-    pub sections_path: String,
+    /// Dump the default settings to stdout.
+    #[structopt(short = "d", long = "dump-config")]
+    dump_config: bool,
+    /// Path to the input file.
+    #[structopt(parse(from_os_str), short = "i", long = "input")]
+    input_file: Option<PathBuf>,
+    /// Path to the config file.
+    #[structopt(parse(from_os_str), short = "c", long = "config")]
+    config: Option<PathBuf>,
+    /// Path to the texvccheck binary (formula checking).
+    #[structopt(parse(from_os_str), short = "p", long = "texvccheck-path")]
+    texvccheck_path: Option<PathBuf>,
+    /// Path to the article sections directory.
+    #[structopt(parse(from_os_str), short = "s", long = "section-path")]
+    section_path: Option<PathBuf>,
+    /// Path to article markers (includes / excludes).
+    #[structopt(parse(from_os_str), short = "m", long = "markers")]
+    marker_path: Option<PathBuf>,
+
+    /// Title of the document.
+    #[structopt(short = "t", long = "title")]
+    doc_title: Option<String>,
+    /// Revision of the document.
+    #[structopt(short = "r", long = "revision")]
+    doc_revision: Option<String>,
+
+    /// The export target. (e.g. `latex` or `latex.print`)
+    #[structopt()]
+    target: String,
+
+    /// Target-specific arguments.
+    #[structopt()]
+    target_args: Vec<String>,
 }
 
-impl Default for Args {
-    fn default() -> Self {
-        Args {
-            dump_config: false,
-            write_config_json: false,
-            input_file: String::new(),
-            config_file: String::new(),
-            doc_title: "<no document name specified>".to_string(),
-            doc_revision: "latest".to_string(),
-            target: String::new(),
-            target_args: vec![],
-            texvccheck_path: String::new(),
-            sections_path: "sections".into(),
-        }
-    }
-}
+fn main() -> Result<(), std::io::Error> {
+    let args = Args::from_args();
 
-fn parse_args() -> Args {
-    let mut args = Args::default();
-    {
-        let mut ap = ArgumentParser::new();
-        ap.set_description(
-            "This program applies transformations specific to the \
-                \"Mathe für nicht-Freaks\"-Project to a syntax tree."
-        );
-        ap.refer(&mut args.input_file).add_option(
-            &["-i", "--input"],
-            Store,
-            "Path to the input file",
-        );
-        ap.refer(&mut args.doc_title).add_option(
-            &["-t",  "--title"],
-            Store,
-            "Title of the input document",
-        );
-        ap.refer(&mut args.doc_revision).add_option(
-            &["-r", "--revision"],
-            Store,
-            "Revision ID of the input document"
-        );
-        ap.refer(&mut args.dump_config).add_option(
-            &["-d", "--dump-settings"],
-            StoreTrue,
-            "Dump the default settings to stdout."
-        );
-        ap.refer(&mut args.config_file).add_option(
-            &["-c", "--config"],
-            Store,
-            "A config file to override the default options."
-        );
-        ap.refer(&mut args.texvccheck_path).add_option(
-            &["-p", "--texvccheck-path"],
-            Store,
-            "Path to the `texvccheck` executable."
-        );
-        ap.refer(&mut args.sections_path).add_option(
-            &["-s", "--sections-path"],
-            Store,
-            "Path to the directory of included sections."
-        );
-        ap.refer(&mut args.target).add_argument(
-            "target",
-            Store,
-            "The target to export, like `deps`, `sections`, `latex`, ..."
-        );
-        ap.refer(&mut args.target_args).add_argument(
-            "args",
-            Collect,
-            "Additional arguments for a target. (e.g. wantet targets for `deps`)"
-        );
-        ap.parse_args_or_exit();
-    }
-    args
-}
-
-fn main() {
-    let args = parse_args();
-
-    let mut settings = if !args.config_file.is_empty() {
-        let file = fs::File::open(&args.config_file)
-            .expect("Could not open config file!");
+    let general_settings = if let Some(path) = args.config {
+        let file = fs::File::open(&path)?;
         serde_yaml::from_reader(&file)
-            .expect("Could not parse config file!")
+            .expect("Error reading settings:")
     } else {
-        Settings::default()
+        GeneralSettings::default()
     };
+
+    let mut settings = Settings::default();
+    settings.general = general_settings;
 
     let orig_root: TResult;
     // section inclusion, etc. may fail, but deps shoud still be generated.
     let transformed_root: TResult;
 
-    settings.document_title = args.doc_title.clone();
-    settings.document_revision = args.doc_revision.clone();
-    settings.section_path = args.sections_path;
+    if let Some(title) = args.doc_title {
+        settings.runtime.document_title = title
+    }
+
+    if let Some(revision) = args.doc_revision {
+        settings.runtime.document_revision = revision
+    }
+
+    if let Some(section_path) = args.section_path {
+        settings.general.section_path = section_path
+    }
 
     if args.dump_config {
-        println!("{}", serde_yaml::to_string(&settings)
+        println!("{}", serde_yaml::to_string(&settings.general)
             .expect("could not serialize default settings!"));
         process::exit(0);
     }
 
-    if args.texvccheck_path.is_empty() {
-        eprintln!("Warning: no texvccheck path, won't perform checks!");
-    } else {
-        settings.tex_checker = Some(CachedTexChecker::new(
-            &args.texvccheck_path, 10_000
+    if let Some(path) = args.texvccheck_path {
+        settings.runtime.tex_checker = Some(CachedTexChecker::new(
+            &path, 10_000
         ));
+    } else {
+        eprintln!("Warning: no texvccheck path, won't perform checks!");
     }
 
-    let root = (if !args.input_file.is_empty() {
-        let file = fs::File::open(&args.input_file)
-            .expect("Could not open input file!");
+    let root = if let Some(path) = args.input_file {
+        let file = fs::File::open(&path)?;
         serde_yaml::from_reader(&file)
     } else {
         serde_yaml::from_reader(io::stdin())
-    }).expect("Could not parse input!");
+    }.expect("Error reading input:");
 
     orig_root = normalize(root, &settings);
     let root_clone = handle_transformation_result(&orig_root).clone();
@@ -159,7 +117,7 @@ fn main() {
 
     // export target
     let mut export_result = vec![];
-    let target = match settings.targets.get(&args.target) {
+    let target = match settings.general.targets.get(&args.target) {
         Some(t) => t.get_target(),
         None => {
             eprintln!("target not configured: {:?}", args.target);
@@ -174,6 +132,7 @@ fn main() {
     target.export(root, &settings, &args.target_args, &mut export_result)
         .expect("target export failed!");
     println!("{}", str::from_utf8(&export_result).unwrap());
+    Ok(())
 }
 
 fn handle_transformation_result(result: &TResult) -> &mediawiki_parser::Element {
