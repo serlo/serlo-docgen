@@ -12,6 +12,7 @@ use std::collections::HashMap;
 mod printers;
 
 use self::printers::*;
+use transformations;
 
 /// Writes a list of `make` dependencies for each target.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -40,6 +41,16 @@ impl Target for DepsTarget {
         let docrev = &settings.runtime.document_revision;
         for (name, target) in &settings.general.targets {
 
+            // apply exclusions
+            let root = {
+                let mut new_settings = Settings::default();
+                new_settings.runtime.markers = settings.runtime.markers.clone();
+                new_settings.runtime.target_name = name.clone();
+                let root = root.clone();
+                transformations::remove_exclusions(root, &new_settings)
+                    .expect("error applying exclusions:")
+            };
+
             let target = target.get_target();
 
             if !args.contains(name) {
@@ -52,8 +63,8 @@ impl Target for DepsTarget {
             let mut section_collection = InclusionPrinter::default();
             writeln!(out, "# dependencies for {}", &name)?;
             write!(out, "{}.{}: ", &docrev, target_ext)?;
-            file_collection.run(root, settings, out)?;
-            section_collection.run(root, settings, out)?;
+            file_collection.run(&root, settings, out)?;
+            section_collection.run(&root, settings, out)?;
             writeln!(out, "")?;
         }
         Ok(())
