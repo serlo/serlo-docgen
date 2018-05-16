@@ -276,6 +276,11 @@ fn remove_exclusions_vec<'a>(
         }
     };
 
+    if subtarget.parameters.is_empty() {
+        result.append(root_content);
+        return Ok(result);
+    }
+
     for elem in root_content.drain(..) {
         if let Element::Heading(heading) = elem {
             let caption = extract_plain_text(&heading.caption).trim().to_lowercase();
