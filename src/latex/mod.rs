@@ -53,7 +53,8 @@ impl Default for LatexTarget {
                 "jpeg" => "jpg.pdf",
                 "gif" => "gif.qr.pdf",
                 "webm" => "webm.qr.pdf",
-                "mp4" => "mp4.qr.pdf"
+                "mp4" => "mp4.qr.pdf",
+                "pdf" => "plain.pdf"
             ],
             indentation_depth: 4,
             max_line_width: 80,
