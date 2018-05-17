@@ -2,7 +2,6 @@ use mediawiki_parser::transformations::*;
 use mediawiki_parser::*;
 use mfnf_sitemap::{Subtarget};
 use preamble::*;
-use mwparser_utils::util::TexResult;
 use std::fs::File;
 use serde_yaml;
 
@@ -62,68 +61,6 @@ pub fn normalize_template_names(mut root: Element, settings: &Settings) -> TResu
         }
     };
     recurse_inplace(&normalize_template_names, root, settings)
-}
-
-
-/// Normalize math formulas with texvccheck
-pub fn normalize_math_formulas(mut root: Element, settings: &Settings) -> TResult {
-
-    if let Element::Formatted(ref mut formatted) = root {
-        if formatted.markup == MarkupType::Math {
-            match check_formula(&formatted.content, &formatted.position, settings) {
-                e @ Element::Text(_) => {
-                    formatted.content.clear();
-                    formatted.content.push(e);
-                },
-                e => return Ok(e),
-            }
-        }
-    }
-    recurse_inplace(&normalize_math_formulas, root, settings)
-}
-
-/// Check a Tex formula, return normalized version or error
-fn check_formula(
-    content: &[Element],
-    position: &Span,
-    settings: &Settings
-) -> Element {
-    if content.len() != 1 {
-        return Element::Error(Error {
-            message: "A formula must have exactly one content element!".into(),
-            position: position.clone(),
-        })
-    }
-    let checked_formula = match content[0] {
-        Element::Text(ref text) => {
-            if let Some(ref mutex) = settings.runtime.tex_checker {
-                mutex.check(&text.text)
-            } else {
-                return content[0].clone();
-            }
-        },
-        _ => return Element::Error(Error {
-            message: "A formula must only have text as content!".into(),
-            position: position.clone(),
-        })
-    };
-    let cause = match checked_formula {
-        TexResult::Ok(content) => {
-            return Element::Text(Text {
-                position: position.clone(),
-                text: content,
-            });
-        },
-        TexResult::UnknownFunction(func) => format!("unknown latex function `{}`!", func),
-        TexResult::SyntaxError => "latex syntax error!".into(),
-        TexResult::LexingError => "latex lexer error!".into(),
-        TexResult::UnknownError => "unknown latex error!".into(),
-    };
-
-    Element::Error(Error {
-        message: cause,
-        position: position.clone(),
-    })
 }
 
 pub fn include_sections(

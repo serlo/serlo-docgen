@@ -89,7 +89,7 @@ dependencies = [
 [[package]]
 name = "mfnf-sitemap-parser"
 version = "0.1.0"
-source = "git+https://github.com/vroland/mfnf-sitemap-parser#7e29081085c9902418abf5a26a7d1e733434e143"
+source = "git+https://github.com/vroland/mfnf-sitemap-parser#abfa77a5fe48b9838414efe729ac4457ce87cfa4"
 dependencies = [
  "mediawiki_parser 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "mwparser_utils 0.1.0 (git+https://github.com/vroland/mediawiki-parser-utils)",
@@ -118,7 +118,7 @@ dependencies = [
 [[package]]
 name = "mwparser_utils"
 version = "0.1.0"
-source = "git+https://github.com/vroland/mediawiki-parser-utils#7ec3a86d3d20458ceca33c8ea38e8e8b161c3a50"
+source = "git+https://github.com/vroland/mediawiki-parser-utils#194c3fee3641b58141a165c8610541f6246d3c04"
 dependencies = [
  "mediawiki_parser 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "mwparser_utils_derive 0.1.0 (git+https://github.com/vroland/mediawiki-parser-utils)",
@@ -129,7 +129,7 @@ dependencies = [
 [[package]]
 name = "mwparser_utils_derive"
 version = "0.1.0"
-source = "git+https://github.com/vroland/mediawiki-parser-utils#7ec3a86d3d20458ceca33c8ea38e8e8b161c3a50"
+source = "git+https://github.com/vroland/mediawiki-parser-utils#194c3fee3641b58141a165c8610541f6246d3c04"
 dependencies = [
  "proc-macro2 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "quote 0.5.2 (registry+https://github.com/rust-lang/crates.io-index)",
