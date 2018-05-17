@@ -8,6 +8,8 @@
 
 use preamble::*;
 use std::collections::HashMap;
+use serde_yaml;
+use std::process;
 
 mod printers;
 
@@ -47,8 +49,16 @@ impl Target for DepsTarget {
                 new_settings.runtime.markers = settings.runtime.markers.clone();
                 new_settings.runtime.target_name = name.clone();
                 let root = root.clone();
-                transformations::remove_exclusions(root, &new_settings)
-                    .expect("error applying exclusions:")
+                let result = transformations::remove_exclusions(root, &new_settings);
+                match result {
+                    Err(err) => {
+                        eprintln!("{}", &err);
+                        println!("{}", serde_yaml::to_string(&err)
+                            .expect("Could not serialize error!"));
+                        process::exit(1);
+                    }
+                    Ok(tree) => tree,
+                }
             };
 
             let target = target.get_target();

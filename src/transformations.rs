@@ -329,7 +329,7 @@ fn check_heading_existence(root: &Element, subtarget: &Subtarget) -> Result<(), 
         };
         if !tree_contains(root, &matches) {
             return Err(TransformationError {
-                cause: format!("heading {} in {} is not present in this document!",
+                cause: format!("heading \"{}\" in \"{}\" is not present in this document!",
                                 &title, &subtarget.name),
                 position: root.get_position().clone(),
                 transformation_name: "remove_exclusions".to_string(),
@@ -354,6 +354,7 @@ pub fn remove_exclusions(mut root: Element, settings: &Settings) -> TResult {
             check_heading_existence(&root, &subtarget)?;
         }
     }
-    root = recurse_inplace_template(&remove_exclusions, root, settings, &remove_exclusions_vec)?;
+    root = recurse_inplace_template(&remove_exclusions, root, settings,
+                                    &remove_exclusions_vec)?;
     Ok(root)
 }
