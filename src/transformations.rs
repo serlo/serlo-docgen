@@ -316,8 +316,44 @@ fn remove_exclusions_vec<'a>(
     Ok(result)
 }
 
+fn check_heading_existence(root: &Element, subtarget: &Subtarget) -> Result<(), TransformationError> {
+    for title in &subtarget.parameters {
+        let matches = |e: &Element| {
+            if let Element::Heading(ref h) = e {
+                let caption = extract_plain_text(&h.caption).trim().to_lowercase();
+                if title.trim().to_lowercase() == caption {
+                    return true
+                }
+            }
+            false
+        };
+        if !tree_contains(root, &matches) {
+            return Err(TransformationError {
+                cause: format!("heading {} in {} is not present in this document!",
+                                &title, &subtarget.name),
+                position: root.get_position().clone(),
+                transformation_name: "remove_exclusions".to_string(),
+                tree: Element::Error(Error {
+                    position: root.get_position().clone(),
+                    message: "heading not found".into()
+                })
+            });
+        }
+    }
+    Ok(())
+}
+
 /// Strip excluded headings.
 pub fn remove_exclusions(mut root: Element, settings: &Settings) -> TResult {
+    // check if every specified heading exists
+    if let Element::Document(_) = root {
+        for subtarget in &settings.runtime.markers.include.subtargets {
+            check_heading_existence(&root, &subtarget)?;
+        }
+        for subtarget in &settings.runtime.markers.exclude.subtargets {
+            check_heading_existence(&root, &subtarget)?;
+        }
+    }
     root = recurse_inplace_template(&remove_exclusions, root, settings, &remove_exclusions_vec)?;
     Ok(root)
 }
