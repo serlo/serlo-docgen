@@ -58,13 +58,15 @@ impl<'a, 'b: 'a> Traversion<'a, &'b Settings> for FilesPrinter<'b, 'a> {
             let target = filename_to_make(&extract_plain_text(&iref.target));
             let target_path = PathBuf::from(target);
             let ext = target_path.extension().unwrap_or_default();
-            let ext_str = ext.to_string_lossy().to_lowercase();
+            let ext_str = ext.to_string_lossy().to_string();
 
             let extensions = &settings.general.external_file_extensions;
             let file_path = &settings.general.external_file_path;
-            let target_extension = self.extension_map.get(&ext_str).unwrap_or(&ext_str);
+            let target_extension = self.extension_map.get(&ext_str.to_lowercase())
+                .unwrap_or(&"%".into())
+                .replace("%", &ext_str);
 
-            if extensions.contains(&ext_str) {
+            if extensions.contains(&ext_str.to_lowercase()) {
                 let path = PathBuf::from(&file_path)
                     .join(&target_path)
                     .with_extension(target_extension);

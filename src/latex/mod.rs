@@ -46,15 +46,15 @@ impl Default for LatexTarget {
     fn default() -> LatexTarget {
         LatexTarget {
             deps_extension_mapping: string_map![
-                "png" => "png.pdf",
-                "svg" => "svg.pdf",
-                "eps" => "eps.pdf",
-                "jpg" => "jpg.pdf",
-                "jpeg" => "jpg.pdf",
-                "gif" => "gif.qr.pdf",
-                "webm" => "webm.qr.pdf",
-                "mp4" => "mp4.qr.pdf",
-                "pdf" => "plain.pdf"
+                "png" => "%.pdf",
+                "svg" => "%.pdf",
+                "eps" => "%.pdf",
+                "jpg" => "%.pdf",
+                "jpeg" => "%.pdf",
+                "gif" => "%.qr.pdf",
+                "webm" => "%.qr.pdf",
+                "mp4" => "%.qr.pdf",
+                "pdf" => "plain.%"
             ],
             indentation_depth: 4,
             max_line_width: 80,

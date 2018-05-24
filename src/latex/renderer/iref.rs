@@ -16,11 +16,12 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         let target_str = filename_to_make(&extract_plain_text(target));
         let target_path = path::Path::new(&target_str);
         let ext = target_path.extension().unwrap_or_default();
-        let ext_str = ext.to_string_lossy().into();
+        let ext_str = ext.to_string_lossy().to_string();
         let target_extension = self.latex
             .get_extension_mapping()
-            .get(&ext_str)
-            .unwrap_or(&ext_str);
+            .get(&ext_str.to_lowercase())
+            .unwrap_or(&"%".into())
+            .replace("%", &ext_str);
 
         path::PathBuf::from(&settings.general.external_file_path)
             .join(target_path
