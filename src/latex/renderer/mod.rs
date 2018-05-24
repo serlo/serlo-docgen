@@ -125,7 +125,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
     fn write_def_location(&self, pos: &Span, doctitle: &str,
                           out: &mut io::Write) -> io::Result<()> {
 
-        writeln!(out, "% defined in {} at {}:{} to {}:{}", doctitle,
+        writeln!(out, "\n% defined in {} at {}:{} to {}:{}", doctitle,
                  pos.start.line, pos.start.col,
                  pos.end.line, pos.end.col)
     }
