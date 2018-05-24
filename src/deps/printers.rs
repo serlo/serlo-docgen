@@ -58,7 +58,7 @@ impl<'a, 'b: 'a> Traversion<'a, &'b Settings> for FilesPrinter<'b, 'a> {
             let target = filename_to_make(&extract_plain_text(&iref.target));
             let target_path = PathBuf::from(target);
             let ext = target_path.extension().unwrap_or_default();
-            let ext_str = ext.to_string_lossy().into();
+            let ext_str = ext.to_string_lossy().to_lowercase();
 
             let extensions = &settings.general.external_file_extensions;
             let file_path = &settings.general.external_file_path;
