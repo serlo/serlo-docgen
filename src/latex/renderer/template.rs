@@ -25,7 +25,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         };
 
         match parsed {
-            KnownTemplate::Formula(formula) => self.formula(&formula, out)?,
+            KnownTemplate::Formula(formula) => self.formula(&formula, settings, out)?,
             KnownTemplate::Important(important) => self.important(settings, &important, out)?,
             KnownTemplate::Definition(_)
             | KnownTemplate::Theorem(_)
@@ -45,7 +45,23 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         Ok(false)
     }
 
-    fn formula(&self, formula: &Formula, out: &mut io::Write) -> io::Result<()> {
+    fn formula(
+        &self,
+        formula: &Formula,
+        settings: &Settings,
+        out: &mut io::Write
+    ) -> io::Result<()> {
+
+        // propagate errors
+        let error = formula.formula.iter()
+            .filter_map(|e| if let Element::Error(ref err) = e {Some(err)} else {None})
+            .next();
+
+        if let Some(err) = error {
+            self.error(err, settings, out)?;
+            return Ok(())
+        }
+
         let content = extract_plain_text(formula.formula).trim().to_owned();
 
         let mut trimmed = trim_enclosing(
