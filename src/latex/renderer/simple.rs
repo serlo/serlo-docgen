@@ -50,7 +50,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         _: &'s Settings,
         out: &mut io::Write
     ) -> io::Result<bool> {
-        writeln!(out, "% {}", &escape_latex(&root.text))?;
+        writeln!(out, "\n% {}", &escape_latex(&root.text))?;
         Ok(false)
     }
 
