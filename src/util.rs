@@ -120,17 +120,6 @@ pub fn indent_and_trim(input: &str, depth: usize, max_line_width: usize) -> Stri
     lines.join("\n")
 }
 
-/// Convert a filename to a make-friedly format.
-pub fn filename_to_make(input: &str) -> String {
-    input.replace(" ", "_")
-        .replace(":", "@COLON@")
-        .replace("(", "@LBR@")
-        .replace(")", "@RBR@")
-        .replace("/", "@SLASH@")
-        .replace("'", "@SQUOTE@")
-        .replace('"', "@DQUOTE@")
-}
-
 struct TreeMatcher<'e, 'c> {
     pub result: bool,
     pub path: Vec<&'e Element>,
