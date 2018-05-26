@@ -50,7 +50,11 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         _: &'s Settings,
         out: &mut io::Write
     ) -> io::Result<bool> {
-        writeln!(out, "\n% {}\n", &escape_latex(&root.text).trim())?;
+        // TODO: Comments can currently cause errors with flattened paragraphs,
+        // eating up following LaTeX.
+        if !self.flatten_paragraphs {
+            writeln!(out, "% {}", &escape_latex(&root.text).trim())?;
+        }
         Ok(false)
     }
 

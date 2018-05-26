@@ -119,3 +119,11 @@ alias!(LABEL, "\\label{{{}}}");
 
 // --- Main Article ---
 alias!(MAINARTICLE, "$\\rightarrow$ \\href{{{}}}{{\\emph{{{}}}}}");
+
+// --- Comments ---
+alias!(COMMENT, "
+\\begin{{comment}}
+{}
+\\end{{comment}}
+
+");
