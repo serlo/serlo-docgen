@@ -58,14 +58,20 @@ fn run_deps_printer(
         let docrev = &settings.runtime.document_revision;
 
         writeln!(out, "# dependencies for {}", &target_name)?;
-        write!(out, "{}.{}: ", &docrev, target_ext)?;
-        let mut printer: Box<Traversion<&Settings>> = match printer_kind {
-            PrinterKind::Sections => Box::new(InclusionPrinter::default()),
+        match printer_kind {
+            PrinterKind::Sections => {
+                write!(out, "{}.{} {}.sections: ",
+                       &docrev, target_ext, &docrev)?;
+                let mut printer = InclusionPrinter::default();
+                printer.run(&root, settings, out)?;
+            }
             PrinterKind::Media => {
-                Box::new(FilesPrinter::new(target.get_extension_mapping()))
+                write!(out, "{}.{} {}.media: ",
+                       &docrev, target_ext, &docrev)?;
+                let mut printer = FilesPrinter::new(target.get_extension_mapping());
+                printer.run(&root, settings, out)?;
             },
         };
-        printer.run(&root, settings, out)?;
         writeln!(out, "")?;
     }
     Ok(())
