@@ -80,6 +80,8 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
             "\\end{align*}"
         ).trim();
 
+        // align environments need to be separated from surrounding text
+        writeln!(out, "\n")?;
         self.environment(
             MATH_ENV!(),
             &[],
