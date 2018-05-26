@@ -111,7 +111,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
     ) -> io::Result<()> {
         let title = match question.kind {
             Some(e) => e.render(self, settings)?,
-            None => String::new();
+            None => String::new(),
         };
         let question_text = question.question.render(self, settings)?;
         let answer = question.answer.render(self, settings)?;
