@@ -37,10 +37,15 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
             | KnownTemplate::AlternativeProof(_)
             | KnownTemplate::ProofSummary(_)
             | KnownTemplate::Solution(_)
+            | KnownTemplate::Question(_)
+            | KnownTemplate::SolutionProcess(_)
              => self.environment_template(settings, &parsed, out)?,
             KnownTemplate::ProofStep(step) => self.proofstep(&step, settings, out)?,
             KnownTemplate::Anchor(anchor) => self.anchor(&anchor, out)?,
             KnownTemplate::Mainarticle(article) => self.mainarticle(settings, &article, out)?,
+            KnownTemplate::Navigation(_) => (),
+            KnownTemplate::ProofByCases(cases) => self.proof_by_cases(&cases, settings, out)?,
+            KnownTemplate::Induction(induction) => self.induction(&induction, settings, out)?,
         };
         Ok(false)
     }
@@ -91,11 +96,57 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
     ) -> io::Result<()> {
         let name = match step.name {
             Some(name) => name.render(self, settings)?,
-            None => "<Poof Step>".into()
+            None => "Beweisschritt".into()
         };
         let goal = step.goal.render(self, settings)?;
         writeln!(out, PROOF_STEP_CAPTION!(), name.trim(), goal.trim())?;
         self.run_vec(&step.step, settings, out)
+    }
+
+    fn proof_by_cases(
+        &mut self,
+        cases: &ProofByCases<'e>,
+        settings: &'s Settings,
+        out: &mut io::Write
+    ) -> io::Result<()> {
+        let attrs = [
+            (Some(cases.case1), Some(cases.proof1)),
+            (Some(cases.case2), Some(cases.proof2)),
+            (cases.case3, cases.proof3),
+            (cases.case4, cases.proof4),
+            (cases.case5, cases.proof5),
+            (cases.case6, cases.proof6),
+        ];
+        for (index, tuple) in attrs.iter().enumerate() {
+            if let (Some(case), Some(proof)) = tuple {
+                let goal = case.render(self, settings)?;
+                writeln!(out, PROOF_CASE_CAPTION!(), "Fall", index + 1, goal.trim())?;
+                self.run_vec(&proof, settings, out)?;
+            }
+        }
+        Ok(())
+    }
+
+    fn induction(
+        &mut self,
+        induction: &Induction<'e>,
+        settings: &'s Settings,
+        out: &mut io::Write
+    ) -> io::Result<()> {
+
+        let basic = if let Some(e) = induction.basic_set {
+            e.render(self, settings)?
+        } else {
+            INDUCTION_SET_DEFAULT!().to_string()
+        };
+        let statement = induction.statement.render(self, settings)?;
+        let base_case = induction.base_case.render(self, settings)?;
+        let hypothesis = induction.induction_hypothesis.render(self, settings)?;
+        let step_case_goal = induction.step_case_goal.render(self, settings)?;
+        let step_case = induction.step_case.render(self, settings)?;
+        writeln!(out, INDUCTION!(), basic.trim(), statement.trim(),
+                 base_case.trim(), hypothesis.trim(), step_case_goal.trim(),
+                 step_case.trim())
     }
 
     fn important(

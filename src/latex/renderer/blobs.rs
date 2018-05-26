@@ -75,6 +75,22 @@ alias!(UNDERLINE, "\\ul{{{}}}");
 alias!(MATH_ENV, "align*");
 alias!(IMPORTANT_ENV, "important*");
 alias!(PROOF_STEP_CAPTION, "\\textbf{{{}}}: {}:\n");
+alias!(PROOF_CASE_CAPTION, "\\textbf{{{} {}}}: {}:\n");
+alias!(INDUCTION,"\\textbf{{Aussageform, deren Allgemeingültigkeit für {} bewiesen werden soll:}}
+
+{}
+
+\\begin{{enumerate}}
+\\item \\textbf{{Induktionsanfang:}} {}
+\\item \\textbf{{Induktionsschritt:}}
+\\begin{{enumerate}}
+\\item \\textbf{{Induktionsvoraussetzung:}} {}
+\\item \\textbf{{Induktionsbehauptung:}} {}
+\\item \\textbf{{Beweis des Induktionsschritts:}} {}
+\\end{{enumerate}}
+\\end{{enumerate}}
+");
+alias!(INDUCTION_SET_DEFAULT, "$n\\in\\mathcal{{N}}$");
 
 // --- Galleries ---
 
