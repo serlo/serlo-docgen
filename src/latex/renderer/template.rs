@@ -37,13 +37,13 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
             | KnownTemplate::AlternativeProof(_)
             | KnownTemplate::ProofSummary(_)
             | KnownTemplate::Solution(_)
-            | KnownTemplate::Question(_)
             | KnownTemplate::SolutionProcess(_)
              => self.environment_template(settings, &parsed, out)?,
             KnownTemplate::ProofStep(step) => self.proofstep(&step, settings, out)?,
             KnownTemplate::Anchor(anchor) => self.anchor(&anchor, out)?,
             KnownTemplate::Mainarticle(article) => self.mainarticle(settings, &article, out)?,
             KnownTemplate::Navigation(_) => (),
+            KnownTemplate::Question(question) => self.question(&question, settings, out)?,
             KnownTemplate::ProofByCases(cases) => self.proof_by_cases(&cases, settings, out)?,
             KnownTemplate::Induction(induction) => self.induction(&induction, settings, out)?,
         };
@@ -101,6 +101,26 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         let goal = step.goal.render(self, settings)?;
         writeln!(out, PROOF_STEP_CAPTION!(), name.trim(), goal.trim())?;
         self.run_vec(&step.step, settings, out)
+    }
+
+    fn question(
+        &mut self,
+        question: &Question<'e>,
+        settings: &'s Settings,
+        out: &mut io::Write
+    ) -> io::Result<()> {
+        let title = match question.kind {
+            Some(e) => e.render(self, settings)?,
+            None => "Frage".into()
+        };
+        let question_text = question.question.render(self, settings)?;
+        let answer = question.answer.render(self, settings)?;
+        self.environment(
+            "question",
+            &[title.trim()],
+            &format!("{}\n\n{}", question_text.trim(), answer.trim()),
+            out
+        )
     }
 
     fn proof_by_cases(
