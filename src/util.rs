@@ -165,12 +165,18 @@ fn is_plain_file(path: &PathBuf) -> bool {
 
 /// Returns wether an image is semantically a thumbnail image.
 pub fn is_thumb(image: &InternalReference) -> bool {
-    for option in &image.options {
-        if extract_plain_text(option).to_lowercase().trim() == "thumb" {
-            return true
-        }
-    }
-    false
+    let thumb_indicators = ["thumb", "miniatur"];
+    image.options.iter()
+        .any(|ref o| thumb_indicators.contains(
+                &extract_plain_text(o).to_lowercase().trim()))
+}
+
+/// Returns wether an image is semantically a centered image.
+pub fn is_centered(image: &InternalReference) -> bool {
+    let thumb_indicators = ["center", "zentriert"];
+    image.options.iter()
+        .any(|ref o| thumb_indicators.contains(
+                &extract_plain_text(o).to_lowercase().trim()))
 }
 
 /// Path of a section file.

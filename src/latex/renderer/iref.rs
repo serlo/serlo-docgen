@@ -58,8 +58,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                 image_options.push(extract_plain_text(option).trim().to_string());
             }
 
-            // thumnail images
-            if image_options.contains(&"thumb".to_owned()) {
+            if is_thumb(root) {
                 let msg = "Thumbnail images should have been moved into galleries.";
                 self.write_error(msg, out)?;
                 return Ok(false)
@@ -67,8 +66,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
 
             let cap_content = &root.caption.render(self, settings)?;
 
-            // centered images
-            if image_options.contains(&"center".to_owned()) {
+            if is_centered(root) {
 
                 self.write_def_location(&root.position, doctitle, out)?;
 
