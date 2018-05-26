@@ -110,8 +110,10 @@ impl Default for GeneralSettings {
         GeneralSettings {
             targets: {
                 let mut tmap = HashMap::new();
-                tmap.insert("deps".to_string(),
-                    MFNFTargets::Dependencies(deps::DepsTarget::default()));
+                tmap.insert("section-deps".to_string(),
+                    MFNFTargets::SectionDeps(deps::SectionDepsTarget::default()));
+                tmap.insert("media-deps".to_string(),
+                    MFNFTargets::MediaDeps(deps::MediaDepsTarget::default()));
                 tmap.insert("latex".to_string(),
                     MFNFTargets::Latex(latex::LatexTarget::default()));
                 tmap.insert("sections".to_string(),

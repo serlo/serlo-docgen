@@ -42,7 +42,8 @@ pub use settings::{Settings, GeneralSettings, RuntimeSettings};
 /// Available targets for mfnf-export.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum MFNFTargets {
-    Dependencies(deps::DepsTarget),
+    SectionDeps(deps::SectionDepsTarget),
+    MediaDeps(deps::MediaDepsTarget),
     Latex(latex::LatexTarget),
     Sections(sections::SectionsTarget),
     PDF(pdf::PDFTarget),
@@ -52,7 +53,8 @@ impl MFNFTargets {
     /// Get the inner struct implementing the target trait.
     pub fn get_target(&self) -> &target::Target {
         match *self {
-            MFNFTargets::Dependencies(ref t) => t,
+            MFNFTargets::SectionDeps(ref t) => t,
+            MFNFTargets::MediaDeps(ref t) => t,
             MFNFTargets::Latex(ref t) => t,
             MFNFTargets::Sections(ref t) => t,
             MFNFTargets::PDF(ref t) => t,
