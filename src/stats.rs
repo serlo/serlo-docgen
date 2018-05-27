@@ -31,7 +31,7 @@ struct Stats {
 }
 
 impl Target for StatsTarget {
-    fn do_include_sections(&self) -> bool { false }
+    fn do_include_sections(&self) -> bool { true }
     fn get_target_extension(&self) -> &str { "yml" }
     fn get_extension_mapping(&self) -> &HashMap<String, String> {
         &self.extension_mapping

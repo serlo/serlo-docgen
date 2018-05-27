@@ -1,9 +1,3 @@
-//! Implements the `sections` target which writes out parts of the syntax tree.
-//!
-//! This target operates on the same syntax tree as the `deps` target. It extracts
-//! parts of the document tree marked by `<section />` tags and writes them to a
-//! directory specified through the transformation settings in the YAML format.
-
 use std::collections::HashMap;
 use preamble::*;
 
