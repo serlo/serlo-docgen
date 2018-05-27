@@ -6,6 +6,7 @@ use deps;
 use latex;
 use sections;
 use pdf;
+use stats;
 use MFNFTargets;
 
 use mwparser_utils::util::CachedTexChecker;
@@ -120,6 +121,8 @@ impl Default for GeneralSettings {
                     MFNFTargets::Sections(sections::SectionsTarget::default()));
                 tmap.insert("pdf".to_string(),
                     MFNFTargets::PDF(pdf::PDFTarget::default()));
+                tmap.insert("stats".to_string(),
+                    MFNFTargets::Stats(stats::StatsTarget::default()));
                 tmap
             },
             file_prefixes: string_vec!["file", "datei", "bild"],

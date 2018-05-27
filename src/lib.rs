@@ -19,6 +19,7 @@ mod latex;
 mod deps;
 mod sections;
 mod pdf;
+mod stats;
 mod transformations;
 
 #[cfg(test)]
@@ -47,6 +48,7 @@ pub enum MFNFTargets {
     Latex(latex::LatexTarget),
     Sections(sections::SectionsTarget),
     PDF(pdf::PDFTarget),
+    Stats(stats::StatsTarget),
 }
 
 impl MFNFTargets {
@@ -58,6 +60,7 @@ impl MFNFTargets {
             MFNFTargets::Latex(ref t) => t,
             MFNFTargets::Sections(ref t) => t,
             MFNFTargets::PDF(ref t) => t,
+            MFNFTargets::Stats(ref t) => t,
         }
     }
 }
