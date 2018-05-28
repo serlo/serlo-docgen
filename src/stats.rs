@@ -25,9 +25,54 @@ impl Default for StatsTarget {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Default)]
-struct Stats {
-    // test stat counting the document length
+struct Stats<'e> {
+    #[serde(skip)]
+    pub path: Vec<&'e Element>,
+
+    /// The original document length
     pub line_count: usize,
+
+    /// Number of images included
+    pub image_count: usize,
+
+    /// Number of templates used of a kind
+    pub template_count: HashMap<String, usize>,
+}
+
+
+impl<'e, 's: 'e> Traversion<'e, &'s Settings> for Stats<'e> {
+
+    path_methods!('e);
+
+    fn work(
+        &mut self,
+        root: &Element,
+        settings: &'s Settings,
+        out: &mut io::Write
+    ) -> io::Result<bool> {
+
+        match root {
+            Element::InternalReference(ref iref) => {
+                let is_image = settings.general.external_file_extensions
+                    .iter().any(|suffix|
+                        extract_plain_text(&iref.target)
+                        .trim()
+                        .to_lowercase()
+                        .ends_with(suffix)
+                    );
+                if is_image {
+                    self.image_count += 1
+                }
+            },
+            Element::Template(ref template) => {
+                let name = extract_plain_text(&template.name).trim().to_lowercase();
+                let current = *self.template_count.get(&name).unwrap_or(&0);
+                self.template_count.insert(name.clone(), current + 1);
+            },
+            _ => (),
+        };
+        Ok(true)
+    }
 }
 
 impl Target for StatsTarget {
@@ -38,15 +83,14 @@ impl Target for StatsTarget {
     }
     fn export<'a>(&self,
                 root: &'a Element,
-                _settings: &Settings,
+                settings: &Settings,
                 _args: &[String],
                 out: &mut io::Write) -> io::Result<()> {
 
-        let mut stats = Stats {
-            line_count: 0,
-        };
+        let mut stats = Stats::default();
 
-        stats.line_count = root.get_position().end.line;
+        stats.line_count = root.get_position().end.line - 1;
+        stats.run(root, settings, out)?;
 
         writeln!(out, "{}", serde_yaml::to_string(&stats)
             .expect("could not serialize the stats struct"))
