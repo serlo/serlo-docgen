@@ -21,6 +21,7 @@ mod sections;
 mod pdf;
 mod stats;
 mod transformations;
+mod html;
 
 #[cfg(test)]
 mod test;
@@ -49,6 +50,7 @@ pub enum MFNFTargets {
     Sections(sections::SectionsTarget),
     PDF(pdf::PDFTarget),
     Stats(stats::StatsTarget),
+    HTML(html::HTMLTarget)
 }
 
 impl MFNFTargets {
@@ -61,6 +63,7 @@ impl MFNFTargets {
             MFNFTargets::Sections(ref t) => t,
             MFNFTargets::PDF(ref t) => t,
             MFNFTargets::Stats(ref t) => t,
+            MFNFTargets::HTML(ref t) => t
         }
     }
 }
