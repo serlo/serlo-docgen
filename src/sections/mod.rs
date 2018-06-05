@@ -53,7 +53,8 @@ impl Target for SectionsTarget {
             filename.push('.');
             filename.push_str(file_ext);
 
-            let mut path = path::PathBuf::from(&filename_to_make(&section));
+            let mut path = path::PathBuf::from(&settings.general.section_path);
+            path = path.join(&filename_to_make(&section));
 
             DirBuilder::new()
                 .recursive(true)
