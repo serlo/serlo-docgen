@@ -46,6 +46,13 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
             KnownTemplate::Question(question) => self.question(&question, settings, out)?,
             KnownTemplate::ProofByCases(cases) => self.proof_by_cases(&cases, settings, out)?,
             KnownTemplate::Induction(induction) => self.induction(&induction, settings, out)?,
+            KnownTemplate::Smiley(smiley) => write!(out, "{}",
+                smiley_to_unicode(&extract_plain_text(&smiley.name.unwrap_or(&[])))
+                .unwrap_or('\u{01f603}')
+            )?,
+            // TODO: replace noprint with a sematic version, ignore for now.
+            KnownTemplate::NoPrint(noprint) => self.run_vec(&noprint.content, settings, out)?,
+            KnownTemplate::Todo(_) => (),
         };
         Ok(false)
     }

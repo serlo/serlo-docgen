@@ -42,6 +42,28 @@ pub fn escape_latex(input: &str) -> String {
     res
 }
 
+/// Returns a unicode character for a smiley description.
+///
+/// see also: https://www.mediawiki.org/wiki/Template:Smiley
+pub fn smiley_to_unicode(input: &str) -> Option<char> {
+    match input {
+        ":)" | "smile" | ":-)" | ":-]" | "#default" => Some('\u{01F60A}'),
+        ":(" | "sad" | "frown" | ":-(" | ":-[" => Some('\u{01F61E}'),
+        "smirk" | "wink" | ";)" | ";-)" | ";-]" => Some('\u{01F60F}'),
+        "grin" | ":-D" | ":D" | "lol" | "lach" => Some('\u{01F604}'),
+        "surprise" | ":O" | ":-O" | "staun" => Some('\u{01F62E}'),
+        "tongue" | ":P" | ":-P"  => Some('\u{01F61B}'),
+        "shades" | "cool" | "8-]" | "8)" | "8-)"=> Some('\u{01F60E}'),
+        "cry" | "wein" | ":'(" | ":-'("  => Some('\u{01F622}'),
+        "devil-grin" | "devil" | "evil" | ">:-D" => Some('\u{01F608}'),
+        "angry" | "wütend" | ">:(" | ">:[" => Some('\u{01F620}'),
+        "confused" | "verwirrt" | "%)" | "%-)" | ":-/" => Some('\u{01F615}'),
+        "confounded" | "very-confused" | ":-S" => Some('\u{01F616}'),
+        "thumb" | "thumbsup" | "daumen" | "Daumen" => Some('\u{01F64C}'),
+        "Facepalm" | "facepalm" => Some('\u{01F625}'),
+        _ => None
+    }
+}
 
 /// generates getters and setters for a path member of a traversion.
 macro_rules! path_methods {
