@@ -321,10 +321,7 @@ pub fn build_image_path(
         .replace("%", &ext_str);
 
     PathBuf::from(&settings.general.external_file_path)
-        .join(name_path
-            .with_extension(&target_extension)
-            .file_stem()
-            .expect("image path is empty!"))
+        .join(name_path.with_extension(&target_extension))
         .to_string_lossy()
         .to_string()
 }
