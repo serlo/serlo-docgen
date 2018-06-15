@@ -3,6 +3,7 @@
 use preamble::*;
 use super::LatexRenderer;
 use mwparser_utils::*;
+use mfnf_template_spec::*;
 
 impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
 

@@ -10,7 +10,7 @@ use pdf;
 use stats;
 use MFNFTargets;
 
-use mwparser_utils::util::CachedTexChecker;
+use mwparser_utils::CachedTexChecker;
 
 macro_rules! string_vec {
     ($($x:expr),*) => (vec![$($x.to_string()),*]);

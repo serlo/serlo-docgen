@@ -1,5 +1,6 @@
 extern crate mediawiki_parser;
 extern crate mwparser_utils;
+extern crate mfnf_template_spec;
 extern crate mfnf_sitemap;
 extern crate serde;
 #[macro_use]

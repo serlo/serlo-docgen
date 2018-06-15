@@ -11,6 +11,7 @@ doc = true
 [dependencies]
 mediawiki_parser = "0.3"
 mwparser_utils = { git = "https://github.com/vroland/mediawiki-parser-utils" }
+mfnf_template_spec = { git = "https://github.com/vroland/mfnf-template-spec" }
 mfnf-sitemap-parser = { git = "https://github.com/vroland/mfnf-sitemap-parser" }
 serde = "1.0"
 serde_derive = "1.0"

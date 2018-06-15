@@ -18,7 +18,7 @@ use std::path::PathBuf;
 use structopt::StructOpt;
 
 use mfnf_export::*;
-use mwparser_utils::util::CachedTexChecker;
+use mwparser_utils::CachedTexChecker;
 use mediawiki_parser::transformations::TResult;
 
 

@@ -2,7 +2,7 @@
 
 use mediawiki_parser::*;
 // re-export common util
-pub use mwparser_utils::util::*;
+pub use mwparser_utils::*;
 use std::path::{PathBuf};
 use std::process;
 use settings::Settings;
@@ -62,21 +62,6 @@ pub fn smiley_to_unicode(input: &str) -> Option<char> {
         "thumb" | "thumbsup" | "daumen" | "Daumen" => Some('\u{01F64C}'),
         "Facepalm" | "facepalm" => Some('\u{01F625}'),
         _ => None
-    }
-}
-
-/// generates getters and setters for a path member of a traversion.
-macro_rules! path_methods {
-    ($lt:tt) => {
-        fn path_push(&mut self, root: &$lt Element) {
-            self.path.push(root);
-        }
-        fn path_pop(&mut self) -> Option<&$lt Element> {
-            self.path.pop()
-        }
-        fn get_path(&self) -> &Vec<&$lt Element> {
-            &self.path
-        }
     }
 }
 
