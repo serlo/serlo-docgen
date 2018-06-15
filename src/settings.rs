@@ -16,14 +16,6 @@ macro_rules! string_vec {
     ($($x:expr),*) => (vec![$($x.to_string()),*]);
 }
 
-macro_rules! string_map {
-    ($($k:expr => $v:expr),*) => {{
-        let mut map: HashMap<String, String> = HashMap::new();
-        $(map.insert($k.to_string(), $v.to_string());)*
-        map
-    }}
-}
-
 macro_rules! string_value_map {
     ($($k:expr => $v:expr),*) => {{
         let mut map = HashMap::new();

@@ -1,7 +1,6 @@
 //! Defines the target trait.
 
 use preamble::*;
-use std::collections::HashMap;
 
 /// Marks an exportable target type.
 pub trait Target {
@@ -13,15 +12,17 @@ pub trait Target {
         args: &[String],
         out: &mut io::Write
     ) -> io::Result<()>;
-    /// does this target operate on the input tree directly or with
-    /// mfnf transformations applied?
-    fn do_include_sections(&self) -> bool { false }
-    /// are make dependencies generated for this target?
-    fn get_target_extension(&self) -> &str;
-    /// mapping of external file extensions to target extensions.
-    /// this is useful if external dependencies should be processed by
-    /// make for this target.
-    fn get_extension_mapping(&self) -> &HashMap<String, String>;
+    /// Include "transcluded" sections?
+    ///
+    /// {#lst:name} can include sections from other articles.
+    fn include_sections(&self) -> bool { false }
+    /// File extension for the target's output.
+    fn target_extension(&self) -> &str;
+    /// Get the target-specific version of a file extension.
+    ///
+    /// The result of this function may contain "%", which will be
+    /// replaced by the original file extension.
+    fn extension_for(&self, &str) -> &str;
 }
 
 

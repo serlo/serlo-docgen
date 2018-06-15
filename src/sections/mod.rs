@@ -4,7 +4,6 @@
 //! parts of the document tree marked by `<section />` tags and writes them to a
 //! directory specified through the transformation settings in the YAML format.
 
-use std::collections::HashMap;
 use preamble::*;
 
 use std::path;
@@ -21,17 +20,12 @@ mod filter;
 /// Write marked document section to the filesystem.
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
 #[serde(default)]
-pub struct SectionsTarget {
-    #[serde(skip_serializing_if = "is_default")]
-    pub extension_mapping: HashMap<String, String>,
-}
+pub struct SectionsTarget {}
 
 impl Target for SectionsTarget {
-    fn do_include_sections(&self) -> bool { false }
-    fn get_target_extension(&self) -> &str { "yml" }
-    fn get_extension_mapping(&self) -> &HashMap<String, String> {
-        &self.extension_mapping
-    }
+    fn include_sections(&self) -> bool { false }
+    fn target_extension(&self) -> &str { "yml" }
+    fn extension_for(&self, _ext: &str) -> &str { "%" }
     fn export<'a>(&self,
                 root: &'a Element,
                 settings: &Settings,

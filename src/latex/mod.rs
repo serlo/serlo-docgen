@@ -16,10 +16,6 @@ use self::renderer::{LatexRenderer};
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(default, deny_unknown_fields)]
 pub struct LatexTarget {
-    /// mapping of external file extensions to target extensions.
-    /// this is useful if external dependencies should be processed by
-    /// make for this target.
-    deps_extension_mapping: HashMap<String, String>,
 
     /// Indentation depth for template content.
     indentation_depth: usize,
@@ -45,17 +41,6 @@ pub struct LatexTarget {
 impl Default for LatexTarget {
     fn default() -> LatexTarget {
         LatexTarget {
-            deps_extension_mapping: string_map![
-                "png" => "%.pdf",
-                "svg" => "%.pdf",
-                "eps" => "%.pdf",
-                "jpg" => "%.pdf",
-                "jpeg" => "%.pdf",
-                "gif" => "%.qr.pdf",
-                "webm" => "%.qr.pdf",
-                "mp4" => "%.qr.pdf",
-                "pdf" => "plain.%"
-            ],
             indentation_depth: 4,
             max_line_width: 80,
             image_width: 0.5,
@@ -90,10 +75,21 @@ impl Default for LatexTarget {
 
 impl Target for LatexTarget {
 
-    fn do_include_sections(&self) -> bool { true }
-    fn get_target_extension(&self) -> &str { "tex" }
-    fn get_extension_mapping(&self) -> &HashMap<String, String> {
-        &self.deps_extension_mapping
+    fn include_sections(&self) -> bool { true }
+    fn target_extension(&self) -> &str { "tex" }
+    fn extension_for(&self, ext: &str) -> &str {
+        match ext.trim().to_lowercase().as_str() {
+            "png" => "%.pdf",
+            "svg" => "%.pdf",
+            "eps" => "%.pdf",
+            "jpg" => "%.pdf",
+            "jpeg" => "%.pdf",
+            "gif" => "%.qr.pdf",
+            "webm" => "%.qr.pdf",
+            "mp4" => "%.qr.pdf",
+            "pdf" => "plain.%",
+            _ => "%",
+        }
     }
     fn export<'a>(&self,
                   root: &'a Element,

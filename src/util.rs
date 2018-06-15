@@ -7,7 +7,7 @@ use std::path::{PathBuf};
 use std::process;
 use settings::Settings;
 use std::io;
-
+use target::Target;
 
 /// Escape LaTeX-Specific symbols
 pub fn escape_latex(input: &str) -> String {
@@ -78,11 +78,6 @@ macro_rules! path_methods {
             &self.path
         }
     }
-}
-
-/// Is a type just the default instance?
-pub fn is_default<T>(obj: &T) -> bool where T: PartialEq + Default {
-    return *obj == T::default();
 }
 
 /// Trim one pair of prefix and suffix from a string, ignoring input case.
@@ -304,4 +299,27 @@ pub fn extract_content(root: Element) -> Option<Vec<Element>> {
         | Element::Error(_)
         => None,
     }
+}
+
+pub fn build_image_path(
+    target: &Target,
+    name: &[Element],
+    settings: &Settings
+) -> String {
+
+    let name_path = PathBuf::from(&filename_to_make(&extract_plain_text(name)));
+    let ext = name_path.extension().unwrap_or_default();
+
+    let ext_str = ext.to_string_lossy().to_string();
+    let target_extension = target
+        .extension_for(&ext_str)
+        .replace("%", &ext_str);
+
+    PathBuf::from(&settings.general.external_file_path)
+        .join(name_path
+            .with_extension(&target_extension)
+            .file_stem()
+            .expect("image path is empty!"))
+        .to_string_lossy()
+        .to_string()
 }

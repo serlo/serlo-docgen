@@ -19,7 +19,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
 
         for image in &root.content {
             if let Element::InternalReference(ref iref) = *image {
-                let path = self.build_image_path(&iref.target, settings);
+                let path = build_image_path(self.latex, &iref.target, settings);
                 let caption = iref.caption.render(self, settings)?;
 
                 // collect image options

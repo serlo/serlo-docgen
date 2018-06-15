@@ -7,7 +7,6 @@
 //! this target is executed.
 
 use preamble::*;
-use std::collections::HashMap;
 use serde_yaml;
 use std::process;
 
@@ -54,7 +53,7 @@ fn run_deps_printer(
             }
         };
 
-        let target_ext = target.get_target_extension();
+        let target_ext = target.target_extension();
         let docrev = &settings.runtime.document_revision;
 
         writeln!(out, "# dependencies for {}", &target_name)?;
@@ -68,7 +67,7 @@ fn run_deps_printer(
             PrinterKind::Media => {
                 write!(out, "{}.{} {}.media: ",
                        &docrev, target_ext, &docrev)?;
-                let mut printer = FilesPrinter::new(target.get_extension_mapping());
+                let mut printer = FilesPrinter::new(target);
                 printer.run(&root, settings, out)?;
             },
         };
@@ -80,18 +79,12 @@ fn run_deps_printer(
 /// Writes a list of included sections in `make` format.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(default)]
-pub struct SectionDepsTarget {
-    #[serde(skip_serializing_if = "is_default")]
-    extension_map_dummy: HashMap<String, String>,
-}
+pub struct SectionDepsTarget {}
 
 impl Target for SectionDepsTarget {
-    fn get_target_extension(&self) -> &str { "sections" }
-    fn do_include_sections(&self) -> bool { false }
-
-    fn get_extension_mapping(&self) -> &HashMap<String, String> {
-        &self.extension_map_dummy
-    }
+    fn target_extension(&self) -> &str { "sections" }
+    fn include_sections(&self) -> bool { false }
+    fn extension_for(&self, _ext: &str) -> &str { "%" }
 
     /// Extract dependencies from a raw source AST. Sections are
     /// not included at this point.
@@ -109,18 +102,12 @@ impl Target for SectionDepsTarget {
 /// Writes a list of included media files in `make` format.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(default)]
-pub struct MediaDepsTarget {
-    #[serde(skip_serializing_if = "is_default")]
-    extension_map_dummy: HashMap<String, String>,
-}
+pub struct MediaDepsTarget {}
 
 impl Target for MediaDepsTarget {
-    fn get_target_extension(&self) -> &str { "media" }
-    fn do_include_sections(&self) -> bool { true }
-
-    fn get_extension_mapping(&self) -> &HashMap<String, String> {
-        &self.extension_map_dummy
-    }
+    fn target_extension(&self) -> &str { "media" }
+    fn include_sections(&self) -> bool { true }
+    fn extension_for(&self, _ext: &str) -> &str { "%" }
 
     /// Extract dependencies from a raw source AST. Sections are
     /// not included at this point.

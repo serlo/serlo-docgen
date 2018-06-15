@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use preamble::*;
 
 use std::io;
@@ -9,9 +8,6 @@ use serde_yaml;
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[serde(default)]
 pub struct PDFTarget {
-    #[serde(skip_serializing_if = "is_default")]
-    pub extension_mapping: HashMap<String, String>,
-
     /// Page trim in mm.
     page_trim: f32,
     /// Paper width in mm.
@@ -38,17 +34,14 @@ impl Default for PDFTarget {
             baseline_height: 12.0,
             border: [20.5, 32.6, 22.0, 18.5],
             document_options: "tocflat, listof=chapterentry".into(),
-            extension_mapping: HashMap::new(),
         }
     }
 }
 
 impl Target for PDFTarget {
-    fn do_include_sections(&self) -> bool { false }
-    fn get_target_extension(&self) -> &str { "yml" }
-    fn get_extension_mapping(&self) -> &HashMap<String, String> {
-        &self.extension_mapping
-    }
+    fn include_sections(&self) -> bool { false }
+    fn target_extension(&self) -> &str { "yml" }
+    fn extension_for(&self, _ext: &str) -> &str { "%" }
     fn export<'a>(&self,
                 _: &'a Element,
                 settings: &Settings,

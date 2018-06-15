@@ -139,7 +139,7 @@ fn main() -> Result<(), std::io::Error> {
         }
     };
 
-    let root = if target.do_include_sections() {
+    let root = if target.include_sections() {
         handle_transformation_result(&transformed_root)
     } else {
         handle_transformation_result(&orig_root)

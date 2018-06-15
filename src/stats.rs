@@ -1,6 +1,5 @@
 //! Implements the `stats` target which extracts various statistical
 //! information from the document tree.
-
 use std::collections::HashMap;
 use preamble::*;
 
@@ -9,20 +8,9 @@ use serde_yaml;
 
 
 /// Dump stats to stdout as yaml.
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Default)]
 #[serde(default)]
-pub struct StatsTarget {
-    #[serde(skip_serializing_if = "is_default")]
-    pub extension_mapping: HashMap<String, String>,
-}
-
-impl Default for StatsTarget {
-    fn default() -> StatsTarget {
-        StatsTarget {
-            extension_mapping: HashMap::new(),
-        }
-    }
-}
+pub struct StatsTarget {}
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Default)]
 struct Stats<'e> {
@@ -48,7 +36,7 @@ impl<'e, 's: 'e> Traversion<'e, &'s Settings> for Stats<'e> {
         &mut self,
         root: &Element,
         settings: &'s Settings,
-        out: &mut io::Write
+        _out: &mut io::Write
     ) -> io::Result<bool> {
 
         match root {
@@ -76,11 +64,9 @@ impl<'e, 's: 'e> Traversion<'e, &'s Settings> for Stats<'e> {
 }
 
 impl Target for StatsTarget {
-    fn do_include_sections(&self) -> bool { true }
-    fn get_target_extension(&self) -> &str { "yml" }
-    fn get_extension_mapping(&self) -> &HashMap<String, String> {
-        &self.extension_mapping
-    }
+    fn include_sections(&self) -> bool { true }
+    fn target_extension(&self) -> &str { "yml" }
+    fn extension_for(&self, _ext: &str) -> &str { "%" }
     fn export<'a>(&self,
                 root: &'a Element,
                 settings: &Settings,

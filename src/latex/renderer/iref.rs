@@ -7,31 +7,6 @@ use super::LatexRenderer;
 
 impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
 
-    pub fn build_image_path(
-        &self,
-        target: &[Element],
-        settings: &Settings
-    ) -> String {
-
-        let target_str = filename_to_make(&extract_plain_text(target));
-        let target_path = path::Path::new(&target_str);
-        let ext = target_path.extension().unwrap_or_default();
-        let ext_str = ext.to_string_lossy().to_string();
-        let target_extension = self.latex
-            .get_extension_mapping()
-            .get(&ext_str.to_lowercase())
-            .unwrap_or(&"%".into())
-            .replace("%", &ext_str);
-
-        path::PathBuf::from(&settings.general.external_file_path)
-            .join(target_path
-                .with_extension(&target_extension)
-                .file_stem()
-                .expect("image path is empty!"))
-            .to_string_lossy()
-            .to_string()
-    }
-
     pub fn internal_ref(
         &mut self,
         root: &'e InternalReference,
@@ -50,7 +25,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         // file is embedded as an image
         if file_exts.contains(&ext_str) {
 
-            let image_path = self.build_image_path(&root.target, settings);
+            let image_path = build_image_path(self.latex, &root.target, settings);
 
             // collect image options
             let mut image_options = vec![];

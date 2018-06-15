@@ -1,7 +1,6 @@
 //! Helpers which look for certain things in the input ast and print
 //! them to a given output in `make` dependency format.
 
-use std::collections::HashMap;
 use std::path::PathBuf;
 use preamble::*;
 
@@ -41,48 +40,41 @@ impl<'a, 'b: 'a> Traversion<'a, &'b Settings> for InclusionPrinter<'a> {
 }
 
 /// Print paths of file dependencies of an article.
-pub struct FilesPrinter<'a, 'b> {
-    pub path: Vec<&'b Element>,
+pub struct FilesPrinter<'e, 't> {
+    pub path: Vec<&'e Element>,
     /// map of original to target file extension of a dependency.
-    pub extension_map: &'a HashMap<String, String>,
+    pub target: &'t Target,
 }
 
-impl<'a, 'b: 'a> Traversion<'a, &'b Settings> for FilesPrinter<'b, 'a> {
+impl<'e, 's: 'e, 't> Traversion<'e, &'s Settings> for FilesPrinter<'e, 't> {
 
-    path_methods!('a);
+    path_methods!('e);
 
-    fn work(&mut self, root: &Element, settings: &'b Settings,
+    fn work(&mut self, root: &Element, settings: &'s Settings,
             out: &mut io::Write) -> io::Result<bool> {
 
         if let Element::InternalReference(ref iref) = *root {
-            let target = filename_to_make(&extract_plain_text(&iref.target));
-            let target_path = PathBuf::from(target);
-            let ext = target_path.extension().unwrap_or_default();
-            let ext_str = ext.to_string_lossy().to_string();
+            let file_path = build_image_path(self.target, &iref.target, settings);
 
             let extensions = &settings.general.external_file_extensions;
-            let file_path = &settings.general.external_file_path;
-            let target_extension = self.extension_map.get(&ext_str.to_lowercase())
-                .unwrap_or(&"%".into())
-                .replace("%", &ext_str);
-
+            let ext_str = PathBuf::from(&file_path)
+                .extension()
+                .unwrap_or_default()
+                .to_string_lossy()
+                .to_string();
             if extensions.contains(&ext_str.to_lowercase()) {
-                let path = PathBuf::from(&file_path)
-                    .join(&target_path)
-                    .with_extension(target_extension);
-                let path = path.to_string_lossy().to_string();
-                write!(out, "\\\n\t{}", &path)?;
+                write!(out, "\\\n\t{}", &file_path)?;
             }
         };
         Ok(true)
     }
 }
 
-impl<'a, 'b> FilesPrinter<'a, 'b> {
-    pub fn new(extension_map: &'a HashMap<String, String>) -> FilesPrinter {
+impl<'e, 't> FilesPrinter<'e, 't> {
+    pub fn new(target: &'t Target) -> FilesPrinter {
         FilesPrinter {
             path: vec![],
-            extension_map,
+            target,
         }
     }
 }
