@@ -74,7 +74,6 @@ pub fn normalize(mut root: Element,
                  settings: &settings::Settings) -> TResult {
 
     root = transformations::normalize_template_names(root, settings)?;
-    root = transformations::remove_file_prefix(root, settings)?;
     root = mwparser_utils::transformations::convert_template_list(root)?;
     if let Some(ref checker) = settings.runtime.tex_checker {
         root = mwparser_utils::transformations::normalize_math_formulas(root, checker)?;

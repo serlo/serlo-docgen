@@ -20,7 +20,7 @@ struct Stats<'e> {
     /// The original document length
     pub line_count: usize,
 
-    /// Number of images included
+    /// Number of files included
     pub image_count: usize,
 
     /// Number of templates used of a kind
@@ -41,14 +41,7 @@ impl<'e, 's: 'e> Traversion<'e, &'s Settings> for Stats<'e> {
 
         match root {
             Element::InternalReference(ref iref) => {
-                let is_image = settings.general.external_file_extensions
-                    .iter().any(|suffix|
-                        extract_plain_text(&iref.target)
-                        .trim()
-                        .to_lowercase()
-                        .ends_with(suffix)
-                    );
-                if is_image {
+                if is_file(iref, settings) {
                     self.image_count += 1
                 }
             },

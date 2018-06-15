@@ -168,22 +168,6 @@ fn normalize_heading_depths_traverse(
     recurse_inplace(&normalize_heading_depths_traverse, root, current_depth)
 }
 
-/// Remove prefixes before filenames of included files.
-pub fn remove_file_prefix(mut root: Element, settings: &Settings) -> TResult {
-    if let Element::InternalReference(ref mut iref) = root {
-        if let Some(&mut Element::Text(ref mut text)) = iref.target.first_mut() {
-            for prefix in &settings.general.file_prefixes {
-                let prefix_str = format!("{}:", &prefix);
-                let new_text = String::from(trim_prefix(&text.text, &prefix_str));
-                text.text.clear();
-                text.text.push_str(&new_text);
-            }
-        }
-    }
-    recurse_inplace(&remove_file_prefix, root, settings)
-}
-
-
 fn remove_exclusions_vec<'a>(
     trans: &TFuncInplace<&'a Settings>,
     root_content: &mut Vec<Element>,

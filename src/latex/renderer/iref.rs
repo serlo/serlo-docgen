@@ -16,14 +16,11 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
 
         let target_str = extract_plain_text(&root.target);
         let target_path = path::Path::new(&target_str);
-        let ext = target_path.extension().unwrap_or_default();
-        let ext_str = ext.to_string_lossy().into();
 
         let doctitle = &settings.runtime.document_title;
-        let file_exts = &settings.general.external_file_extensions;
 
-        // file is embedded as an image
-        if file_exts.contains(&ext_str) {
+        // embedded files (images, videos, ...)
+        if is_file(root, settings) {
 
             let image_path = build_image_path(self.latex, &root.target, settings);
 

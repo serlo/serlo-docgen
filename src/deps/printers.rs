@@ -1,7 +1,6 @@
 //! Helpers which look for certain things in the input ast and print
 //! them to a given output in `make` dependency format.
 
-use std::path::PathBuf;
 use preamble::*;
 
 /// Prints paths of the sections included in a document.
@@ -54,17 +53,12 @@ impl<'e, 's: 'e, 't> Traversion<'e, &'s Settings> for FilesPrinter<'e, 't> {
             out: &mut io::Write) -> io::Result<bool> {
 
         if let Element::InternalReference(ref iref) = *root {
-            let file_path = build_image_path(self.target, &iref.target, settings);
-
-            let extensions = &settings.general.external_file_extensions;
-            let ext_str = PathBuf::from(&file_path)
-                .extension()
-                .unwrap_or_default()
-                .to_string_lossy()
-                .to_string();
-            if extensions.contains(&ext_str.to_lowercase()) {
-                write!(out, "\\\n\t{}", &file_path)?;
+            if !is_file(iref, settings) {
+                return Ok(true)
             }
+
+            let file_path = build_image_path(self.target, &iref.target, settings);
+            write!(out, "\\\n\t{}", &file_path)?;
         };
         Ok(true)
     }

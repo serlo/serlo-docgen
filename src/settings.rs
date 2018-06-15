@@ -61,11 +61,8 @@ pub struct GeneralSettings {
     /// This allows for multiple targets of the same type with different parameters.
     pub targets: HashMap<String, MFNFTargets>,
 
-    /// A list of file prefixes which are ignored.
+    /// A list of file prefixes which indicate references to files.
     pub file_prefixes: Vec<String>,
-
-    /// File extensions allowed for references to external files.
-    pub external_file_extensions: Vec<String>,
 
     /// Base path for web links to articles.
     pub article_url_base: String,
@@ -120,18 +117,7 @@ impl Default for GeneralSettings {
                     MFNFTargets::Stats(stats::StatsTarget::default()));
                 tmap
             },
-            file_prefixes: string_vec!["file", "datei", "bild"],
-            external_file_extensions: string_vec![
-                "jpg",
-                "jpeg",
-                "png",
-                "svg",
-                "eps",
-                "pdf",
-                "gif",
-                "webm",
-                "mp4"
-            ],
+            file_prefixes: string_vec!["file:", "datei:", "bild:"],
             external_file_path: "media".into(),
             article_url_base: "https://de.wikibooks.org/wiki/".into(),
             section_path: "sections".into(),

@@ -307,7 +307,12 @@ pub fn build_image_path(
     settings: &Settings
 ) -> String {
 
-    let name_path = PathBuf::from(&filename_to_make(&extract_plain_text(name)));
+    let name_str = extract_plain_text(name);
+    let mut trimmed = name_str.trim();
+    for prefix in &settings.general.file_prefixes {
+        trimmed = trim_prefix(trimmed, prefix);
+    }
+    let name_path = PathBuf::from(&filename_to_make(trimmed.trim()));
     let ext = name_path.extension().unwrap_or_default();
 
     let ext_str = ext.to_string_lossy().to_string();
@@ -322,4 +327,9 @@ pub fn build_image_path(
             .expect("image path is empty!"))
         .to_string_lossy()
         .to_string()
+}
+
+pub fn is_file(iref: &InternalReference, settings: &Settings) -> bool {
+    let plain = extract_plain_text(&iref.target).trim().to_lowercase();
+    settings.general.file_prefixes.iter().any(|p| plain.starts_with(p))
 }
