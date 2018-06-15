@@ -59,7 +59,7 @@ impl<'e, 's: 'e> Traversion<'e, &'s Settings> for Stats<'e> {
 impl Target for StatsTarget {
     fn include_sections(&self) -> bool { true }
     fn target_extension(&self) -> &str { "yml" }
-    fn extension_for(&self, _ext: &str) -> &str { "%" }
+    fn extension_for(&self, _ext: &str) -> &str { ".dummy" }
     fn export<'a>(&self,
                 root: &'a Element,
                 settings: &Settings,
