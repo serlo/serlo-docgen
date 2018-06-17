@@ -58,7 +58,7 @@ alias!(HTML_REF, "\\footnote{{{}}}");
 // --- Lists ---
 
 alias!(ITEM, "\\item {}");
-alias!(ITEM_DEFINITION, "\\item \\textbf{{{}}}: {}");
+alias!(ITEM_DEFINITION, "\\item[{}:] {}");
 alias!(
     LIST,
     "\

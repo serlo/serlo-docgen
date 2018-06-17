@@ -24,9 +24,8 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
 
         let envname = match kind {
             ListItemKind::Ordered => "enumerate",
-            ListItemKind::Unordered | ListItemKind::Definition | ListItemKind::DefinitionTerm => {
-                "itemize"
-            }
+            ListItemKind::Unordered => "itemize",
+            ListItemKind::Definition | ListItemKind::DefinitionTerm => "description"
         };
 
         let items = {
