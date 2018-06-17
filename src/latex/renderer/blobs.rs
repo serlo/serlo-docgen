@@ -1,6 +1,5 @@
 //! This file keeps blobs of LaTeX source code in one place.
 
-
 /// Creates a macro aliasing the input literal
 /// to allow for compile-time subsitution.
 macro_rules! alias {
@@ -9,36 +8,45 @@ macro_rules! alias {
         macro_rules! $name {
             () => {
                 $lit
-            }
+            };
         }
-    }
+    };
 }
 
 // --- Environments ---
 
-alias!(GENERIC_ENV, "\
+alias!(
+    GENERIC_ENV,
+    "\
 \\begin{{{}}}{}
 {}
-\\end{{{}}}
-");
+\\end{{{}}}\
+"
+);
 
 // --- Internal References ---
 
-alias!(FIGURE_CONTENT, "\
+alias!(
+    FIGURE_CONTENT,
+    "\
 % image options: {:?}
 \\stepcounter{{imagelabel}}
 \\centering
 \\addxcontentsline{{lof}}{{section}}[]{{License Info not yet supported.}}
 \\adjincludegraphics[max width={}\\textwidth, max height={}\\textheight]{{{}}}\
-");
+"
+);
 
 alias!(FIGURE_CAPTION, "\\caption{{{} (\\arabic{{imagelabel}})}}");
-alias!(FIGURE_INLINE, "
+alias!(
+    FIGURE_INLINE,
+    "
 % image options: {:?}
 \\stepcounter{{imagelabel}}
 \\addxcontentsline{{lof}}{{section}}[]{{License Info not yet supported.}}
 \\adjincludegraphics[height=\\lineheight]{{{}}}\
-");
+"
+);
 
 alias!(INTERNAL_HREF, "\\href{{{}}}{{\\emph{{{}}}}}");
 
@@ -51,16 +59,22 @@ alias!(HTML_REF, "\\footnote{{{}}}");
 
 alias!(ITEM, "\\item {}");
 alias!(ITEM_DEFINITION, "\\item \\textbf{{{}}}: {}");
-alias!(LIST, "\
+alias!(
+    LIST,
+    "\
 \\begin{{{}}}
 {}
 \\end{{{}}}\
-");
+"
+);
 
 // --- Headings ---
 
-alias!(SECTION, "\\{}section{{{}}}
-");
+alias!(
+    SECTION,
+    "\\{}section{{{}}}
+"
+);
 
 // --- Formatting ---
 
@@ -76,7 +90,9 @@ alias!(MATH_ENV, "align*");
 alias!(IMPORTANT_ENV, "important*");
 alias!(PROOF_STEP_CAPTION, "\\textbf{{{}}}: {}:\n");
 alias!(PROOF_CASE_CAPTION, "\\textbf{{{} {}}}: {}:\n");
-alias!(INDUCTION,"\\textbf{{Aussageform, deren Allgemeingültigkeit für {} bewiesen werden soll:}}
+alias!(
+    INDUCTION,
+    "\\textbf{{Aussageform, deren Allgemeingültigkeit für {} bewiesen werden soll:}}
 
 {}
 
@@ -89,18 +105,24 @@ alias!(INDUCTION,"\\textbf{{Aussageform, deren Allgemeingültigkeit für {} bewi
 \\item \\textbf{{Beweis des Induktionsschritts:}} {}
 \\end{{enumerate}}
 \\end{{enumerate}}
-");
+"
+);
 alias!(INDUCTION_SET_DEFAULT, "$n\\in\\mathcal{{N}}$");
 
 // --- Galleries ---
 
-alias!(GALLERY, "\
+alias!(
+    GALLERY,
+    "\
 \\begin{{tabularx}}{{\\linewidth}}{{{}}}
 {}
 \\end{{tabularx}}
-");
+"
+);
 
-alias!(GALLERY_CONTENT, "\
+alias!(
+    GALLERY_CONTENT,
+    "\
 % image options: {:?}
 \\stepcounter{{imagelabel}}
 \\addxcontentsline{{lof}}{{section}}[]{{License Info not yet supported.}}
@@ -114,10 +136,13 @@ alias!(GALLERY_CONTENT, "\
         \\caption*{{{} (\\arabic{{imagelabel}})}}
     \\end{{figure}}
 \\end{{minipage}}
-");
+"
+);
 
 // --- Table ---
-alias!(TABLE, "\
+alias!(
+    TABLE,
+    "\
 \\renewcommand{{\\arraystretch}}{{1.5}}
 \\begin{{longtabu}} to \\linewidth {{{}}}
 \\caption{{{}}}\\\\ \\toprule
@@ -125,10 +150,10 @@ alias!(TABLE, "\
 \\bottomrule
 \\end{{longtabu}}
 \\renewcommand{{\\arraystretch}}{{1.0}}
-");
+"
+);
 
 alias!(TABLE_WITH_HEADER, "{}\\midrule\n{}");
-alias!(TABLE_WITHOUT_HEADER, "{}");
 
 // --- Anchor ---
 alias!(LABEL, "\\label{{{}}}");
@@ -137,9 +162,12 @@ alias!(LABEL, "\\label{{{}}}");
 alias!(MAINARTICLE, "$\\rightarrow$ \\href{{{}}}{{\\emph{{{}}}}}");
 
 // --- Comments ---
-alias!(COMMENT, "
+alias!(
+    COMMENT,
+    "
 \\begin{{comment}}
 {}
 \\end{{comment}}
 
-");
+"
+);

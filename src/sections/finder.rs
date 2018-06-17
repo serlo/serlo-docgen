@@ -11,16 +11,11 @@ pub struct SectionNameCollector<'e> {
 }
 
 impl<'e> Traversion<'e, ()> for SectionNameCollector<'e> {
-
     path_methods!('e);
 
-    fn work(&mut self,
-            root: &'e Element,
-            _: (),
-            _: &mut io::Write) -> io::Result<bool> {
-
+    fn work(&mut self, root: &'e Element, _: (), _: &mut io::Write) -> io::Result<bool> {
         if let Element::HtmlTag(ref tag) = *root {
-            if tag.name.to_lowercase() == "section"  {
+            if tag.name.to_lowercase() == "section" {
                 for attr in &tag.attributes {
                     if attr.key == "begin" {
                         self.sections.push(attr.value.trim().into());
@@ -52,28 +47,24 @@ pub struct SectionFinder<'e, 'a> {
     pub begin: bool,
     path: Vec<&'e Element>,
     /// the resulting path.
-    pub result: Vec<&'e Element>
+    pub result: Vec<&'e Element>,
 }
 
 impl<'e, 'a> Traversion<'e, ()> for SectionFinder<'e, 'a> {
-
     path_methods!('e);
 
-    fn work(&mut self,
-            root: &'e Element,
-            _: (),
-            _: &mut io::Write) -> io::Result<bool> {
-
+    fn work(&mut self, root: &'e Element, _: (), _: &mut io::Write) -> io::Result<bool> {
         // end recursion if result is found
         if !self.result.is_empty() {
-            return Ok(false)
+            return Ok(false);
         }
 
         if let Element::HtmlTag(ref tag) = *root {
             if tag.name.to_lowercase() == "section" {
                 for attr in &tag.attributes {
-                    if attr.key.to_lowercase() == if self.begin {"begin"} else {"end"}
-                        && attr.value.to_lowercase() == self.label.to_lowercase() {
+                    if attr.key.to_lowercase() == if self.begin { "begin" } else { "end" }
+                        && attr.value.to_lowercase() == self.label.to_lowercase()
+                    {
                         self.result = self.path.clone();
                     }
                 }
@@ -105,4 +96,3 @@ impl<'a, 'e> SectionFinder<'e, 'a> {
         SectionFinder::find_path(root, label, false)
     }
 }
-

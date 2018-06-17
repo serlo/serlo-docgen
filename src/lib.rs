@@ -1,12 +1,12 @@
 extern crate mediawiki_parser;
-extern crate mwparser_utils;
-extern crate mfnf_template_spec;
 extern crate mfnf_sitemap;
+extern crate mfnf_template_spec;
+extern crate mwparser_utils;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
-extern crate serde_yaml;
 extern crate serde_json;
+extern crate serde_yaml;
 
 use mediawiki_parser::transformations::TResult;
 use mediawiki_parser::Element;
@@ -16,13 +16,13 @@ mod target;
 mod util;
 #[macro_use]
 mod settings;
-mod latex;
 mod deps;
-mod sections;
+mod html;
+mod latex;
 mod pdf;
+mod sections;
 mod stats;
 mod transformations;
-mod html;
 
 #[cfg(test)]
 mod test;
@@ -30,17 +30,16 @@ mod test;
 // common includes for submodules
 mod preamble {
     pub use mediawiki_parser::Traversion;
-    pub use target::Target;
-    pub use settings::Settings;
     pub use mediawiki_parser::*;
+    pub use settings::Settings;
     pub use std::io;
+    pub use target::Target;
     pub use util::*;
 }
 
 // public exports
+pub use settings::{GeneralSettings, RuntimeSettings, Settings};
 pub use target::Target;
-pub use settings::{Settings, GeneralSettings, RuntimeSettings};
-
 
 /// Available targets for mfnf-export.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -51,7 +50,7 @@ pub enum MFNFTargets {
     Sections(sections::SectionsTarget),
     PDF(pdf::PDFTarget),
     Stats(stats::StatsTarget),
-    HTML(html::HTMLTarget)
+    HTML(html::HTMLTarget),
 }
 
 impl MFNFTargets {
@@ -64,16 +63,14 @@ impl MFNFTargets {
             MFNFTargets::Sections(ref t) => t,
             MFNFTargets::PDF(ref t) => t,
             MFNFTargets::Stats(ref t) => t,
-            MFNFTargets::HTML(ref t) => t
+            MFNFTargets::HTML(ref t) => t,
         }
     }
 }
 
 /// Applies all transformations which should happen before section transclusion.
 /// This is mostly tree normlization and is applied on all targets.
-pub fn normalize(mut root: Element,
-                 settings: &settings::Settings) -> TResult {
-
+pub fn normalize(mut root: Element, settings: &settings::Settings) -> TResult {
     root = transformations::normalize_template_names(root, settings)?;
     root = mwparser_utils::transformations::convert_template_list(root)?;
     if let Some(ref checker) = settings.runtime.tex_checker {
@@ -83,9 +80,7 @@ pub fn normalize(mut root: Element,
 }
 
 /// Applies transformations necessary for article output (e.g section transclusion).
-pub fn compose(mut root: Element,
-               settings: &settings::Settings) -> TResult {
-
+pub fn compose(mut root: Element, settings: &settings::Settings) -> TResult {
     root = transformations::include_sections(root, settings)?;
     root = transformations::normalize_heading_depths(root, settings)?;
     root = transformations::remove_exclusions(root, settings)?;

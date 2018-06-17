@@ -1,20 +1,18 @@
 use mediawiki_parser::transformations::*;
 use mediawiki_parser::*;
-use mfnf_sitemap::{Subtarget};
+use mfnf_sitemap::Subtarget;
 use preamble::*;
-use std::fs::File;
 use serde_yaml;
-
+use std::fs::File;
 
 /// Convert template name paragraphs to lowercase text only.
 pub fn normalize_template_names(mut root: Element, settings: &Settings) -> TResult {
     if let Element::Template(ref mut template) = root {
-
         if template.name.is_empty() {
             return Ok(Element::Error(Error {
                 position: template.position.clone(),
                 message: "MFNF template name must not be empty!".to_string(),
-            }))
+            }));
         };
 
         let mut new_text = extract_plain_text(&template.name).trim().to_owned();
@@ -28,13 +26,13 @@ pub fn normalize_template_names(mut root: Element, settings: &Settings) -> TResu
                 return Ok(Element::Error(Error {
                     position: template.position.clone(),
                     message: "Only TemplateArguments are allowed as \
-                            children of templates!".into(),
-                }))
+                              children of templates!"
+                        .into(),
+                }));
             }
         }
 
         if !new_text.is_empty() {
-
             // convert to lowercase and remove prefixes
             if !new_text.starts_with('#') {
                 new_text = new_text.trim().to_lowercase();
@@ -42,12 +40,16 @@ pub fn normalize_template_names(mut root: Element, settings: &Settings) -> TResu
 
             let text = Element::Text(Text {
                 position: Span {
-                    start: template.name.first()
+                    start: template
+                        .name
+                        .first()
                         .map(|e| e.get_position().start.clone())
-                        .unwrap_or(template.position.start.clone()),
-                    end: template.name.last()
+                        .unwrap_or_else(|| template.position.start.clone()),
+                    end: template
+                        .name
+                        .last()
                         .map(|e| e.get_position().end.clone())
-                        .unwrap_or(template.position.end.clone()),
+                        .unwrap_or_else(|| template.position.end.clone()),
                 },
                 text: new_text,
             });
@@ -63,9 +65,7 @@ pub fn normalize_template_names(mut root: Element, settings: &Settings) -> TResu
     recurse_inplace(&normalize_template_names, root, settings)
 }
 
-pub fn include_sections(
-    mut root: Element,
-    settings: &Settings) -> TResult {
+pub fn include_sections(mut root: Element, settings: &Settings) -> TResult {
     root = recurse_inplace_template(&include_sections, root, settings, &include_sections_vec)?;
     Ok(root)
 }
@@ -73,12 +73,11 @@ pub fn include_sections(
 pub fn include_sections_vec<'a>(
     trans: &TFuncInplace<&'a Settings>,
     root_content: &mut Vec<Element>,
-    settings: &'a Settings) -> TListResult {
-
+    settings: &'a Settings,
+) -> TListResult {
     // search for section inclusion in children
     let mut result = vec![];
     for mut child in root_content.drain(..) {
-
         if let Element::Template(ref template) = child {
             let prefix = &settings.general.section_inclusion_prefix;
             let template_name = extract_plain_text(&template.name);
@@ -86,13 +85,14 @@ pub fn include_sections_vec<'a>(
             // section transclusion
             if template_name.to_lowercase().trim().starts_with(prefix) {
                 let article = trim_prefix(template_name.trim(), prefix);
-                if template.content.len() < 1 {
+                if template.content.is_empty() {
                     return Err(TransformationError {
                         cause: "A section inclusion must specify article \
-                                name and section name!".to_string(),
+                                name and section name!"
+                            .to_string(),
                         position: template.position.clone(),
                         transformation_name: "include_sections".to_string(),
-                        tree: Element::Template(template.clone())
+                        tree: Element::Template(template.clone()),
                     });
                 }
 
@@ -102,8 +102,11 @@ pub fn include_sections_vec<'a>(
                 // error returned when the section file is faulty
                 let file_error = Element::Error(Error {
                     position: template.position.clone(),
-                    message: format!("section file `{}` could not \
-                                be read or parsed!", &path)
+                    message: format!(
+                        "section file `{}` could not \
+                         be read or parsed!",
+                        &path
+                    ),
                 });
 
                 let section_str = File::open(&path);
@@ -113,8 +116,8 @@ pub fn include_sections_vec<'a>(
                     return Ok(result);
                 }
 
-                let mut section_tree: Vec<Element>
-                    = match serde_yaml::from_reader(&section_str.unwrap()) {
+                let mut section_tree: Vec<Element> = match serde_yaml::from_reader(&section_str.unwrap())
+                {
                     Ok(root) => root,
                     Err(_) => {
                         result.push(file_error);
@@ -122,22 +125,17 @@ pub fn include_sections_vec<'a>(
                     }
                 };
 
-                result.push(
-                    Element::Comment(Comment {
-                        position: template.position.clone(),
-                        text: format!("included from: {}|{}", article, section_name),
-                    })
-                );
+                result.push(Element::Comment(Comment {
+                    position: template.position.clone(),
+                    text: format!("included from: {}|{}", article, section_name),
+                }));
 
                 // recursively include sections
                 // heading depths are normalized in a later transformation
-                section_tree = include_sections_vec(
-                    &include_sections,
-                    &mut section_tree,
-                    settings,
-                )?;
+                section_tree =
+                    include_sections_vec(&include_sections, &mut section_tree, settings)?;
                 result.append(&mut section_tree);
-                continue
+                continue;
             }
         }
         result.push(trans(child, settings)?);
@@ -147,17 +145,12 @@ pub fn include_sections_vec<'a>(
 
 /// Normalize heading depths by making subheadings one level deeper than their parent.
 /// The highest level of headings is assigned depth 1.
-pub fn normalize_heading_depths(
-    mut root: Element,
-    _settings: &Settings) -> TResult {
+pub fn normalize_heading_depths(mut root: Element, _settings: &Settings) -> TResult {
     root = normalize_heading_depths_traverse(root, 1)?;
     Ok(root)
 }
 
-fn normalize_heading_depths_traverse(
-    mut root: Element,
-    current_depth: usize) -> TResult {
-
+fn normalize_heading_depths_traverse(mut root: Element, current_depth: usize) -> TResult {
     let mut current_depth = current_depth;
 
     if let Element::Heading(ref mut heading) = root {
@@ -171,19 +164,26 @@ fn normalize_heading_depths_traverse(
 fn remove_exclusions_vec<'a>(
     trans: &TFuncInplace<&'a Settings>,
     root_content: &mut Vec<Element>,
-    settings: &'a Settings) -> TListResult {
-
+    settings: &'a Settings,
+) -> TListResult {
     let mut result = vec![];
     let (subtarget, include) = {
         let is_current_subtarget = |s: &&Subtarget| -> bool {
-            s.name == settings.runtime.target_name
-                .trim().to_lowercase()
+            s.name == settings.runtime.target_name.trim().to_lowercase()
         };
 
-        let include_subtarget = settings.runtime.markers.include.subtargets
+        let include_subtarget = settings
+            .runtime
+            .markers
+            .include
+            .subtargets
             .iter()
             .find(&is_current_subtarget);
-        let exclude_subtarget = settings.runtime.markers.exclude.subtargets
+        let exclude_subtarget = settings
+            .runtime
+            .markers
+            .exclude
+            .subtargets
             .iter()
             .find(&is_current_subtarget);
 
@@ -205,12 +205,17 @@ fn remove_exclusions_vec<'a>(
     for elem in root_content.drain(..) {
         if let Element::Heading(heading) = elem {
             let caption = extract_plain_text(&heading.caption).trim().to_lowercase();
-            let in_params = subtarget.parameters.iter()
-                .find(|h| h.trim().to_lowercase() == caption)
-                .is_some();
+            let in_params = subtarget
+                .parameters
+                .iter()
+                .any(|h| h.trim().to_lowercase() == caption);
 
-            let is_heading = |e: &Element | {
-                if let Element::Heading(_) = e {true} else {false}
+            let is_heading = |e: &Element| {
+                if let Element::Heading(_) = e {
+                    true
+                } else {
+                    false
+                }
             };
             let new_heading = Element::Heading(heading);
 
@@ -222,7 +227,7 @@ fn remove_exclusions_vec<'a>(
                 } else {
                     unreachable!();
                 };
-                if contains_headings && include || !include {
+                if !include || contains_headings {
                     result.push(new_heading)
                 }
             // otherwise, only include heading when marked as include.
@@ -237,27 +242,32 @@ fn remove_exclusions_vec<'a>(
     Ok(result)
 }
 
-fn check_heading_existence(root: &Element, subtarget: &Subtarget) -> Result<(), TransformationError> {
+fn check_heading_existence(
+    root: &Element,
+    subtarget: &Subtarget,
+) -> Result<(), TransformationError> {
     for title in &subtarget.parameters {
         let matches = |e: &Element| {
             if let Element::Heading(ref h) = e {
                 let caption = extract_plain_text(&h.caption).trim().to_lowercase();
                 if title.trim().to_lowercase() == caption {
-                    return true
+                    return true;
                 }
             }
             false
         };
         if !tree_contains(root, &matches) {
             return Err(TransformationError {
-                cause: format!("heading \"{}\" in \"{}\" is not present in this document!",
-                                &title, &subtarget.name),
+                cause: format!(
+                    "heading \"{}\" in \"{}\" is not present in this document!",
+                    &title, &subtarget.name
+                ),
                 position: root.get_position().clone(),
                 transformation_name: "remove_exclusions".to_string(),
                 tree: Element::Error(Error {
                     position: root.get_position().clone(),
-                    message: "heading not found".into()
-                })
+                    message: "heading not found".into(),
+                }),
             });
         }
     }
@@ -275,7 +285,6 @@ pub fn remove_exclusions(mut root: Element, settings: &Settings) -> TResult {
             check_heading_existence(&root, &subtarget)?;
         }
     }
-    root = recurse_inplace_template(&remove_exclusions, root, settings,
-                                    &remove_exclusions_vec)?;
+    root = recurse_inplace_template(&remove_exclusions, root, settings, &remove_exclusions_vec)?;
     Ok(root)
 }

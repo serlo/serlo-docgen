@@ -1,48 +1,59 @@
+use super::{compose, normalize};
 use preamble::*;
-use super::{normalize, compose};
 use serde_yaml;
 
 macro_rules! test_case {
-    ($target:expr, $name: ident, $ast: expr, $result: expr) => {
+    ($target:expr, $name:ident, $ast:expr, $result:expr) => {
         #[test]
         fn $name() {
-            let mut root = serde_yaml::from_str($ast)
-                .expect("could not parse test input!");
+            let mut root = serde_yaml::from_str($ast).expect("could not parse test input!");
             let settings = Settings::default();
-            root = normalize(root, &settings)
-                .expect("normalization transformation error!");
-            root = compose(root, &settings)
-                .expect("compose transformation error!");
-            let target = settings.general.targets.get($target)
+            root = normalize(root, &settings).expect("normalization transformation error!");
+            root = compose(root, &settings).expect("compose transformation error!");
+            let target = settings
+                .general
+                .targets
+                .get($target)
                 .expect("unknown target!")
                 .get_target();
             let mut res = vec![];
-            target.export(&root, &settings, &[], &mut res)
+            target
+                .export(&root, &settings, &[], &mut res)
                 .expect("export failed!");
             assert_eq!(&String::from_utf8_lossy(&res), $result);
         }
-    }
+    };
 }
 
-test_case!("latex", simple_text, "
+test_case!(
+    "latex",
+    simple_text,
+    "
 type: text
 position: {}
 text: simple plain text äüöß",
-"simple plain text äüöß"
+    "simple plain text äüöß"
 );
 
-test_case!("latex", paragraph, "
+test_case!(
+    "latex",
+    paragraph,
+    "
 type: paragraph
 position: {}
 content:
     - type: text
       position: {}
       text: some text",
-"some text
+    "some text
 
-");
+"
+);
 
-test_case!("latex", paragraph_bold, "
+test_case!(
+    "latex",
+    paragraph_bold,
+    "
 type: paragraph
 position: {}
 content:
@@ -59,11 +70,15 @@ content:
     - type: text
       position: {}
       text: \" end par\"",
-"some text \\textbf{bold text} end par
+    "some text \\textbf{bold text} end par
 
-");
+"
+);
 
-test_case!("latex", italic_text, "
+test_case!(
+    "latex",
+    italic_text,
+    "
 type: formatted
 position: {}
 markup: italic
@@ -71,9 +86,13 @@ content:
     - type: text
       position: {}
       text: some text",
-"\\textit{some text}");
+    "\\textit{some text}"
+);
 
-test_case!("latex", bold_text, "
+test_case!(
+    "latex",
+    bold_text,
+    "
 type: formatted
 position: {}
 markup: bold
@@ -81,9 +100,13 @@ content:
     - type: text
       position: {}
       text: some text",
-"\\textbf{some text}");
+    "\\textbf{some text}"
+);
 
-test_case!("latex", nowiki_text, "
+test_case!(
+    "latex",
+    nowiki_text,
+    "
 type: formatted
 position: {}
 markup: nowiki
@@ -91,9 +114,13 @@ content:
     - type: text
       position: {}
       text: some text",
-"some text");
+    "some text"
+);
 
-test_case!("latex", simple_heading, "
+test_case!(
+    "latex",
+    simple_heading,
+    "
 type: heading
 depth: 1
 position: {}
@@ -105,12 +132,16 @@ content:
     - type: text
       position: {}
       text: some text",
-"\\section{heading caption}
+    "\\section{heading caption}
 
     some text
-");
+"
+);
 
-test_case!("latex", simple_ulist, "
+test_case!(
+    "latex",
+    simple_ulist,
+    "
 type: list
 position: {}
 content:
@@ -122,12 +153,16 @@ content:
         - type: text
           position: {}
           text: item content 1",
-"\\begin{itemize}
+    "\\begin{itemize}
     \\item item content 1
 \\end{itemize}
-");
+"
+);
 
-test_case!("latex", simple_olist, "
+test_case!(
+    "latex",
+    simple_olist,
+    "
 type: list
 position: {}
 content:
@@ -147,13 +182,17 @@ content:
         - type: text
           position: {}
           text: item content 2",
-"\\begin{enumerate}
+    "\\begin{enumerate}
     \\item item content 1
     \\item item content 2
 \\end{enumerate}
-");
+"
+);
 
-test_case!("latex", complex_list, "
+test_case!(
+    "latex",
+    complex_list,
+    "
 type: template
 position: {}
 name:
@@ -168,12 +207,16 @@ content:
         - type: text
           position: {}
           text: item content 1",
-"\\begin{itemize}
+    "\\begin{itemize}
     \\item item content 1
 \\end{itemize}
-");
+"
+);
 
-test_case!("latex", complex_olist, "
+test_case!(
+    "latex",
+    complex_olist,
+    "
 type: template
 position: {}
 name:
@@ -203,8 +246,9 @@ content:
           position: {}
           text: second item
 ",
-"\\begin{enumerate}
+    "\\begin{enumerate}
     \\item item content 1
     \\item second item
 \\end{enumerate}
-");
+"
+);

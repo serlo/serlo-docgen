@@ -1,17 +1,15 @@
 //! Render image galleries
 
-use preamble::*;
 use super::LatexRenderer;
+use preamble::*;
 
 impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
-
     pub fn gallery(
         &mut self,
         root: &'e Gallery,
         settings: &'s Settings,
-        out: &mut io::Write
+        out: &mut io::Write,
     ) -> io::Result<bool> {
-
         let columns = "X".repeat(self.latex.gallery_images_per_row);
         let doctitle = &settings.runtime.document_title;
 
@@ -54,12 +52,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         }
 
         self.write_def_location(&root.position, doctitle, out)?;
-        writeln!(
-            out,
-            GALLERY!(),
-            columns,
-            table_rows.join("\\\\\n")
-        )?;
+        writeln!(out, GALLERY!(), columns, table_rows.join("\\\\\n"))?;
         Ok(false)
     }
 }

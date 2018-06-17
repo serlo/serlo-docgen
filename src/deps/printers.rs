@@ -10,12 +10,14 @@ pub struct InclusionPrinter<'b> {
 }
 
 impl<'a, 'b: 'a> Traversion<'a, &'b Settings> for InclusionPrinter<'a> {
-
     path_methods!('a);
 
-    fn work(&mut self, root: &Element, settings: &'b Settings,
-            out: &mut io::Write) -> io::Result<bool> {
-
+    fn work(
+        &mut self,
+        root: &Element,
+        settings: &'b Settings,
+        out: &mut io::Write,
+    ) -> io::Result<bool> {
         if let Element::Template(ref template) = *root {
             let prefix: &str = &settings.general.section_inclusion_prefix;
             let template_name = extract_plain_text(&template.name);
@@ -46,15 +48,17 @@ pub struct FilesPrinter<'e, 't> {
 }
 
 impl<'e, 's: 'e, 't> Traversion<'e, &'s Settings> for FilesPrinter<'e, 't> {
-
     path_methods!('e);
 
-    fn work(&mut self, root: &Element, settings: &'s Settings,
-            out: &mut io::Write) -> io::Result<bool> {
-
+    fn work(
+        &mut self,
+        root: &Element,
+        settings: &'s Settings,
+        out: &mut io::Write,
+    ) -> io::Result<bool> {
         if let Element::InternalReference(ref iref) = *root {
             if !is_file(iref, settings) {
-                return Ok(true)
+                return Ok(true);
             }
 
             let file_path = build_image_path(self.target, &iref.target, settings);

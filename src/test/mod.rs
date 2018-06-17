@@ -1,2 +1,2 @@
 mod latex;
-pub use super::{normalize, compose};
+pub use super::{compose, normalize};

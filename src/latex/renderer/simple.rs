@@ -1,19 +1,16 @@
 //! LaTeX renderer implemenation for simple node types.
 
-use preamble::*;
-use mediawiki_parser::MarkupType;
 use super::LatexRenderer;
-
+use mediawiki_parser::MarkupType;
+use preamble::*;
 
 impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
-
     pub fn paragraph(
         &mut self,
         root: &'e Paragraph,
         settings: &'s Settings,
-        out: &mut io::Write
+        out: &mut io::Write,
     ) -> io::Result<bool> {
-
         let content = root.content.render(self, settings)?;
         if self.flatten_paragraphs {
             write!(out, "{}", content.trim())?;
@@ -27,9 +24,8 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         &mut self,
         root: &'e Heading,
         settings: &'s Settings,
-        out: &mut io::Write
+        out: &mut io::Write,
     ) -> io::Result<bool> {
-
         let line_width = self.latex.max_line_width;
         let indent = self.latex.indentation_depth;
 
@@ -48,7 +44,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         &mut self,
         root: &'e Comment,
         _: &'s Settings,
-        out: &mut io::Write
+        out: &mut io::Write,
     ) -> io::Result<bool> {
         // TODO: Comments can currently cause errors with flattened paragraphs,
         // eating up following LaTeX.
@@ -62,7 +58,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         &mut self,
         root: &'e Text,
         _: &'s Settings,
-        out: &mut io::Write
+        out: &mut io::Write,
     ) -> io::Result<bool> {
         write!(out, "{}", &escape_latex(&root.text))?;
         Ok(false)
@@ -72,31 +68,30 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         &mut self,
         root: &'e Formatted,
         settings: &'s Settings,
-        out: &mut io::Write
+        out: &mut io::Write,
     ) -> io::Result<bool> {
-
         let inner = root.content.render(self, settings)?;
 
         match root.markup {
             MarkupType::NoWiki => {
                 write!(out, "{}", &inner)?;
-            },
+            }
             MarkupType::Bold => {
                 write!(out, BOLD!(), &inner)?;
-            },
+            }
             MarkupType::Italic => {
                 write!(out, ITALIC!(), &inner)?;
-            },
+            }
             MarkupType::Math => {
                 let inner = extract_plain_text(&root.content);
                 write!(out, MATH!(), &inner)?;
-            },
+            }
             MarkupType::StrikeThrough => {
                 write!(out, STRIKE_THROUGH!(), &inner)?;
-            },
+            }
             MarkupType::Underline => {
                 write!(out, UNDERLINE!(), &inner)?;
-            },
+            }
             _ => {
                 let msg = format!("MarkupType not implemented: {:?}", &root.markup);
                 self.write_error(&msg, out)?;
@@ -109,9 +104,8 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         &mut self,
         root: &'e ExternalReference,
         settings: &'s Settings,
-        out: &mut io::Write
+        out: &mut io::Write,
     ) -> io::Result<bool> {
-
         let caption = root.caption.render(self, settings)?;
         writeln!(out, INTERNAL_HREF!(), &root.target, &caption)?;
         Ok(false)

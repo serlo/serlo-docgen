@@ -3,20 +3,18 @@
 //! This target renders the final syntax tree to a LaTeX document body.
 //! LaTeX boilerplate like preamble or document tags have to be added afterwards.
 
-use std::collections::HashMap;
 use preamble::*;
+use std::collections::HashMap;
 
-mod trans;
 mod renderer;
+mod trans;
 
-use self::renderer::{LatexRenderer};
-
+use self::renderer::LatexRenderer;
 
 /// Data for LaTeX export.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(default, deny_unknown_fields)]
 pub struct LatexTarget {
-
     /// Indentation depth for template content.
     indentation_depth: usize,
     /// Maximum line width (without indentation).
@@ -74,9 +72,12 @@ impl Default for LatexTarget {
 }
 
 impl Target for LatexTarget {
-
-    fn include_sections(&self) -> bool { true }
-    fn target_extension(&self) -> &str { "tex" }
+    fn include_sections(&self) -> bool {
+        true
+    }
+    fn target_extension(&self) -> &str {
+        "tex"
+    }
     fn extension_for(&self, ext: &str) -> &str {
         match ext.trim().to_lowercase().as_str() {
             "png" => "%.pdf",
@@ -91,22 +92,19 @@ impl Target for LatexTarget {
             _ => "%",
         }
     }
-    fn export<'a>(&self,
-                  root: &'a Element,
-                  settings: &Settings,
-                  _: &[String],
-                  out: &mut io::Write) -> io::Result<()> {
-
+    fn export<'a>(
+        &self,
+        root: &'a Element,
+        settings: &Settings,
+        _: &[String],
+        out: &mut io::Write,
+    ) -> io::Result<()> {
         // apply latex-specific transformations
         let mut latex_tree = root.clone();
-        latex_tree = trans::hoist_thumbnails(latex_tree, settings)
-            .expect("Error in thumbnail hoisting!");
+        latex_tree =
+            trans::hoist_thumbnails(latex_tree, settings).expect("Error in thumbnail hoisting!");
 
         let mut renderer = LatexRenderer::new(self);
         renderer.run(&latex_tree, settings, out)
     }
 }
-
-
-
-

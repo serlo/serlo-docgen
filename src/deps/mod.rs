@@ -18,7 +18,7 @@ use transformations;
 #[derive(Debug, Copy, Clone)]
 enum PrinterKind {
     Sections,
-    Media
+    Media,
 }
 
 fn run_deps_printer(
@@ -26,13 +26,12 @@ fn run_deps_printer(
     root: &Element,
     settings: &Settings,
     args: &[String],
-    out: &mut io::Write
+    out: &mut io::Write,
 ) -> io::Result<()> {
-
     for (target_name, target) in &settings.general.targets {
         let target = target.get_target();
         if !args.contains(&target_name) {
-            continue
+            continue;
         }
 
         // apply exclusions
@@ -45,8 +44,10 @@ fn run_deps_printer(
             match result {
                 Err(err) => {
                     eprintln!("{}", &err);
-                    println!("{}", serde_yaml::to_string(&err)
-                        .expect("Could not serialize error!"));
+                    println!(
+                        "{}",
+                        serde_yaml::to_string(&err).expect("Could not serialize error!")
+                    );
                     process::exit(1);
                 }
                 Ok(tree) => tree,
@@ -59,19 +60,17 @@ fn run_deps_printer(
         writeln!(out, "# dependencies for {}", &target_name)?;
         match printer_kind {
             PrinterKind::Sections => {
-                write!(out, "{}.{} {}.sections: ",
-                       &docrev, target_ext, &docrev)?;
+                write!(out, "{}.{} {}.sections: ", &docrev, target_ext, &docrev)?;
                 let mut printer = InclusionPrinter::default();
                 printer.run(&root, settings, out)?;
             }
             PrinterKind::Media => {
-                write!(out, "{}.{} {}.media: ",
-                       &docrev, target_ext, &docrev)?;
+                write!(out, "{}.{} {}.media: ", &docrev, target_ext, &docrev)?;
                 let mut printer = FilesPrinter::new(target);
                 printer.run(&root, settings, out)?;
-            },
+            }
         };
-        writeln!(out, "")?;
+        writeln!(out)?;
     }
     Ok(())
 }
@@ -82,9 +81,15 @@ fn run_deps_printer(
 pub struct SectionDepsTarget {}
 
 impl Target for SectionDepsTarget {
-    fn target_extension(&self) -> &str { "sections" }
-    fn include_sections(&self) -> bool { false }
-    fn extension_for(&self, _ext: &str) -> &str { "%" }
+    fn target_extension(&self) -> &str {
+        "sections"
+    }
+    fn include_sections(&self) -> bool {
+        false
+    }
+    fn extension_for(&self, _ext: &str) -> &str {
+        "%"
+    }
 
     /// Extract dependencies from a raw source AST. Sections are
     /// not included at this point.
@@ -93,8 +98,8 @@ impl Target for SectionDepsTarget {
         root: &'a Element,
         settings: &Settings,
         args: &[String],
-        out: &mut io::Write) -> io::Result<()>
-    {
+        out: &mut io::Write,
+    ) -> io::Result<()> {
         run_deps_printer(PrinterKind::Sections, root, settings, args, out)
     }
 }
@@ -105,9 +110,15 @@ impl Target for SectionDepsTarget {
 pub struct MediaDepsTarget {}
 
 impl Target for MediaDepsTarget {
-    fn target_extension(&self) -> &str { "media" }
-    fn include_sections(&self) -> bool { true }
-    fn extension_for(&self, _ext: &str) -> &str { "%" }
+    fn target_extension(&self) -> &str {
+        "media"
+    }
+    fn include_sections(&self) -> bool {
+        true
+    }
+    fn extension_for(&self, _ext: &str) -> &str {
+        "%"
+    }
 
     /// Extract dependencies from a raw source AST. Sections are
     /// not included at this point.
@@ -116,8 +127,8 @@ impl Target for MediaDepsTarget {
         root: &'a Element,
         settings: &Settings,
         args: &[String],
-        out: &mut io::Write) -> io::Result<()>
-    {
+        out: &mut io::Write,
+    ) -> io::Result<()> {
         run_deps_printer(PrinterKind::Media, root, settings, args, out)
     }
 }

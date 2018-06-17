@@ -3,10 +3,10 @@
 use mediawiki_parser::*;
 // re-export common util
 pub use mwparser_utils::*;
-use std::path::{PathBuf};
-use std::process;
 use settings::Settings;
 use std::io;
+use std::path::PathBuf;
+use std::process;
 use target::Target;
 
 /// Escape LaTeX-Specific symbols
@@ -29,13 +29,13 @@ pub fn escape_latex(input: &str) -> String {
             '<' => "\\textless{}",
             '>' => "\\textgreater{}",
             '^' => "\\textasciicircum{}",
-            '`' => "{}`",   // avoid ?` and !`
+            '`' => "{}`", // avoid ?` and !`
             '\n' => "\\\\",
             '↯' => "\\Lightning{}",
             _ => {
                 res.push(c);
-                continue
-            },
+                continue;
+            }
         };
         res.push_str(s);
     }
@@ -52,16 +52,16 @@ pub fn smiley_to_unicode(input: &str) -> Option<char> {
         "smirk" | "wink" | ";)" | ";-)" | ";-]" => Some('\u{01F60F}'),
         "grin" | ":-D" | ":D" | "lol" | "lach" => Some('\u{01F604}'),
         "surprise" | ":O" | ":-O" | "staun" => Some('\u{01F62E}'),
-        "tongue" | ":P" | ":-P"  => Some('\u{01F61B}'),
-        "shades" | "cool" | "8-]" | "8)" | "8-)"=> Some('\u{01F60E}'),
-        "cry" | "wein" | ":'(" | ":-'("  => Some('\u{01F622}'),
+        "tongue" | ":P" | ":-P" => Some('\u{01F61B}'),
+        "shades" | "cool" | "8-]" | "8)" | "8-)" => Some('\u{01F60E}'),
+        "cry" | "wein" | ":'(" | ":-'(" => Some('\u{01F622}'),
         "devil-grin" | "devil" | "evil" | ">:-D" => Some('\u{01F608}'),
         "angry" | "wütend" | ">:(" | ">:[" => Some('\u{01F620}'),
         "confused" | "verwirrt" | "%)" | "%-)" | ":-/" => Some('\u{01F615}'),
         "confounded" | "very-confused" | ":-S" => Some('\u{01F616}'),
         "thumb" | "thumbsup" | "daumen" | "Daumen" => Some('\u{01F64C}'),
         "Facepalm" | "facepalm" => Some('\u{01F625}'),
-        _ => None
+        _ => None,
     }
 }
 
@@ -69,7 +69,7 @@ pub fn smiley_to_unicode(input: &str) -> Option<char> {
 pub fn trim_enclosing<'a>(input: &'a str, prefix: &str, suffix: &str) -> &'a str {
     let lower_input = input.to_lowercase();
     if lower_input.starts_with(prefix) && lower_input.ends_with(suffix) {
-        return &input[prefix.len()..input.len()-suffix.len()];
+        return &input[prefix.len()..input.len() - suffix.len()];
     }
     input
 }
@@ -92,14 +92,12 @@ pub fn indent_and_trim(input: &str, depth: usize, max_line_width: usize) -> Stri
         let trimmed = line.trim();
         let comment = trimmed.starts_with(COMMENT_PREFIX.trim());
         let line_depth = depth + line.len() - line.trim_left().len();
-        let start_string = format!("{:depth$}", "", depth=line_depth);
+        let start_string = format!("{:depth$}", "", depth = line_depth);
 
         let mut new_line = start_string.clone();
 
         if trimmed.len() > max_line_width {
-
             for word in trimmed.split(' ') {
-
                 let current_length = new_line.trim().len();
 
                 if current_length + word.len() + 1 > max_line_width && current_length > 0 {
@@ -146,9 +144,10 @@ pub fn tree_contains(tree: &Element, predicate: &Fn(&Element) -> bool) -> bool {
     let mut matcher = TreeMatcher {
         result: false,
         path: vec![],
-        predicate: predicate,
+        predicate,
     };
-    matcher.run(tree, (), &mut vec![])
+    matcher
+        .run(tree, (), &mut vec![])
         .expect("unexptected tree matcher IO error:");
     matcher.result
 }
@@ -157,41 +156,49 @@ pub fn tree_contains(tree: &Element, predicate: &Fn(&Element) -> bool) -> bool {
 fn is_plain_file(path: &PathBuf) -> bool {
     let components = path.components();
     if components.count() != 1 {
-        return false
+        return false;
     }
     match path.components().next() {
         Some(c) => c.as_os_str() == path,
-        None => false
+        None => false,
     }
 }
 
 /// Returns wether an image is semantically a thumbnail image.
 pub fn is_thumb(image: &InternalReference) -> bool {
     let thumb_indicators = ["thumb", "miniatur"];
-    image.options.iter()
-        .any(|ref o| thumb_indicators.contains(
-                &extract_plain_text(o).to_lowercase().trim()))
+    image
+        .options
+        .iter()
+        .any(|ref o| thumb_indicators.contains(&extract_plain_text(o).to_lowercase().trim()))
 }
 
 /// Returns wether an image is semantically a centered image.
 pub fn is_centered(image: &InternalReference) -> bool {
     let thumb_indicators = ["center", "zentriert"];
-    image.options.iter()
-        .any(|ref o| thumb_indicators.contains(
-                &extract_plain_text(o).to_lowercase().trim()))
+    image
+        .options
+        .iter()
+        .any(|ref o| thumb_indicators.contains(&extract_plain_text(o).to_lowercase().trim()))
 }
 
 /// Path of a section file.
 pub fn get_section_path(article: &str, section: &str, settings: &Settings) -> String {
     if !is_plain_file(&PathBuf::from(article)) {
-        eprintln!("article name \"{}\" contains path elements. \
-                   This could be dangerous! Abort.", article);
+        eprintln!(
+            "article name \"{}\" contains path elements. \
+             This could be dangerous! Abort.",
+            article
+        );
         process::exit(1);
     }
 
     if !is_plain_file(&PathBuf::from(section)) {
-        eprintln!("section name \"{}\" contains path elements. \
-                   This could be dangerous! Abort.", section);
+        eprintln!(
+            "section name \"{}\" contains path elements. \
+             This could be dangerous! Abort.",
+            section
+        );
         process::exit(1);
     }
 
@@ -210,7 +217,7 @@ pub fn get_section_path(article: &str, section: &str, settings: &Settings) -> St
 }
 
 /// This object can be rendered by a traversion.
-pub trait Renderable<S>  {
+pub trait Renderable<S> {
     fn render<'e, 's>(
         &'e self,
         renderer: &mut Traversion<'e, &'s S>,
@@ -224,7 +231,6 @@ impl<S> Renderable<S> for Element {
         renderer: &mut Traversion<'e, &'s S>,
         settings: &'s S,
     ) -> io::Result<String> {
-
         let mut temp = vec![];
         renderer.run(self, settings, &mut temp)?;
         Ok(String::from_utf8(temp).unwrap())
@@ -237,7 +243,6 @@ impl<S> Renderable<S> for [Element] {
         renderer: &mut Traversion<'e, &'s S>,
         settings: &'s S,
     ) -> io::Result<String> {
-
         let mut temp = vec![];
         renderer.run_vec(self, settings, &mut temp)?;
         Ok(String::from_utf8(temp).unwrap())
@@ -260,11 +265,11 @@ pub fn extract_content(root: Element) -> Option<Vec<Element>> {
         Element::Heading(mut e) => {
             e.caption.append(&mut e.content);
             Some(e.caption)
-        },
+        }
         Element::Template(mut e) => {
             e.name.append(&mut e.content);
             Some(e.name)
-        },
+        }
         Element::TemplateArgument(e) => Some(e.value),
         Element::InternalReference(mut e) => {
             for mut option in &mut e.options {
@@ -272,26 +277,18 @@ pub fn extract_content(root: Element) -> Option<Vec<Element>> {
             }
             e.target.append(&mut e.caption);
             Some(e.target)
-        },
+        }
         Element::ExternalReference(e) => Some(e.caption),
         Element::Table(mut e) => {
             e.caption.append(&mut e.rows);
             Some(e.caption)
         }
         Element::TableRow(e) => Some(e.cells),
-        Element::Text(_)
-        | Element::Comment(_)
-        | Element::Error(_)
-        => None,
+        Element::Text(_) | Element::Comment(_) | Element::Error(_) => None,
     }
 }
 
-pub fn build_image_path(
-    target: &Target,
-    name: &[Element],
-    settings: &Settings
-) -> String {
-
+pub fn build_image_path(target: &Target, name: &[Element], settings: &Settings) -> String {
     let name_str = extract_plain_text(name);
     let mut trimmed = name_str.trim();
     for prefix in &settings.general.file_prefixes {
@@ -301,9 +298,7 @@ pub fn build_image_path(
     let ext = name_path.extension().unwrap_or_default();
 
     let ext_str = ext.to_string_lossy().to_string();
-    let target_extension = target
-        .extension_for(&ext_str)
-        .replace("%", &ext_str);
+    let target_extension = target.extension_for(&ext_str).replace("%", &ext_str);
 
     PathBuf::from(&settings.general.external_file_path)
         .join(name_path.with_extension(&target_extension))
@@ -313,5 +308,9 @@ pub fn build_image_path(
 
 pub fn is_file(iref: &InternalReference, settings: &Settings) -> bool {
     let plain = extract_plain_text(&iref.target).trim().to_lowercase();
-    settings.general.file_prefixes.iter().any(|p| plain.starts_with(p))
+    settings
+        .general
+        .file_prefixes
+        .iter()
+        .any(|p| plain.starts_with(p))
 }

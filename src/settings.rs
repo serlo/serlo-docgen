@@ -1,12 +1,12 @@
+use mfnf_sitemap::Markers;
 use std::collections::HashMap;
 use std::path::PathBuf;
-use mfnf_sitemap::Markers;
 
 use deps;
 use html;
 use latex;
-use sections;
 use pdf;
+use sections;
 use stats;
 use MFNFTargets;
 
@@ -24,7 +24,6 @@ macro_rules! string_value_map {
     }}
 }
 
-
 /// MFNF transformation settings object.
 #[derive(Debug, Default)]
 pub struct Settings {
@@ -35,7 +34,6 @@ pub struct Settings {
 /// Runtime (instance-specific) settings.
 #[derive(Debug)]
 pub struct RuntimeSettings {
-
     /// Currently used text checker
     pub tex_checker: Option<CachedTexChecker>,
 
@@ -83,7 +81,6 @@ pub struct GeneralSettings {
     pub section_inclusion_prefix: String,
 }
 
-
 impl Default for RuntimeSettings {
     fn default() -> RuntimeSettings {
         RuntimeSettings {
@@ -101,20 +98,34 @@ impl Default for GeneralSettings {
         GeneralSettings {
             targets: {
                 let mut tmap = HashMap::new();
-                tmap.insert("section-deps".to_string(),
-                    MFNFTargets::SectionDeps(deps::SectionDepsTarget::default()));
-                tmap.insert("media-deps".to_string(),
-                    MFNFTargets::MediaDeps(deps::MediaDepsTarget::default()));
-		tmap.insert("html".to_string(),
-                    MFNFTargets::HTML(html::HTMLTarget::default()));
-                tmap.insert("latex".to_string(),
-                    MFNFTargets::Latex(latex::LatexTarget::default()));
-                tmap.insert("sections".to_string(),
-                    MFNFTargets::Sections(sections::SectionsTarget::default()));
-                tmap.insert("pdf".to_string(),
-                    MFNFTargets::PDF(pdf::PDFTarget::default()));
-                tmap.insert("stats".to_string(),
-                    MFNFTargets::Stats(stats::StatsTarget::default()));
+                tmap.insert(
+                    "section-deps".to_string(),
+                    MFNFTargets::SectionDeps(deps::SectionDepsTarget::default()),
+                );
+                tmap.insert(
+                    "media-deps".to_string(),
+                    MFNFTargets::MediaDeps(deps::MediaDepsTarget::default()),
+                );
+                tmap.insert(
+                    "html".to_string(),
+                    MFNFTargets::HTML(html::HTMLTarget::default()),
+                );
+                tmap.insert(
+                    "latex".to_string(),
+                    MFNFTargets::Latex(latex::LatexTarget::default()),
+                );
+                tmap.insert(
+                    "sections".to_string(),
+                    MFNFTargets::Sections(sections::SectionsTarget::default()),
+                );
+                tmap.insert(
+                    "pdf".to_string(),
+                    MFNFTargets::PDF(pdf::PDFTarget::default()),
+                );
+                tmap.insert(
+                    "stats".to_string(),
+                    MFNFTargets::Stats(stats::StatsTarget::default()),
+                );
                 tmap
             },
             file_prefixes: string_vec!["file:", "datei:", "bild:"],
@@ -127,4 +138,3 @@ impl Default for GeneralSettings {
         }
     }
 }
-

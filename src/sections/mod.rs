@@ -6,16 +6,15 @@
 
 use preamble::*;
 
-use std::path;
-use std::fs::File;
-use std::io::Write;
-use std::io;
-use std::fs::DirBuilder;
 use serde_yaml;
+use std::fs::DirBuilder;
+use std::fs::File;
+use std::io;
+use std::io::Write;
+use std::path;
 
-mod finder;
 mod filter;
-
+mod finder;
 
 /// Write marked document section to the filesystem.
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
@@ -23,20 +22,27 @@ mod filter;
 pub struct SectionsTarget {}
 
 impl Target for SectionsTarget {
-    fn include_sections(&self) -> bool { false }
-    fn target_extension(&self) -> &str { "yml" }
-    fn extension_for(&self, _ext: &str) -> &str { "%" }
-    fn export<'a>(&self,
-                root: &'a Element,
-                settings: &Settings,
-                _: &[String],
-                _: &mut io::Write) -> io::Result<()> {
-
+    fn include_sections(&self) -> bool {
+        false
+    }
+    fn target_extension(&self) -> &str {
+        "yml"
+    }
+    fn extension_for(&self, _ext: &str) -> &str {
+        "%"
+    }
+    fn export<'a>(
+        &self,
+        root: &'a Element,
+        settings: &Settings,
+        _: &[String],
+        _: &mut io::Write,
+    ) -> io::Result<()> {
         let sections = finder::SectionNameCollector::collect_from(root);
 
         for section in sections {
             if section.is_empty() {
-                continue
+                continue;
             }
 
             let inter = filter::SectionFilter::extract(&section, root);
@@ -50,17 +56,16 @@ impl Target for SectionsTarget {
             let mut path = path::PathBuf::from(&settings.general.section_path);
             path = path.join(&filename_to_make(&section));
 
-            DirBuilder::new()
-                .recursive(true)
-                .create(&path)?;
+            DirBuilder::new().recursive(true).create(&path)?;
 
             path = path.join(&filename);
 
             let mut file = File::create(&path)?;
-            file.write_all(serde_yaml::to_string(&inter)
-                .expect("could not serialize section!")
-                .as_bytes())?;
-
+            file.write_all(
+                serde_yaml::to_string(&inter)
+                    .expect("could not serialize section!")
+                    .as_bytes(),
+            )?;
         }
         Ok(())
     }

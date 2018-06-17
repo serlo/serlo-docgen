@@ -1,8 +1,7 @@
 use preamble::*;
 
-use std::io;
 use serde_yaml;
-
+use std::io;
 
 /// Dump pdf settings to stdout as yaml.
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -39,26 +38,36 @@ impl Default for PDFTarget {
 }
 
 impl Target for PDFTarget {
-    fn include_sections(&self) -> bool { false }
-    fn target_extension(&self) -> &str { "yml" }
-    fn extension_for(&self, _ext: &str) -> &str { "%" }
-    fn export<'a>(&self,
-                _: &'a Element,
-                settings: &Settings,
-                _: &[String],
-                out: &mut io::Write) -> io::Result<()> {
-
-        let mut data_table = serde_yaml::to_value(self)
-            .expect("could not construct value from PDFTarget!");
+    fn include_sections(&self) -> bool {
+        false
+    }
+    fn target_extension(&self) -> &str {
+        "yml"
+    }
+    fn extension_for(&self, _ext: &str) -> &str {
+        "%"
+    }
+    fn export<'a>(
+        &self,
+        _: &'a Element,
+        settings: &Settings,
+        _: &[String],
+        out: &mut io::Write,
+    ) -> io::Result<()> {
+        let mut data_table =
+            serde_yaml::to_value(self).expect("could not construct value from PDFTarget!");
 
         let title = &settings.runtime.document_title;
         let revision = &settings.runtime.document_revision;
-        if let &mut serde_yaml::Value::Mapping(ref mut m) = &mut data_table {
+        if let serde_yaml::Value::Mapping(ref mut m) = data_table {
             m.insert("document_title".into(), title.clone().into());
             m.insert("document_revision".into(), revision.clone().into());
         }
 
-        writeln!(out, "{}", serde_yaml::to_string(&data_table)
-            .expect("could not serialize the PDFTarget struct"))
+        writeln!(
+            out,
+            "{}",
+            serde_yaml::to_string(&data_table).expect("could not serialize the PDFTarget struct")
+        )
     }
 }

@@ -10,22 +10,16 @@ pub struct ThumbCollector<'e> {
 }
 
 impl<'e, 's: 'e> Traversion<'e, &'s Settings> for ThumbCollector<'e> {
-
     path_methods!('e);
 
-    fn work(
-        &mut self,
-        root: &'e Element,
-        _: &'s Settings,
-        _: &mut io::Write
-    ) -> io::Result<bool> {
+    fn work(&mut self, root: &'e Element, _: &'s Settings, _: &mut io::Write) -> io::Result<bool> {
         match *root {
             Element::InternalReference(ref iref) => {
                 if is_thumb(iref) {
                     self.thumbs.push(root.clone());
                 }
                 Ok(false)
-            },
+            }
             Element::Heading(_) => Ok(false),
             _ => Ok(true),
         }
@@ -40,7 +34,8 @@ pub fn hoist_thumbnails(mut root: Element, settings: &Settings) -> TResult {
                 path: vec![],
                 thumbs: vec![],
             };
-            collector.run_vec(&heading.content, settings, &mut vec![])
+            collector
+                .run_vec(&heading.content, settings, &mut vec![])
                 .expect("error collecting thumbnails. HOW?");
             collector.thumbs
         };
@@ -49,7 +44,7 @@ pub fn hoist_thumbnails(mut root: Element, settings: &Settings) -> TResult {
             let marker = TagAttribute {
                 position: heading.position.clone(),
                 key: "from_thumbs".into(),
-                value: "true".into()
+                value: "true".into(),
             };
             let gallery = Element::Gallery(Gallery {
                 position: heading.position.clone(),
@@ -70,7 +65,7 @@ pub fn hoist_thumbnails(mut root: Element, settings: &Settings) -> TResult {
 fn hoist_thumbnails_vec<'a>(
     trans: &TFuncInplace<&'a Settings>,
     root_content: &mut Vec<Element>,
-    settings: &'a Settings
+    settings: &'a Settings,
 ) -> TListResult {
     let mut result = vec![];
     for mut child in root_content.drain(..) {
