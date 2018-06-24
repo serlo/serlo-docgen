@@ -108,7 +108,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
     ) -> io::Result<bool> {
         let mut caption = root.caption.render(self, settings)?;
         if caption.is_empty() {
-            caption = root.target.clone();
+            caption = escape_latex(&root.target);
         }
         writeln!(out, INTERNAL_HREF!(), &root.target, &caption)?;
         Ok(false)
