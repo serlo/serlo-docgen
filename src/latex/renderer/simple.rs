@@ -110,7 +110,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         if caption.is_empty() {
             caption = escape_latex(&root.target);
         }
-        writeln!(out, INTERNAL_HREF!(), &root.target, &caption)?;
+        writeln!(out, INTERNAL_HREF!(), &escape_latex(&root.target), &caption)?;
         Ok(false)
     }
 }
