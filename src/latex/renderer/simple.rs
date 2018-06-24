@@ -106,7 +106,10 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         settings: &'s Settings,
         out: &mut io::Write,
     ) -> io::Result<bool> {
-        let caption = root.caption.render(self, settings)?;
+        let mut caption = root.caption.render(self, settings)?;
+        if caption.is_empty() {
+            caption = root.target.clone();
+        }
         writeln!(out, INTERNAL_HREF!(), &root.target, &caption)?;
         Ok(false)
     }
