@@ -288,3 +288,31 @@ pub fn remove_exclusions(mut root: Element, settings: &Settings) -> TResult {
     root = recurse_inplace_template(&remove_exclusions, root, settings, &remove_exclusions_vec)?;
     Ok(root)
 }
+
+/// Resolve interwiki links.
+pub fn resolve_interwiki_links(mut root: Element, settings: &Settings) -> TResult {
+
+    if let Element::InternalReference(ref iref) = root {
+        let text = extract_plain_text(&iref.target);
+        if let Some(position) = text.find(":") {
+
+            let interlink_result = settings.general.interwiki_link_mapping
+                .get(text[0..position + 1].to_lowercase().trim());
+
+            if let Some(replacement) = interlink_result {
+                let reference = ExternalReference {
+                    position: iref.position.clone(),
+                    target: {
+                        let mut r = replacement.clone();
+                        r.push_str(&text[position + 1..]);
+                        r
+                    },
+                    caption: iref.caption.clone()
+                };
+                return Ok(Element::ExternalReference(reference));
+            }
+        }
+    }
+    root = recurse_inplace(&resolve_interwiki_links, root, settings)?;
+    Ok(root)
+}

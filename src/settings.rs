@@ -79,6 +79,9 @@ pub struct GeneralSettings {
 
     /// Template name prefix indication section inclusion
     pub section_inclusion_prefix: String,
+
+    /// Mapping of interwiki link prefix to url (e.g. w: -> de.wikipedia.org)
+    pub interwiki_link_mapping: HashMap<String, String>,
 }
 
 impl Default for RuntimeSettings {
@@ -128,6 +131,16 @@ impl Default for GeneralSettings {
                 );
                 tmap
             },
+            interwiki_link_mapping: [
+                ("w:", "https://de.wikipedia.org/wiki/"),
+                ("b:", "https://de.wikibooks.org/wiki/"),
+                ("d:", "https://www.wikidata.org/wiki/"),
+                ("n:", "https://de.wikinews.org/wiki/"),
+                ("v:", "https://de.wikiversity.org/wiki/"),
+                ("wikt:", "https://de.wiktionary.org/wiki/"),
+                ("mathe_für_nicht-freaks:", "https://de.wikibooks.org/wiki/Mathe_für_Nicht-Freaks:"),
+                ("mathe für nicht-freaks:", "https://de.wikibooks.org/wiki/Mathe_für_Nicht-Freaks:")
+            ].iter().map(|e| (e.0.to_string(), e.1.to_string())).collect(),
             file_prefixes: string_vec!["file:", "datei:", "bild:"],
             external_file_path: "media".into(),
             article_url_base: "https://de.wikibooks.org/wiki/".into(),
