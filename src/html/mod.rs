@@ -1,6 +1,7 @@
 use preamble::*;
 
 use std::io;
+mod renderer;
 
 /// serialize to html
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Default)]
@@ -25,7 +26,7 @@ impl Target for HTMLTarget {
         _: &[String],
         out: &mut io::Write,
     ) -> io::Result<()> {
-        print!("Hello World!");
-        Ok(())
+        let mut renderer = renderer::HtmlRenderer::new(self);
+        renderer.run(root, settings, out)
     }
 }
