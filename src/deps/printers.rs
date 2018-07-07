@@ -62,7 +62,7 @@ impl<'e, 's: 'e, 't> Traversion<'e, &'s Settings> for FilesPrinter<'e, 't> {
             }
 
             let file_path = build_image_path(self.target, &iref.target, settings);
-            write!(out, "\\\n\t{}", &file_path)?;
+            write!(out, "\\\n\t{}", &file_path.to_string_lossy())?;
         };
         Ok(true)
     }

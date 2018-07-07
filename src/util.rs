@@ -288,22 +288,28 @@ pub fn extract_content(root: Element) -> Option<Vec<Element>> {
     }
 }
 
-pub fn build_image_path(target: &Target, name: &[Element], settings: &Settings) -> String {
-    let name_str = extract_plain_text(name);
-    let mut trimmed = name_str.trim();
-    for prefix in &settings.general.file_prefixes {
-        trimmed = trim_prefix(trimmed, prefix);
-    }
-    let name_path = PathBuf::from(&filename_to_make(trimmed.trim()));
-    let ext = name_path.extension().unwrap_or_default();
+pub fn build_image_path(target: &Target, name: &[Element], settings: &Settings) -> PathBuf {
+
+    let file_path = build_file_path(target, name, settings);
+    let ext = file_path.extension().unwrap_or_default();
 
     let ext_str = ext.to_string_lossy().to_string();
     let target_extension = target.extension_for(&ext_str).replace("%", &ext_str);
 
-    PathBuf::from(&settings.general.external_file_path)
-        .join(name_path.with_extension(&target_extension))
-        .to_string_lossy()
-        .to_string()
+    file_path.with_extension(&target_extension)
+}
+
+pub fn build_file_path(target: &Target, name: &[Element], settings: &Settings) -> PathBuf {
+
+    let name_str = extract_plain_text(name);
+    let mut trimmed = name_str.trim();
+
+    for prefix in &settings.general.file_prefixes {
+        trimmed = trim_prefix(trimmed, prefix);
+    }
+
+    let name_path = PathBuf::from(&filename_to_make(trimmed.trim()));
+    PathBuf::from(&settings.general.external_file_path).join(name_path)
 }
 
 pub fn is_file(iref: &InternalReference, settings: &Settings) -> bool {

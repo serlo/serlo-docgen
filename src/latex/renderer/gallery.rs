@@ -31,7 +31,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                     &image_options,
                     self.latex.image_height,
                     self.latex.image_height,
-                    &path,
+                    &path.to_string_lossy(),
                     &caption,
                 );
 

@@ -42,7 +42,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                     &image_options,
                     self.latex.image_width,
                     self.latex.image_height,
-                    &image_path,
+                    &image_path.to_string_lossy(),
                 );
 
                 if self.latex.centered_image_captions {
@@ -53,7 +53,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                 self.environment("figure", &["H"], &fig_content, out)?;
             // inline images
             } else {
-                writeln!(out, FIGURE_INLINE!(), &image_options, &image_path,)?;
+                writeln!(out, FIGURE_INLINE!(), &image_options, &image_path.to_string_lossy())?;
             }
 
             return Ok(false);
