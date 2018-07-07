@@ -61,8 +61,12 @@ impl<'e, 's: 'e, 't> Traversion<'e, &'s Settings> for FilesPrinter<'e, 't> {
                 return Ok(true);
             }
 
-            let file_path = build_image_path(self.target, &iref.target, settings);
-            write!(out, "\\\n\t{}", &file_path.to_string_lossy())?;
+            let file_path = build_file_path(self.target, &iref.target, settings);
+            let image_path = build_image_path(self.target, &iref.target, settings);
+            write!(out, "\\\n\t{}", &image_path.to_string_lossy())?;
+            write!(out, "\\\n\t{}.meta", &file_path.to_string_lossy())?;
+
+
         };
         Ok(true)
     }
