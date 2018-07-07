@@ -2,6 +2,7 @@ use html::HTMLTarget;
 use preamble::*;
 
 mod simpletypes;
+mod template;
 
 pub struct HtmlRenderer<'e, 't> {
     pub path: Vec<&'e Element>,
@@ -27,10 +28,8 @@ impl<'e, 's: 'e, 't: 'e> Traversion<'e, &'s Settings> for HtmlRenderer<'e, 't> {
             Element::Comment(ref root) => self.comment(root, settings, out)?,
             Element::ExternalReference(ref root) => self.href(root, settings, out)?,
             Element::Formatted(ref root) => self.formatted(root, settings, out)?,
-            Element::Template(ref root) => {
-                writeln!(out, "4")?;
-                true
-            },
+            Element::HtmlTag(ref root) => self.htmltag(root, settings, out)?,
+            Element::Template(ref root) => self.template(root, settings, out)?,
             _ => {
                 writeln!(out, "all other types")?;
                 true
@@ -45,4 +44,24 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
             html: target,
         }
     }
+
+    //error-handling
+    fn write_error(&self, message: &str, out: &mut io::Write) -> io::Result<bool> {
+        let message = escape_latex(message);
+        writeln!(out, "error: {}", message)?;
+        Ok(true)
+    }
 }
+
+
+
+
+
+/*
+fn escape_html(
+    string: &str
+    )-> io::Result<()>{
+        Ok(true);
+    }
+
+*/

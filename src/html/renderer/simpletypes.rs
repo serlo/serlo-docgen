@@ -92,10 +92,8 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                 write!(out, "<span class=\"underline\">")?;
             }
             _ => {
-                write!(out, "not implemented MarkupType")?;
-                //Todo: implement errors
-                //msg = format!("MarkupType not implemented: {:?}", &root.markup);
-                //self.write_error(&msg, out)?;
+                let msg = format!("MarkupType not implemented: {:?}", &root.markup);
+                self.write_error(&msg, out)?;
             }
         }
         self.run_vec(&root.content,settings,out)?;
@@ -103,7 +101,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         Ok(false)
     }
 
-/*
+
     pub fn htmltag(
         &mut self,
         root: &'e HtmlTag,
@@ -111,12 +109,10 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         out: &mut io::Write,
     ) -> io::Result<bool> {
         match root.name.to_lowercase().trim() {
-            "dfn" => {
+            "dfn" | "ref" => {
+                write!(out, "<{}>", &root.name.to_lowercase())?;
                 self.run_vec(&root.content,settings,out)?;
-            }
-            "ref" => {
-                let content = root.content.render(self, settings)?;
-                write!(out, "{}", &content)?;
+                write!(out, "</{}>", &root.name.to_lowercase())?;
             }
             "section" => (),
             _ => {
@@ -124,10 +120,12 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                     "no export function defined \
                      for html tag `{}`!",
                     root.name
+                    //Todo: implemented error function, thatt passes errors
                 );
+                self.write_error(&msg, out);
 
             }
         }
         Ok(false)
-    }*/
+    }
 }
