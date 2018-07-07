@@ -39,9 +39,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
             KnownTemplate::AlternativeProof(_) => self.environment_template(root, settings, &parsed, out, "alternativeproof")?,
             KnownTemplate::ProofSummary(_) => self.environment_template(root, settings, &parsed, out, "proofsummary")?,
             KnownTemplate::Solution(_) => self.environment_template(root, settings, &parsed, out, "solution")?,
-            KnownTemplate::SolutionProcess(_) => {
-                writeln!(out, "template, eines von vielen");//self.environment_template(settings, &parsed, out)?
-            }
+            KnownTemplate::SolutionProcess(_) => self.environment_template(root, settings, &parsed, out, "solutionprocess")?,
             _ => writeln!(out, "irgendetwas anderes")?
         };
         Ok(false)
@@ -56,7 +54,6 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         out: &mut io::Write,
         typ: &str,
     ) -> io::Result<()> {
-        let title = template.find("title").map(|a| a.value).unwrap_or(&[]);
         write!(out, "<div class=\"{}\"",typ)?;
         self.run_vec(&root.content, settings, out);
         write!(out, "</div>")?;
