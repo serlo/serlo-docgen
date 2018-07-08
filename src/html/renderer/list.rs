@@ -45,11 +45,30 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                                     writeln!(out, "</ul>")?;
                                 },
         ListItemKind::Definition | ListItemKind::DefinitionTerm => {
-                                                                        writeln!(out, "<dl class=\"definition\">")?;
-                                                                        writeln!(out, "<dl class=\"definition\">")?;
+                                                                        writeln!(out, "<dl class=\"definitionlist\">")?;
+                                                                        for child in &root.content {
+                                                                            if let Element::ListItem(ref li) = *child {
+                                                                                match li.kind {
+                                                                                    ListItemKind::Definition => {
+                                                                                        write!(out, "<dt class=\"definition\">")?;
+                                                                                        self.run_vec(&li.content, settings, out)?;
+                                                                                        write!(out, "</dt>")?;
+                                                                                    },
+                                                                                    ListItemKind::DefinitionTerm => {
+                                                                                        write!(out, "<dd class=\"definitionterm\">")?;
+                                                                                        self.run_vec(&li.content, settings, out)?;
+                                                                                        write!(out, "</dd>")?;
+                                                                                    },
+                                                                                    _ => {
+                                                                                        let msg = format!("error: different type of listElement in definitionList {:?}", &li.kind);
+                                                                                        self.write_error(&msg, out)?;
+                                                                                }
+                                                                                }
+                                                                            }
+                                                                        }
 
                                                                     }
-    };//here go with for loop trhough list, get content here, add list definition before, three different class styles
+    };
 
 
     Ok(false)
