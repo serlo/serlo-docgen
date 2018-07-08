@@ -3,6 +3,7 @@ use preamble::*;
 
 mod simpletypes;
 mod template;
+mod list;
 
 pub struct HtmlRenderer<'e, 't> {
     pub path: Vec<&'e Element>,
@@ -30,6 +31,7 @@ impl<'e, 's: 'e, 't: 'e> Traversion<'e, &'s Settings> for HtmlRenderer<'e, 't> {
             Element::Formatted(ref root) => self.formatted(root, settings, out)?,
             Element::HtmlTag(ref root) => self.htmltag(root, settings, out)?,
             Element::Template(ref root) => self.template(root, settings, out)?,
+            Element::List(ref root) => self.list(root, settings, out)?,
             _ => {
                 writeln!(out, "all other types")?;
                 true
