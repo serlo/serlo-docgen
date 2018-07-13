@@ -7,7 +7,10 @@ use settings::Settings;
 use std::io;
 use std::path::PathBuf;
 use std::process;
+use std::fs::File;
 use target::Target;
+use meta::MediaMeta;
+use serde_yaml;
 
 /// Escape LaTeX-Specific symbols
 pub fn escape_latex(input: &str) -> String {
@@ -286,12 +289,37 @@ pub fn extract_content(root: Element) -> Option<Vec<Element>> {
         Element::TableRow(e) => Some(e.cells),
         Element::Text(_) | Element::Comment(_) | Element::Error(_) => None,
     }
+
 }
 
 #[derive(Debug)]
-pub enum MetaLoadError {
-    IOError(io::Error),
+pub enum MetaLoadResult<T> {
+    IOError(PathBuf, io::Error),
     ParseError(serde_yaml::Error),
+    Meta(T),
+}
+
+pub fn load_media_meta(name: &[Element], settings: &Settings) -> MetaLoadResult<MediaMeta> {
+    let mut file_path = build_file_path(name, settings);
+    let mut filename = match file_path.file_name() {
+        Some(n) => n,
+        None => return MetaLoadResult::IOError(
+            file_path.clone(), io::Error::new(io::ErrorKind::NotFound, "File not found.")
+        )
+    }.to_os_string();
+    filename.push(".meta");
+    file_path.set_file_name(filename);
+
+    let file = match File::open(&file_path) {
+        Ok(f) => f,
+        Err(e) => {
+            return MetaLoadResult::IOError(file_path, e)
+        }
+    };
+    match serde_yaml::from_reader(&file) {
+        Ok(m) => MetaLoadResult::Meta(m),
+        Err(e) => MetaLoadResult::ParseError(e),
+    }
 }
 
 pub fn build_image_path(target: &Target, name: &[Element], settings: &Settings) -> PathBuf {
