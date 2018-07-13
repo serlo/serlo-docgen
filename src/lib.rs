@@ -11,6 +11,7 @@ extern crate serde_yaml;
 use mediawiki_parser::transformations::TResult;
 use mediawiki_parser::Element;
 
+mod meta;
 mod target;
 #[macro_use]
 mod util;
