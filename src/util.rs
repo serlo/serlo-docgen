@@ -288,9 +288,15 @@ pub fn extract_content(root: Element) -> Option<Vec<Element>> {
     }
 }
 
+#[derive(Debug)]
+pub enum MetaLoadError {
+    IOError(io::Error),
+    ParseError(serde_yaml::Error),
+}
+
 pub fn build_image_path(target: &Target, name: &[Element], settings: &Settings) -> PathBuf {
 
-    let file_path = build_file_path(target, name, settings);
+    let file_path = build_file_path(name, settings);
     let ext = file_path.extension().unwrap_or_default();
 
     let ext_str = ext.to_string_lossy().to_string();
@@ -299,7 +305,7 @@ pub fn build_image_path(target: &Target, name: &[Element], settings: &Settings) 
     file_path.with_extension(&target_extension)
 }
 
-pub fn build_file_path(target: &Target, name: &[Element], settings: &Settings) -> PathBuf {
+pub fn build_file_path(name: &[Element], settings: &Settings) -> PathBuf {
 
     let name_str = extract_plain_text(name);
     let mut trimmed = name_str.trim();
