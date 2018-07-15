@@ -26,9 +26,15 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                     image_options.push(extract_plain_text(option).trim().to_string());
                 }
 
+                let license_text = match self.get_license_text(iref, settings, out)? {
+                    Some(s) => s,
+                    None => return Ok(false)
+                };
+
                 let mut inner = format!(
                     GALLERY_CONTENT!(),
                     &image_options,
+                    &license_text,
                     self.latex.image_height,
                     self.latex.image_height,
                     &path.to_string_lossy(),
