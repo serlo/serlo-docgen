@@ -3,24 +3,24 @@
 /// Meta data for a media file.
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct MediaMeta {
-    license: MediaLicense,
+    pub license: MediaLicense,
 }
 
 /// License data for a media file.
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct MediaLicense {
     /// Uploader's username.
-    user: String,
+    pub user: String,
     /// License common name.
-    name: String,
+    pub name: String,
     /// License short name.
-    shortname: String,
+    pub shortname: String,
     /// License text url.
-    licenseurl: String,
+    pub licenseurl: String,
     /// Media file url.
-    url: String,
+    pub url: String,
     /// Contributing authors.
-    authors: Vec<String>,
+    pub authors: Vec<String>,
     /// Original image source. Often contains additional markup.
-    source: String,
+    pub source: String,
 }
