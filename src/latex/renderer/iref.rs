@@ -19,6 +19,25 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         // embedded files (images, videos, ...)
         if is_file(root, settings) {
             let image_path = build_image_path(self.latex, &root.target, settings);
+            let meta = match load_media_meta(&root.target, settings) {
+                MetaLoadResult::Meta(m) => m,
+                e @ _ => {
+                    let error = escape_latex(&format!("{:#?}", e));
+                    self.write_error(&error, out)?;
+                    return Ok(false);
+                }
+            };
+            let authors = meta.license.authors.join(", ");
+            let license_text = format!(LICENSE_TEXT!(),
+                &escape_latex(&meta.license.url),
+                &escape_latex(&build_file_path(&root.target, settings)
+                    .file_name()
+                    .map(|f| f.to_string_lossy())
+                    .unwrap_or_default()
+                ),
+                &escape_latex(&authors),
+                &escape_latex(&meta.license.shortname),
+            );
 
             // collect image options
             let mut image_options = vec![];
@@ -40,6 +59,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                 let mut fig_content = format!(
                     FIGURE_CONTENT!(),
                     &image_options,
+                    &license_text,
                     self.latex.image_width,
                     self.latex.image_height,
                     &image_path.to_string_lossy(),
@@ -53,7 +73,11 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                 self.environment("figure", &["H"], &fig_content, out)?;
             // inline images
             } else {
-                writeln!(out, FIGURE_INLINE!(), &image_options, &image_path.to_string_lossy())?;
+                writeln!(out, FIGURE_INLINE!(),
+                    &image_options,
+                    &license_text,
+                    &image_path.to_string_lossy()
+                )?;
             }
 
             return Ok(false);

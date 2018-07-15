@@ -27,12 +27,18 @@ alias!(
 // --- Internal References ---
 
 alias!(
+    LICENSE_TEXT,
+    "Abb. \\arabic{{imagelabel}}: \
+    \\protect\\href{{{}}}{{\\textbf{{{}}}}} by {} \\textit{{({})}}"
+);
+
+alias!(
     FIGURE_CONTENT,
     "\
 % image options: {:?}
 \\stepcounter{{imagelabel}}
 \\centering
-\\addxcontentsline{{lof}}{{section}}[]{{License Info not yet supported.}}
+\\addxcontentsline{{lof}}{{section}}[]{{{}}}
 \\adjincludegraphics[max width={}\\textwidth, max height={}\\textheight]{{{}}}\
 "
 );
@@ -43,7 +49,7 @@ alias!(
     "
 % image options: {:?}
 \\stepcounter{{imagelabel}}
-\\addxcontentsline{{lof}}{{section}}[]{{License Info not yet supported.}}
+\\addxcontentsline{{lof}}{{section}}[]{{{}}}
 \\adjincludegraphics[height=\\lineheight]{{{}}}\
 "
 );
