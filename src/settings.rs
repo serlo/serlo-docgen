@@ -65,10 +65,13 @@ pub struct GeneralSettings {
     /// Base path for web links to articles.
     pub article_url_base: String,
 
-    /// Path prefix for external files.
-    pub external_file_path: PathBuf,
+    /// Path base for files accessed at run time.
+    pub base_path: PathBuf,
 
-    /// Path to the section file directory.
+    /// Path to embedded media files. (relative to `base_path`)
+    pub media_path: PathBuf,
+
+    /// Path to the section file directory. (relative to `base_path`)
     pub section_path: PathBuf,
 
     /// Default revision number of included sections (always `latest`)
@@ -142,7 +145,8 @@ impl Default for GeneralSettings {
                 ("mathe für nicht-freaks:", "https://de.wikibooks.org/wiki/Mathe_für_Nicht-Freaks:")
             ].iter().map(|e| (e.0.to_string(), e.1.to_string())).collect(),
             file_prefixes: string_vec!["file:", "datei:", "bild:"],
-            external_file_path: "media".into(),
+            base_path: ".".into(),
+            media_path: "media".into(),
             article_url_base: "https://de.wikibooks.org/wiki/".into(),
             section_path: "sections".into(),
             section_rev: "latest".into(),

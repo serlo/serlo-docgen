@@ -47,7 +47,8 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
 
         // embedded files (images, videos, ...)
         if is_file(root, settings) {
-            let image_path = build_image_path(self.latex, &root.target, settings);
+            let image_path = mapped_media_path(self.latex, &root.target,
+                                               settings, PathMode::RELATIVE);
             let license_text = match self.get_license_text(root, settings, out)? {
                 Some(s) => s,
                 None => return Ok(false)
