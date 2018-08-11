@@ -55,7 +55,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         typ: &str,
     ) -> io::Result<()> {
         write!(out, "<div class=\"{}\"",typ)?;
-        self.run_vec(&root.content, settings, out);
+        self.run_vec(&root.content, settings, out)?;
         write!(out, "</div>")?;
         Ok(())
     }

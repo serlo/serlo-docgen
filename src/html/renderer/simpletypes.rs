@@ -122,7 +122,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                     root.name
                     //Todo: implemented error function, thatt passes errors
                 );
-                self.write_error(&msg, out);
+                self.write_error(&msg, out)?;
 
             }
         }
