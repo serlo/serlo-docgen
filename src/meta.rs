@@ -23,4 +23,8 @@ pub struct MediaLicense {
     pub authors: Vec<String>,
     /// Original image source. Often contains additional markup.
     pub source: String,
+    /// Link to a page with more detailed information (mostly wikimedia commons)
+    pub detailsurl: String,
+    /// Original filename of the image
+    pub filename: String
 }
