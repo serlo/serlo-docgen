@@ -45,6 +45,13 @@ pub fn escape_latex(input: &str) -> String {
     res
 }
 
+/// Escape HTML symbols.
+/// TODO: Dummy
+pub fn escape_html(input: &str) -> String {
+    input.to_string()
+}
+
+
 /// Returns a unicode character for a smiley description.
 ///
 /// see also: https://www.mediawiki.org/wiki/Template:Smiley

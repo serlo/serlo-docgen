@@ -4,6 +4,7 @@ use preamble::*;
 mod simpletypes;
 mod template;
 mod list;
+mod media;
 
 pub struct HtmlRenderer<'e, 't> {
     pub path: Vec<&'e Element>,
@@ -32,6 +33,8 @@ impl<'e, 's: 'e, 't: 'e> Traversion<'e, &'s Settings> for HtmlRenderer<'e, 't> {
             Element::HtmlTag(ref root) => self.htmltag(root, settings, out)?,
             Element::Template(ref root) => self.template(root, settings, out)?,
             Element::List(ref root) => self.list(root, settings, out)?,
+            Element::InternalReference(ref root) => self.internal_ref(root, settings, out)?,
+            Element::Gallery(ref root) => self.gallery(root, settings, out)?,
             _ => {
                 writeln!(out, "all other types")?;
                 true
