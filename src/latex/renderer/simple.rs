@@ -113,7 +113,8 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         if caption.is_empty() {
             caption = escape_latex(&root.target);
         }
-        writeln!(out, INTERNAL_HREF!(), &escape_latex(&root.target), &caption)?;
+        let url = escape_latex(&urlencode(&root.target));
+        writeln!(out, INTERNAL_HREF!(), &url, &caption)?;
         Ok(false)
     }
 }

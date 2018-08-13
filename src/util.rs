@@ -51,6 +51,20 @@ pub fn escape_html(input: &str) -> String {
     input.to_string()
 }
 
+/// based on  https://github.com/bt/rust_urlencoding
+pub fn urlencode(data: &str) -> String {
+    let mut escaped = String::new();
+    for b in data.as_bytes().iter() {
+        match *b as char {
+            // Accepted characters
+            'A'...'Z' | 'a'...'z' | '0'...'9' | '/'| ':' | '-' | '_' | '.' | '~' => escaped.push(*b as char),
+
+            // Everything else is percent-encoded
+            b => escaped.push_str(format!("%{:02X}", b as u32).as_str()),
+        };
+    }
+    return escaped;
+}
 
 /// Returns a unicode character for a smiley description.
 ///
