@@ -92,6 +92,9 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
             MarkupType::Underline => {
                 write!(out, UNDERLINE!(), &inner)?;
             }
+            MarkupType::Blockquote => {
+                self.environment(QUOTE_ENV!(), &[], &inner, out)?;
+            }
             _ => {
                 let msg = format!("MarkupType not implemented: {:?}", &root.markup);
                 self.write_error(&msg, out)?;

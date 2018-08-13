@@ -89,6 +89,7 @@ alias!(ITALIC, "\\textit{{{}}}");
 alias!(MATH, "${}$");
 alias!(STRIKE_THROUGH, "\\sout{{{}}}");
 alias!(UNDERLINE, "\\ul{{{}}}");
+alias!(QUOTE_ENV, "displayquote");
 
 // --- Templates ---
 
