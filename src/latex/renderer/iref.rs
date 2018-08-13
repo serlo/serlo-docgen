@@ -100,6 +100,8 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
 
         // export links to other articles as url to the article
         if target_str
+            .trim()
+            .trim_left_matches(":")
             .to_lowercase()
             .starts_with("mathe für nicht-freaks:")
         {
@@ -107,11 +109,23 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
 
             let mut url = settings.general.article_url_base.to_owned();
             url.push_str(&target_str);
-            url = url.replace(' ', "_");
+            url = escape_latex(&urlencode(&url));
 
             writeln!(out, INTERNAL_HREF!(), &url, &cap_content)?;
             return Ok(false);
         }
+
+        // anchor references
+        let anchor_prefixes = ["#Anchor:", "#anchor:", "#Anker:", "#anker:"];
+        let anchor_prefix = anchor_prefixes
+            .iter().filter(|p| target_str.starts_with(*p))
+            .next();
+        if let Some(prefix) = anchor_prefix {
+            let target = target_str.trim_left_matches(prefix);
+            write!(out, LABEL_REF!(), target.trim())?;
+            return Ok(false)
+        }
+
 
         let msg = format!("No export function defined for ref {:?}", target_path);
         self.write_error(&msg, out)?;

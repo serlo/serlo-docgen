@@ -164,6 +164,7 @@ alias!(TABLE_WITH_HEADER, "{}\\midrule\n{}");
 
 // --- Anchor ---
 alias!(LABEL, "\\label{{{}}}");
+alias!(LABEL_REF, "\\ref{{{}}}");
 
 // --- Main Article ---
 alias!(MAINARTICLE, "$\\rightarrow$ \\href{{{}}}{{\\emph{{{}}}}}");
