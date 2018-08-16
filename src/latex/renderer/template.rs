@@ -42,7 +42,8 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
             | KnownTemplate::Solution(_)
             | KnownTemplate::SolutionProcess(_) => {
                 self.environment_template(settings, &parsed, out)?
-            }
+            },
+            KnownTemplate::GroupExercise(group) => self.group_exercise(&group, settings, out)?,
             KnownTemplate::ProofStep(step) => self.proofstep(&step, settings, out)?,
             KnownTemplate::Anchor(anchor) => self.anchor(&anchor, out)?,
             KnownTemplate::Mainarticle(article) => self.mainarticle(settings, &article, out)?,
@@ -153,6 +154,53 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                 self.run_vec(&proof, settings, out)?;
             }
         }
+        Ok(())
+    }
+
+    fn group_exercise(
+        &mut self,
+        group: &GroupExercise<'e>,
+        settings: &'s Settings,
+        out: &mut io::Write,
+    ) -> io::Result<()> {
+        let title = group.title.unwrap_or(&[]).render(self, settings)?;
+        let mut exercise = group.exercise.render(self, settings)?;
+
+        let tasks;
+        let solutions;
+        {
+            let mut build_items = | solution | -> Vec<String> {
+                group.present.iter()
+                .filter(|a| a.name.starts_with("subtask") && (if solution {
+                        a.name.ends_with("solution")
+                    } else {
+                        !a.name.ends_with("solution")
+                }))
+                .map(|a| {
+                    let mut s = "\\item ".to_string();
+                    s.push_str(&a.value.render(self, settings)
+                        .expect("unexpected error during latex rendering!").trim());
+                    s
+                }).collect()
+            };
+
+            let task_list = build_items(false);
+            let solution_list = build_items(true);
+            tasks = format!(LIST!(), "enumerate",
+                            &task_list.join("\n"), "enumerate");
+            solutions = format!(LIST!(), "enumerate",
+                                &solution_list.join("\n"), "enumerate");
+        }
+
+        exercise = format!(EXERCISE_TASKLIST!(), exercise.trim(), tasks.trim());
+
+        if let Some(explanation) = group.explanation {
+            let exp = explanation.render(self, settings)?;
+            exercise = format!(EXERCISE_EXPLANATION!(), exercise.trim(), exp.trim());
+        }
+
+        self.environment("exercise", &[title.trim()], exercise.trim(), out)?;
+        self.environment("solution", &[title.trim()], solutions.trim(), out)?;
         Ok(())
     }
 

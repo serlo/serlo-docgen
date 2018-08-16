@@ -115,6 +115,8 @@ alias!(
 "
 );
 alias!(INDUCTION_SET_DEFAULT, "$n\\in\\mathcal{{N}}$");
+alias!(EXERCISE_TASKLIST, "{}\n\n{}");
+alias!(EXERCISE_EXPLANATION, "{}\n\n{}");
 
 // --- Galleries ---
 
