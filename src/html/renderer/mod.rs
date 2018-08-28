@@ -5,6 +5,7 @@ mod simpletypes;
 mod template;
 mod list;
 mod media;
+mod table;
 
 pub struct HtmlRenderer<'e, 't> {
     pub path: Vec<&'e Element>,
@@ -30,6 +31,9 @@ impl<'e, 's: 'e, 't: 'e> Traversion<'e, &'s Settings> for HtmlRenderer<'e, 't> {
             Element::Comment(ref root) => self.comment(root, settings, out)?,
             Element::ExternalReference(ref root) => self.href(root, settings, out)?,
             Element::Formatted(ref root) => self.formatted(root, settings, out)?,
+            Element::Table(ref root) => self.table(root, settings, out)?,
+            Element::TableRow(ref root) => self.table_row(root, settings, out)?,
+            Element::TableCell(ref root) => self.table_cell(root, settings, out)?,
             Element::HtmlTag(ref root) => self.htmltag(root, settings, out)?,
             Element::Template(ref root) => self.template(root, settings, out)?,
             Element::List(ref root) => self.list(root, settings, out)?,
