@@ -11,12 +11,20 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         out: &mut io::Write,
     ) -> io::Result<bool> {
         if root.header {
-            write!(out, "<th>")?;
+            write!(out, "<th")?;
+            for attribute in &root.attributes {
+                write!(out, " {}=\"{}\"", &escape_html(&attribute.key), &escape_html(&attribute.value))?;
+            }
+            writeln!(out, ">")?;
             self.run_vec(&root.content, settings, out)?;
             write!(out, "</th>")?;
         }
         else{
-            write!(out, "<td>")?;
+            write!(out, "<td")?;
+            for attribute in &root.attributes {
+                write!(out, " {}=\"{}\"", &escape_html(&attribute.key), &escape_html(&attribute.value))?;
+            }
+            writeln!(out, ">")?;
             self.run_vec(&root.content, settings, out)?;
             write!(out, "</td>")?;
         }
@@ -29,10 +37,14 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         settings: &'s Settings,
         out: &mut io::Write,
     ) -> io::Result<bool> {
-        writeln!(out, "<tr>");
+        writeln!(out, "<tr")?;
+        for attribute in &root.attributes {
+            write!(out, " {}=\"{}\"", &escape_html(&attribute.key), &escape_html(&attribute.value))?;
+        }
+        writeln!(out, ">")?;
         for element in &root.cells {
                 match element {
-                    TableCell => {
+                    Element::TableCell(_) => {
                                     self.run(element, settings, out)?;
                                 },
                     _ => {
@@ -42,7 +54,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                         }
                 }
             }
-            writeln!(out, "</tr>");
+            writeln!(out, "</tr>")?;
         Ok(false)
     }
     pub fn table(
@@ -51,10 +63,14 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         settings: &'s Settings,
         out: &mut io::Write,
     ) -> io::Result<bool> {
-        writeln!(out, "<table>")?;
+        write!(out, "<table")?;
+        for attribute in &root.attributes {
+            write!(out, " {}=\"{}\"", &escape_html(&attribute.key), &escape_html(&attribute.value))?;
+        }
+        write!(out, ">")?;
         for element in &root.rows {
                 match element {
-                    TableRow => {
+                    Element::TableRow(_) => {
                                     self.run(element, settings, out)?;
                                 },
                     _ => {
@@ -71,4 +87,3 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         Ok(false)
     }
 }
-

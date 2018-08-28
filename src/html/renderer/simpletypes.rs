@@ -27,7 +27,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         _: &'s Settings,
         out: &mut io::Write,
     ) -> io::Result<bool> {
-        write!(out, "{}", &root.text)?;
+        write!(out, "{}", &escape_html(&root.text))?;
         Ok(false)
     }
 
@@ -49,7 +49,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         _: &'s Settings,
         out: &mut io::Write,
     ) -> io::Result<bool> {
-        writeln!(out, "<!-- {} -->", &root.text)?;
+        writeln!(out, "<!-- {} -->", &escape_html(&root.text))?;
         Ok(false)
     }
 
@@ -59,7 +59,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         settings: &'s Settings,
         out: &mut io::Write,
     ) -> io::Result<bool> {
-        write!(out, "<a class=\"link\" href=\"{}\">", &root.target)?;
+        write!(out, "<a class=\"link\" href=\"{}\">", &escape_html(&root.target))?;
         self.run_vec(&root.caption,settings,out)?;
         writeln!(out, " </a>")?;
         Ok(false)
@@ -71,7 +71,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         settings: &'s Settings,
         out: &mut io::Write,
     ) -> io::Result<bool> {
-
+        //let mut a = false;
         match root.markup {
             MarkupType::NoWiki => {
                 write!(out, "<span class=\"nowiki\">")?;
@@ -84,6 +84,8 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
             }
             MarkupType::Math => {
                 write!(out, "<span class=\"math\">")?;
+                //write!(out, "\\(")?;
+                //a = true;
             }
             MarkupType::StrikeThrough => {
                 write!(out, "<span class=\"striketrough\">")?;
@@ -97,6 +99,10 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
             }
         }
         self.run_vec(&root.content,settings,out)?;
+        /*if a
+        {
+            write!(out, "\\)")?;
+        }*/
         writeln!(out, "</span>")?;
         Ok(false)
     }
@@ -120,7 +126,6 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                     "no export function defined \
                      for html tag `{}`!",
                     root.name
-                    //Todo: implemented error function, thatt passes errors
                 );
                 self.write_error(&msg, out)?;
 

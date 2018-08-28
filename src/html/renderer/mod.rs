@@ -56,21 +56,19 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
 
     //error-handling
     fn write_error(&self, message: &str, out: &mut io::Write) -> io::Result<bool> {
-        let message = escape_latex(message);
+        let message = escape_html(message.to_string());
         writeln!(out, "error: {}", message)?;
+        Ok(true)
+    }
+    fn error(&self, root: &Error, out: &mut io::Write) -> io::Result<bool> {
+        self.write_error(&root.message, out)?;
         Ok(true)
     }
 }
 
 
-
-
-
-/*
-fn escape_html(
-    string: &str
-    )-> io::Result<()>{
-        Ok(true);
+fn escape_html(stringtoreplace: String)-> String{
+        let mut x = str::replace(&stringtoreplace, "<", "");
+        x = str::replace(&x, ">", "");
+        x
     }
-
-*/
