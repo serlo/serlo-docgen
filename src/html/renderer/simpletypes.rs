@@ -27,7 +27,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         _: &'s Settings,
         out: &mut io::Write,
     ) -> io::Result<bool> {
-        write!(out, "{}", &escape_html(&root.text))?;
+        write!(out, "{}", escape_html(&root.text))?;
         Ok(false)
     }
 
@@ -49,7 +49,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         _: &'s Settings,
         out: &mut io::Write,
     ) -> io::Result<bool> {
-        writeln!(out, "<!-- {} -->", &escape_html(&root.text))?;
+        writeln!(out, "<!-- {} -->", escape_html(&root.text))?;
         Ok(false)
     }
 
@@ -59,7 +59,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         settings: &'s Settings,
         out: &mut io::Write,
     ) -> io::Result<bool> {
-        write!(out, "<a class=\"link\" href=\"{}\">", &escape_html(&root.target))?;
+        write!(out, "<a class=\"link\" href=\"{}\">", escape_html(&root.target))?;
         self.run_vec(&root.caption,settings,out)?;
         writeln!(out, " </a>")?;
         Ok(false)

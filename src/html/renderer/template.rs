@@ -11,7 +11,6 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         settings: &'s Settings,
         out: &mut io::Write,
     ) -> io::Result<bool> {
-        let doctitle = &settings.runtime.document_title;
         let parsed = if let Some(parsed) = parse_template(&root) {
             parsed
         } else {
@@ -29,17 +28,17 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         match parsed {
             KnownTemplate::Formula(formula) => writeln!(out, "formula")?,//self.formula(&formula, settings, out)?,
             KnownTemplate::Important(important) => writeln!(out, "Important")?,//self.important(settings, &important, out)?,
-            KnownTemplate::Definition(_) => self.environment_template(root, settings, &parsed, out, "definition")?,
-            KnownTemplate::Theorem(_) => self.environment_template(root, settings, &parsed, out, "theorem")?,
-            KnownTemplate::Example(_) => self.environment_template(root, settings, &parsed, out, "example")?,
-            KnownTemplate::Exercise(_) => self.environment_template(root, settings, &parsed, out, "exercise")?,
-            KnownTemplate::Hint(_) => self.environment_template(root, settings, &parsed, out, "hint")?,
-            KnownTemplate::Warning(_) => self.environment_template(root, settings, &parsed, out, "warning")?,
-            KnownTemplate::Proof(_) => self.environment_template(root, settings, &parsed, out, "proof")?,
-            KnownTemplate::AlternativeProof(_) => self.environment_template(root, settings, &parsed, out, "alternativeproof")?,
-            KnownTemplate::ProofSummary(_) => self.environment_template(root, settings, &parsed, out, "proofsummary")?,
-            KnownTemplate::Solution(_) => self.environment_template(root, settings, &parsed, out, "solution")?,
-            KnownTemplate::SolutionProcess(_) => self.environment_template(root, settings, &parsed, out, "solutionprocess")?,
+            KnownTemplate::Definition(_) => self.environment_template(root, settings, out, "definition")?,
+            KnownTemplate::Theorem(_) => self.environment_template(root, settings, out, "theorem")?,
+            KnownTemplate::Example(_) => self.environment_template(root, settings, out, "example")?,
+            KnownTemplate::Exercise(_) => self.environment_template(root, settings, out, "exercise")?,
+            KnownTemplate::Hint(_) => self.environment_template(root, settings, out, "hint")?,
+            KnownTemplate::Warning(_) => self.environment_template(root, settings, out, "warning")?,
+            KnownTemplate::Proof(_) => self.environment_template(root, settings, out, "proof")?,
+            KnownTemplate::AlternativeProof(_) => self.environment_template(root, settings, out, "alternativeproof")?,
+            KnownTemplate::ProofSummary(_) => self.environment_template(root, settings, out, "proofsummary")?,
+            KnownTemplate::Solution(_) => self.environment_template(root, settings, out, "solution")?,
+            KnownTemplate::SolutionProcess(_) => self.environment_template(root, settings, out, "solutionprocess")?,
             _ => writeln!(out, "irgendetwas anderes")?
         };
         Ok(false)
@@ -50,7 +49,6 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         &mut self,
         root: &'e Template,
         settings: &'s Settings,
-        template: &KnownTemplate<'e>,
         out: &mut io::Write,
         typ: &str,
     ) -> io::Result<()> {
