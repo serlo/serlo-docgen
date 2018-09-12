@@ -29,6 +29,8 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
             KnownTemplate::Formula(formula) => self.formula(&formula, settings, out)?,//self.formula(&formula, settings, out)?,
             //KnownTemplate::Important(important) => writeln!(out, "Important")?,//self.important(settings, &important, out)?,
             KnownTemplate::Definition(_) => self.environment_template(root, settings, out, "definition")?,
+            KnownTemplate::Question(question) => self.question(&question, settings, out)?,
+            KnownTemplate::ProofStep(step) => self.proofstep(&step, settings, out)?,
             KnownTemplate::Theorem(_) => self.environment_template(root, settings, out, "theorem")?,
             KnownTemplate::Example(_) => self.environment_template(root, settings, out, "example")?,
             KnownTemplate::Exercise(_) => self.environment_template(root, settings, out, "exercise")?,
@@ -50,6 +52,30 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         Ok(false)
 
     }
+    fn proof_by_cases(
+        &mut self,
+        cases: &ProofByCases<'e>,
+        settings: &'s Settings,
+        out: &mut io::Write,
+    ) -> io::Result<bool> {
+        let attrs = [
+            (Some(cases.case1), Some(cases.proof1)),
+            (Some(cases.case2), Some(cases.proof2)),
+            (cases.case3, cases.proof3),
+            (cases.case4, cases.proof4),
+            (cases.case5, cases.proof5),
+            (cases.case6, cases.proof6),
+        ];
+        for (index, tuple) in attrs.iter().enumerate() {
+            if let (Some(case), Some(proof)) = tuple {
+                writeln!(out, "<div class=\"proofcase\"> Fall {}: </div>", index + 1)?;
+                self.run_vec(&proof, settings, out)?;
+            }
+        }
+        Ok(false)
+
+    }
+
 
     fn formula(
         &mut self,
@@ -82,14 +108,69 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                     MarkupType::Math => {
                         self.formel(root, settings, out)?;
                     },
-                    _ => write!(out, "FEHLER")?
+                    _ => { let msg = format!(
+                                        "unknown type in formula.formula[0] in formula-template! Type: {:?}",
+                                        root.markup
+                                    );
+                        self.write_error(&msg, out)?;
+                    }
                 }
             },
-            _ => write!(out, "FEHLER")?
+            _ => { let msg = format!(
+                                "unknown type in formula.formula[0] in formula-template! Not a Formatted: Type: {:?}",
+                                formula.formula[0]
+                            );
+                self.write_error(&msg, out)?;
+            }
         }
         writeln!(out, "</p>")?;
         Ok(false)
     }
+
+    pub fn question(
+        &mut self,
+        question: &Question<'e>,
+        settings: &'s Settings,
+        out: &mut io::Write,
+    ) -> io::Result<bool>{
+        write!(out, "<details>")?;
+        write!(out, "<summary class =\"question\">")?;
+        if let Some(kind) = question.kind {
+            write!(out,"<div class=\"fragenart\" style=\"display: inline;\">")?;
+            self.run_vec(&kind, settings, out)?;
+            write!(out, ": ")?;
+            write!(out,"</div>")?;
+        }
+        else{
+            write!(out,"<div class=\"fragenart\" style=\"display: inline;\">")?;
+            write!(out, "Frage: ")?;
+            write!(out,"</div>")?;
+        }
+        self.run_vec(&question.question, settings, out)?;
+        write!(out, "</summary>")?;
+        write!(out,"<div class=\"answer\">")?;
+        self.run_vec(&question.answer, settings, out)?;
+        write!(out,"</div>")?;
+        write!(out, "</details>")?;
+        Ok(false)
+    }//it is impportant to specify in css: display: inline, otherwise weird line break
+
+    pub fn proofstep(
+        &mut self,
+        step: &ProofStep<'e>,
+        settings: &'s Settings,
+        out: &mut io::Write,
+    ) -> io::Result<bool>{
+        write!(out, "<details open>")?;
+        write!(out, "<summary class =\"proofstep\">")?;
+        write!(out, "Beweisschritt: <br>")?;
+        self.run_vec(&step.goal, settings, out)?;
+        write!(out, "</summary>")?;
+        write!(out,"<div class=\"proofstep\">")?;
+        self.run_vec(&step.step, settings, out)?;
+        write!(out, "</details>")?;
+        Ok(false)
+    }//auf zeilenumbrüche achten, da in einem neuen absatz reingepackt der text (seltsamerweise)
 
     pub fn environment_template(
         &mut self,
@@ -105,6 +186,26 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         write!(out, "</div>")?;
         Ok(false)
     }
+    /*pub fn exercise(
+        &mut self,
+        exercise: &Exercise<'e>,
+        settings: &'s Settings,
+        out: &mut io::Write,
+    ) -> io::Result<bool> {
+        write!(out, "<div class=\"aufgabe\"> Aufgabe ")?;
+        if let Some(title) = &exercise.title {
+            write!(out, "({})", title)?;
+        };
+        if let Some(solution) = &exercise.solution {
+            write!(out, "<details> <summary class=\"solution\"> Lösung"
+            write!(out, "({})", title)?;
+        };
+        self.run_vec(&exercise.exercise, settings, out)?;
+        for attribute in exercise.present() {
+            if attribute.name == "title" {
+                continue;
+            }
+    }*/
 
 
 }
