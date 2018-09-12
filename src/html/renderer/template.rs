@@ -26,7 +26,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         };
 
         match parsed {
-            KnownTemplate::Formula(formula) => writeln!(out, "formula")?,//self.formula(&formula, settings, out)?,
+            KnownTemplate::Formula(formula) => self.formula(&formula, settings, out)?,//self.formula(&formula, settings, out)?,
             KnownTemplate::Important(important) => writeln!(out, "Important")?,//self.important(settings, &important, out)?,
             KnownTemplate::Definition(_) => self.environment_template(root, settings, out, "definition")?,
             KnownTemplate::Theorem(_) => self.environment_template(root, settings, out, "theorem")?,
@@ -39,10 +39,56 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
             KnownTemplate::ProofSummary(_) => self.environment_template(root, settings, out, "proofsummary")?,
             KnownTemplate::Solution(_) => self.environment_template(root, settings, out, "solution")?,
             KnownTemplate::SolutionProcess(_) => self.environment_template(root, settings, out, "solutionprocess")?,
+            KnownTemplate::Smiley(smiley) => write!(
+                out,
+                "{}",
+                smiley_to_unicode(&extract_plain_text(&smiley.name.unwrap_or(&[])))
+                    .unwrap_or('\u{01f603}')
+            )?,
             _ => writeln!(out, "irgendetwas anderes")?
         };
         Ok(false)
 
+    }
+
+    fn formula(
+        &mut self,
+        formula: &Formula<'e>,
+        settings: &'s Settings,
+        out: &mut io::Write,
+    ) -> io::Result<()> {
+
+        let error = formula
+            .formula
+            .iter()
+            .filter_map(|e| {
+                if let Element::Error(ref err) = e {
+                    Some(err)
+                } else {
+                    None
+                }
+            })
+            .next();
+
+        if let Some(err) = error {
+            self.error(err, out)?;
+            return Ok(());
+        }
+
+        writeln!(out, "<p class=\"formula\">")?;
+        match formula.formula[0] {
+            Element::Formatted(ref root) => {
+                match root.markup {
+                    MarkupType::Math => {
+                        self.formel(root, settings, out).map(|_| ())?
+                    },
+                    _ => write!(out, "FEHLER")?
+                }
+            },
+            _ => write!(out, "FEHLER")?
+        }
+        writeln!(out, "</p>")?;
+        Ok(())
     }
 
     pub fn environment_template(
@@ -52,6 +98,8 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         out: &mut io::Write,
         typ: &str,
     ) -> io::Result<()> {
+        //let title = template.find("title").map(|a| a.value).unwrap_or(&[]);
+    //    let title_text = title.render(self, settings)?;
         write!(out, "<div class=\"{}\"",typ)?;
         self.run_vec(&root.content, settings, out)?;
         write!(out, "</div>")?;

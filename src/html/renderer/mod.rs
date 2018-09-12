@@ -60,15 +60,8 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         writeln!(out, "error: {}", message)?;
         Ok(true)
     }
-    /*fn error(&self, root: &Error, out: &mut io::Write) -> io::Result<bool> {
+    fn error(&self, root: &Error, out: &mut io::Write) -> io::Result<bool> {
         self.write_error(&root.message, out)?;
         Ok(true)
-    }*/
-}
-
-
-fn escape_html(stringtoreplace: &str)-> String{
-        let mut x = str::replace(stringtoreplace, "<", "&lt;");
-        x = str::replace(&x, ">", "&gt;");
-        x
     }
+}

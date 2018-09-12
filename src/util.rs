@@ -44,12 +44,13 @@ pub fn escape_latex(input: &str) -> String {
     }
     res
 }
+pub fn escape_html(stringtoreplace: &str)-> String{
+        let mut x = str::replace(stringtoreplace, "<", "&lt;");
+        x = str::replace(&x, ">", "&gt;");
+        x
+    }
 
-/// Escape HTML symbols.
-/// TODO: Dummy
-pub fn escape_html(input: &str) -> String {
-    input.to_string()
-}
+
 
 /// based on  https://github.com/bt/rust_urlencoding
 pub fn urlencode(data: &str) -> String {

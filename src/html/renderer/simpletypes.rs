@@ -83,9 +83,8 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                 write!(out, "<span class=\"italic\">")?;
             }
             MarkupType::Math => {
-                write!(out, "<span class=\"math\">")?;
-                //write!(out, "\\(")?;
-                //a = true;
+                self.formel(root,settings,out)?;
+                return Ok(false);
             }
             MarkupType::StrikeThrough => {
                 write!(out, "<span class=\"striketrough\">")?;
@@ -133,4 +132,18 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         }
         Ok(false)
     }
+
+    pub fn formel(
+        &mut self,
+        root: &'e Formatted,
+        settings: &'s Settings,
+        out: &mut io::Write,
+    ) -> io::Result<bool> {
+        write!(out,"<span class=\"math\">")?;
+        self.run_vec(&root.content, settings, out)?;
+        write!(out, "</span>")?;
+        Ok(false)
+
+    }
+
 }
