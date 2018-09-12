@@ -30,6 +30,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         match parsed {
             KnownTemplate::Formula(formula) => self.formula(&formula, settings, out)?,
             KnownTemplate::Important(important) => self.important(settings, &important, out)?,
+            KnownTemplate::Literature(literature) => self.literature(&literature, out)?,
             KnownTemplate::Definition(_)
             | KnownTemplate::Theorem(_)
             | KnownTemplate::Example(_)
@@ -113,6 +114,42 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         self.run_vec(&step.step, settings, out)
     }
 
+    fn literature(
+        &mut self,
+        literature: &Literature<'e>,
+        out: &mut io::Write,
+    ) -> io::Result<()> {
+        let mut lit = String::new();
+        if let Some(author) = literature.author {
+            lit.push_str(&extract_plain_text(author));
+            lit.push_str(": ");
+        }
+        lit.push_str(&format!("\\emph{{{}}}", &extract_plain_text(literature.title)));
+
+        if let Some(publisher) = literature.publisher {
+            lit.push_str(". ");
+            lit.push_str(&extract_plain_text(publisher));
+        }
+        if let Some(address) = literature.address {
+            lit.push_str(", ");
+            lit.push_str(&extract_plain_text(address));
+        }
+        if let Some(year) = literature.year {
+            lit.push_str(" ");
+            lit.push_str(&extract_plain_text(year));
+        }
+        if let Some(isbn) = literature.isbn {
+            lit.push_str(", ");
+            lit.push_str(&extract_plain_text(isbn));
+        }
+        if let Some(pages) = literature.pages {
+            lit.push_str(", ");
+            lit.push_str(&format!("S. {}", &extract_plain_text(pages)));
+        }
+        lit.push_str(".");
+        write!(out, "{}", lit)
+    }
+
     fn question(
         &mut self,
         question: &Question<'e>,
@@ -164,7 +201,6 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         out: &mut io::Write,
     ) -> io::Result<()> {
         let title = group.title.unwrap_or(&[]).render(self, settings)?;
-        let mut exercise = group.exercise.render(self, settings)?;
 
         let tasks;
         let solutions;
@@ -192,7 +228,12 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                                 &solution_list.join("\n"), "enumerate");
         }
 
-        exercise = format!(EXERCISE_TASKLIST!(), exercise.trim(), tasks.trim());
+        let mut exercise = if let Some(exercise_raw) = group.exercise {
+            let exercise = exercise_raw.render(self, settings)?;
+            format!(EXERCISE_TASKLIST!(), exercise.trim(), tasks.trim())
+        } else {
+            String::new()
+        };
 
         if let Some(explanation) = group.explanation {
             let exp = explanation.render(self, settings)?;
