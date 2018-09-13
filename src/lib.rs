@@ -77,6 +77,7 @@ pub fn normalize(mut root: Element, settings: &settings::Settings) -> TResult {
     if let Some(ref checker) = settings.runtime.tex_checker {
         root = mwparser_utils::transformations::normalize_math_formulas(root, checker)?;
     }
+    root = transformations::remove_whitespace_trailers(root, settings)?;
     Ok(root)
 }
 

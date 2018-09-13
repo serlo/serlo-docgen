@@ -65,9 +65,8 @@ pub fn normalize_template_names(mut root: Element, settings: &Settings) -> TResu
     recurse_inplace(&normalize_template_names, root, settings)
 }
 
-pub fn include_sections(mut root: Element, settings: &Settings) -> TResult {
-    root = recurse_inplace_template(&include_sections, root, settings, &include_sections_vec)?;
-    Ok(root)
+pub fn include_sections(root: Element, settings: &Settings) -> TResult {
+    recurse_inplace_template(&include_sections, root, settings, &include_sections_vec)
 }
 
 pub fn include_sections_vec<'a>(
@@ -145,9 +144,8 @@ pub fn include_sections_vec<'a>(
 
 /// Normalize heading depths by making subheadings one level deeper than their parent.
 /// The highest level of headings is assigned depth 1.
-pub fn normalize_heading_depths(mut root: Element, _settings: &Settings) -> TResult {
-    root = normalize_heading_depths_traverse(root, 1)?;
-    Ok(root)
+pub fn normalize_heading_depths(root: Element, _settings: &Settings) -> TResult {
+    normalize_heading_depths_traverse(root, 1)
 }
 
 fn normalize_heading_depths_traverse(mut root: Element, current_depth: usize) -> TResult {
@@ -275,7 +273,7 @@ fn check_heading_existence(
 }
 
 /// Strip excluded headings.
-pub fn remove_exclusions(mut root: Element, settings: &Settings) -> TResult {
+pub fn remove_exclusions(root: Element, settings: &Settings) -> TResult {
     // check if every specified heading exists
     if let Element::Document(_) = root {
         for subtarget in &settings.runtime.markers.include.subtargets {
@@ -285,12 +283,11 @@ pub fn remove_exclusions(mut root: Element, settings: &Settings) -> TResult {
             check_heading_existence(&root, &subtarget)?;
         }
     }
-    root = recurse_inplace_template(&remove_exclusions, root, settings, &remove_exclusions_vec)?;
-    Ok(root)
+    recurse_inplace_template(&remove_exclusions, root, settings, &remove_exclusions_vec)
 }
 
 /// Resolve interwiki links.
-pub fn resolve_interwiki_links(mut root: Element, settings: &Settings) -> TResult {
+pub fn resolve_interwiki_links(root: Element, settings: &Settings) -> TResult {
     if let Element::InternalReference(ref iref) = root {
         let text = extract_plain_text(&iref.target);
         if let Some(position) = text.find(":") {
@@ -313,6 +310,37 @@ pub fn resolve_interwiki_links(mut root: Element, settings: &Settings) -> TResul
             }
         }
     }
-    root = recurse_inplace(&resolve_interwiki_links, root, settings)?;
-    Ok(root)
+    recurse_inplace(&resolve_interwiki_links, root, settings)
 }
+
+/// Strip trailing whitespace elements from containers.
+pub fn remove_whitespace_trailers(mut root: Element, settings: &Settings) -> TResult {
+
+    fn rstrip<'a>(root_content: &mut Vec<Element>) {
+        loop {
+            let last = root_content.pop();
+            if let Some(Element::Text(ref text)) = last {
+                if text.text.trim().is_empty() {
+                    continue;
+                }
+            }
+            if let Some(last) = last {
+                root_content.push(last);
+            }
+            break;
+        }
+    }
+
+    match root {
+        Element::Paragraph(ref mut par) => rstrip(&mut par.content),
+        Element::TemplateArgument(ref mut arg) => rstrip(&mut arg.value),
+        Element::InternalReference(ref mut iref) => rstrip(&mut iref.caption),
+        Element::ExternalReference(ref mut eref) => rstrip(&mut eref.caption),
+        Element::ListItem(ref mut li) => rstrip(&mut li.content),
+        Element::TableCell(ref mut tc) => rstrip(&mut tc.content),
+        _ => (),
+    }
+    recurse_inplace(&remove_whitespace_trailers, root, settings)
+}
+
+
