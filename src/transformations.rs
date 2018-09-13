@@ -315,7 +315,6 @@ pub fn resolve_interwiki_links(root: Element, settings: &Settings) -> TResult {
 
 /// Strip trailing whitespace elements from containers.
 pub fn remove_whitespace_trailers(mut root: Element, settings: &Settings) -> TResult {
-
     fn rstrip<'a>(root_content: &mut Vec<Element>) {
         loop {
             let last = root_content.pop();
@@ -346,7 +345,6 @@ pub fn remove_whitespace_trailers(mut root: Element, settings: &Settings) -> TRe
 /// Unpack the paragraph in template arguments if they contain one paragraph
 /// as their only content element. Usually, the user wanted no paragraph here.
 pub fn unpack_template_arguments(mut root: Element, settings: &Settings) -> TResult {
-
     if let Element::TemplateArgument(ref mut arg) = root {
         let mut new_content = None;
         if let [Element::Paragraph(ref mut par)] = arg.value[..] {

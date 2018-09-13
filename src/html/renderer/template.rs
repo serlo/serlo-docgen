@@ -4,17 +4,17 @@ use mwparser_utils::*;
 use preamble::*;
 
 macro_rules! tag_wrapper {
-    ($self: ident, $content:expr, $settings:ident, $out:ident, $tag:expr, $class:expr) => {
+    ($self:ident, $content:expr, $settings:ident, $out:ident, $tag:expr, $class:expr) => {
         write!($out, "<{} class=\"{}\">", $tag, $class)?;
         $self.run_vec($content, $settings, $out)?;
         write!($out, "</{}>", $tag)?;
-    }
+    };
 }
 
 macro_rules! div_wrapper {
-    ($self: ident, $content:expr, $settings:ident, $out:ident, $class:expr) => {
+    ($self:ident, $content:expr, $settings:ident, $out:ident, $class:expr) => {
         tag_wrapper!($self, $content, $settings, $out, "div", $class)
-    }
+    };
 }
 
 impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
@@ -48,8 +48,8 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                 self.run_vec(&noprint.content, settings, out)?;
                 false
             }
-            KnownTemplate::Navigation(_) => {false}
-            KnownTemplate::Todo(_) => {false}
+            KnownTemplate::Navigation(_) => false,
+            KnownTemplate::Todo(_) => false,
             KnownTemplate::Theorem(_)
             | KnownTemplate::Definition(_)
             | KnownTemplate::SolutionProcess(_)
@@ -172,7 +172,14 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
             write!(out, "Frage: ")?;
             write!(out, "</div>")?;
         }
-        tag_wrapper!(self, &question.question, settings, out, "span", "question-text");
+        tag_wrapper!(
+            self,
+            &question.question,
+            settings,
+            out,
+            "span",
+            "question-text"
+        );
         write!(out, "</summary>")?;
         div_wrapper!(self, &question.answer, settings, out, "answer");
         write!(out, "</details>")?;
@@ -223,7 +230,14 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
 
         let title = template.find("title");
         if let Some(render_title) = title {
-            tag_wrapper!(self, &render_title.value, settings, out, "span", "environment-title");
+            tag_wrapper!(
+                self,
+                &render_title.value,
+                settings,
+                out,
+                "span",
+                "environment-title"
+            );
         }
 
         for attribute in template.present() {
