@@ -39,11 +39,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         };
 
         match parsed {
-            KnownTemplate::Formula(formula) => self.formula(&formula, settings, out)?, //self.formula(&formula, settings, out)?,
-            //KnownTemplate::Important(important) => writeln!(out, "Important")?,//self.important(settings, &important, out)?,
-            KnownTemplate::Definition(_) => {
-                self.environment_template(&parsed, settings, out, "definition")?
-            }
+            KnownTemplate::Formula(formula) => self.formula(&formula, settings, out)?,
             KnownTemplate::Induction(induction) => self.induction(&induction, settings, out)?,
             KnownTemplate::Question(question) => self.question(&question, settings, out)?,
             KnownTemplate::ProofStep(step) => self.proofstep(&step, settings, out)?,
@@ -52,32 +48,22 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                 self.run_vec(&noprint.content, settings, out)?;
                 false
             }
-            KnownTemplate::Todo(_) => {false}
-            KnownTemplate::Theorem(_) => {
-                self.environment_template(&parsed, settings, out, "theorem")?
-            }
-            KnownTemplate::Example(_) => {
-                self.environment_template(&parsed, settings, out, "example")?
-            }
-            KnownTemplate::Exercise(_) => {
-                self.environment_template(&parsed, settings, out, "exercise")?
-            }
             KnownTemplate::Navigation(_) => {false}
-            KnownTemplate::Hint(_) => self.environment_template(&parsed, settings, out, "hint")?,
-            KnownTemplate::Warning(_) => {
-                self.environment_template(&parsed, settings, out, "warning")?
-            }
-            KnownTemplate::Proof(_) => self.environment_template(&parsed, settings, out, "proof")?,
-            KnownTemplate::AlternativeProof(_) => {
-                self.environment_template(&parsed, settings, out, "alternativeproof")?
-            }
-            KnownTemplate::ProofSummary(_) => {
-                self.environment_template(&parsed, settings, out, "proofsummary")?
+            KnownTemplate::Todo(_) => {false}
+            KnownTemplate::Theorem(_)
+            | KnownTemplate::Definition(_)
+            | KnownTemplate::SolutionProcess(_)
+            | KnownTemplate::ProofSummary(_)
+            | KnownTemplate::AlternativeProof(_)
+            | KnownTemplate::Proof(_)
+            | KnownTemplate::Warning(_)
+            | KnownTemplate::Example(_)
+            | KnownTemplate::Exercise(_)
+            | KnownTemplate::Hint(_) => {
+                let class = parsed.identifier().to_lowercase();
+                self.environment_template(&parsed, settings, out, &class)?
             }
             KnownTemplate::Solution(solution) => self.solution(&solution, settings, out)?,
-            KnownTemplate::SolutionProcess(_) => {
-                self.environment_template(&parsed, settings, out, "solutionprocess")?
-            }
             KnownTemplate::Smiley(smiley) => {
                 write!(
                     out,
@@ -177,24 +163,18 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         write!(out, "<details>")?;
         write!(out, "<summary class =\"question\">")?;
         if let Some(kind) = question.kind {
-            write!(out, "<div class=\"fragenart\" style=\"display: inline;\">")?;
-            if let [Element::Paragraph(ref par)] = kind {
-                self.run_vec(&par.content, settings, out)?;
-            } else {
-                self.run_vec(&kind, settings, out)?;
-            }
+            write!(out, "<div class=\"question-kind\">")?;
+            self.run_vec(&kind, settings, out)?;
             write!(out, ": ")?;
             write!(out, "</div>")?;
         } else {
-            write!(out, "<div class=\"fragenart\" style=\"display: inline;\">")?;
+            write!(out, "<div class=\"question-kind\">")?;
             write!(out, "Frage: ")?;
             write!(out, "</div>")?;
         }
-        self.run_vec(&question.question, settings, out)?;
+        tag_wrapper!(self, &question.question, settings, out, "span", "question-text");
         write!(out, "</summary>")?;
-        write!(out, "<div class=\"answer\">")?;
-        self.run_vec(&question.answer, settings, out)?;
-        write!(out, "</div>")?;
+        div_wrapper!(self, &question.answer, settings, out, "answer");
         write!(out, "</details>")?;
         Ok(false)
     } //it is impportant to specify in css: display: inline, otherwise weird line break
@@ -207,11 +187,10 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
     ) -> io::Result<bool> {
         write!(out, "<details open>")?;
         write!(out, "<summary class =\"proofstep\">")?;
-        write!(out, "Beweisschritt: <br>")?;
-        self.run_vec(&step.goal, settings, out)?;
+        write!(out, "Beweisschritt:")?;
+        div_wrapper!(self, &step.goal, settings, out, "proofstep-goal");
         write!(out, "</summary>")?;
-        write!(out, "<div class=\"proofstep\">")?;
-        self.run_vec(&step.step, settings, out)?;
+        div_wrapper!(self, &step.step, settings, out, "proofstep");
         write!(out, "</details>")?;
         Ok(false)
     } //auf zeilenumbrüche achten, da in einem neuen absatz reingepackt der text (seltsamerweise)
@@ -221,65 +200,40 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         template: &KnownTemplate<'e>,
         settings: &'s Settings,
         out: &mut io::Write,
-        typ: &str,
+        class: &str,
     ) -> io::Result<bool> {
         //let title = template.find("title").map(|a| a.value).unwrap_or(&[]);
         //    let title_text = title.render(self, settings)?;
-        write!(out, "<div class=\"{}\">", typ)?;
-        match template {
-            KnownTemplate::Definition(_) => {
-                write!(out, "Definition")?;
-            }
-            KnownTemplate::Theorem(_) => {
-                write!(out, "Theorem")?;
-            }
-            KnownTemplate::Example(_) => {
-                write!(out, "Beispiel")?;
-            }
-            KnownTemplate::Exercise(_) => {
-                write!(out, "Aufgabe")?;
-            }
-            KnownTemplate::Hint(_) => {
-                write!(out, "Hinweis")?;
-            }
-            KnownTemplate::Warning(_) => {
-                write!(out, "Warnung")?;
-            }
-            KnownTemplate::Proof(_) => {
-                write!(out, "Beweis")?;
-            }
-            KnownTemplate::AlternativeProof(_) => {
-                write!(out, "Alternativer Beweis")?;
-            }
-            KnownTemplate::ProofSummary(_) => {
-                write!(out, "Beweiszusammenfassung")?;
-            }
-            KnownTemplate::Solution(_) => {
-                write!(out, "Lösung")?;
-            }
-            KnownTemplate::SolutionProcess(_) => {
-                write!(out, "Lösungsweg")?;
-            }
-            _ => write!(out, "FEHLER")?,
-        }
-        write!(out, ": ")?;
+        write!(out, "<div class=\"{} environment\">", class)?;
+        let name = match template {
+            KnownTemplate::Definition(_) => "Definition",
+            KnownTemplate::Theorem(_) => "Theorem",
+            KnownTemplate::Example(_) => "Beispiel",
+            KnownTemplate::Exercise(_) => "Aufgabe",
+            KnownTemplate::Hint(_) => "Hinweis",
+            KnownTemplate::Warning(_) => "Warnung",
+            KnownTemplate::Proof(_) => "Beweis",
+            KnownTemplate::AlternativeProof(_) => "Alternativer Beweis",
+            KnownTemplate::ProofSummary(_) => "Beweiszusammenfassung",
+            KnownTemplate::Solution(_) => "Lösung",
+            KnownTemplate::SolutionProcess(_) => "Lösungsweg",
+            _ => "FEHLER",
+        };
+        write!(out, "{}: ", &name)?;
+
         let title = template.find("title");
         if let Some(render_title) = title {
-            if let [Element::Paragraph(ref par)] = render_title.value {
-                self.run_vec(&par.content, settings, out)?;
-            } else {
-                self.run_vec(&render_title.value, settings, out)?;
-            }
+            tag_wrapper!(self, &render_title.value, settings, out, "span", "environment-title");
         }
-        write!(out, ":")?;
+
         for attribute in template.present() {
             if attribute.name == "title" {
                 continue;
             }
-            self.run_vec(&attribute.value, settings, out)?;
+            let class = format!("env-{}", &attribute.name);
+            div_wrapper!(self, &attribute.value, settings, out, &class);
         }
         write!(out, "</div>")?;
-
         Ok(false)
     }
     /*pub fn exercise(
@@ -310,11 +264,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
     ) -> io::Result<bool> {
         write!(out, "<details class=\"solution\"> <summary> Lösung: ")?;
         if let Some(render_title) = &solution.title {
-            if let [Element::Paragraph(ref par)] = render_title {
-                self.run_vec(&par.content, settings, out)?;
-            } else {
-                self.run_vec(&render_title, settings, out)?;
-            }
+            self.run_vec(&render_title, settings, out)?;
         }
         write!(out, "</summary>")?;
         self.run_vec(&solution.solution, settings, out)?;

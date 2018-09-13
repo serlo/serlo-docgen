@@ -78,7 +78,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "mediawiki_parser"
-version = "0.3.7"
+version = "0.3.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "argparse 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -94,7 +94,7 @@ name = "mfnf-sitemap-parser"
 version = "0.1.0"
 source = "git+https://github.com/vroland/mfnf-sitemap-parser#31abfca92ca71385a231260966dd01b25ee67036"
 dependencies = [
- "mediawiki_parser 0.3.7 (registry+https://github.com/rust-lang/crates.io-index)",
+ "mediawiki_parser 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "mwparser_utils 0.1.0 (git+https://github.com/vroland/mediawiki-parser-utils)",
  "serde 1.0.78 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_derive 1.0.78 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -107,7 +107,7 @@ name = "mfnf_export"
 version = "0.1.0"
 dependencies = [
  "colored 1.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "mediawiki_parser 0.3.7 (registry+https://github.com/rust-lang/crates.io-index)",
+ "mediawiki_parser 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "mfnf-sitemap-parser 0.1.0 (git+https://github.com/vroland/mfnf-sitemap-parser)",
  "mfnf_template_spec 0.1.0 (git+https://github.com/vroland/mfnf-template-spec)",
  "mwparser_utils 0.1.0 (git+https://github.com/vroland/mediawiki-parser-utils)",
@@ -124,7 +124,7 @@ name = "mfnf_template_spec"
 version = "0.1.0"
 source = "git+https://github.com/vroland/mfnf-template-spec#3a9a055c2ebd8c00234913d6c3ecefcfd523f5fb"
 dependencies = [
- "mediawiki_parser 0.3.7 (registry+https://github.com/rust-lang/crates.io-index)",
+ "mediawiki_parser 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "mwparser_utils 0.1.0 (git+https://github.com/vroland/mediawiki-parser-utils)",
  "mwparser_utils_derive 0.1.0 (git+https://github.com/vroland/mediawiki-parser-utils)",
  "serde 1.0.78 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -134,9 +134,9 @@ dependencies = [
 [[package]]
 name = "mwparser_utils"
 version = "0.1.0"
-source = "git+https://github.com/vroland/mediawiki-parser-utils#3f42e0334b103b9e9e4e647f5846d187b8bff3ce"
+source = "git+https://github.com/vroland/mediawiki-parser-utils#7066307d6f5931a9d7ebb9a5f9172c2c332204df"
 dependencies = [
- "mediawiki_parser 0.3.7 (registry+https://github.com/rust-lang/crates.io-index)",
+ "mediawiki_parser 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "mwparser_utils_derive 0.1.0 (git+https://github.com/vroland/mediawiki-parser-utils)",
  "serde 1.0.78 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_derive 1.0.78 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -145,7 +145,7 @@ dependencies = [
 [[package]]
 name = "mwparser_utils_derive"
 version = "0.1.0"
-source = "git+https://github.com/vroland/mediawiki-parser-utils#3f42e0334b103b9e9e4e647f5846d187b8bff3ce"
+source = "git+https://github.com/vroland/mediawiki-parser-utils#7066307d6f5931a9d7ebb9a5f9172c2c332204df"
 dependencies = [
  "proc-macro2 0.4.19 (registry+https://github.com/rust-lang/crates.io-index)",
  "quote 0.6.8 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -367,7 +367,7 @@ dependencies = [
 "checksum lazy_static 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "ca488b89a5657b0a2ecd45b95609b3e848cf1755da332a0da46e2b2b1cb371a7"
 "checksum libc 0.2.43 (registry+https://github.com/rust-lang/crates.io-index)" = "76e3a3ef172f1a0b9a9ff0dd1491ae5e6c948b94479a3021819ba7d860c8645d"
 "checksum linked-hash-map 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)" = "70fb39025bc7cdd76305867c4eccf2f2dcf6e9a57f5b21a93e1c2d86cd03ec9e"
-"checksum mediawiki_parser 0.3.7 (registry+https://github.com/rust-lang/crates.io-index)" = "c6c0371485571a917dffb3125a6a996487f616f6aff7600ca4f6e47396f329c0"
+"checksum mediawiki_parser 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)" = "4df78c60e26cd6e87077c12fb82e989476aa76c91001e2ddb1ef297be3bb1cd9"
 "checksum mfnf-sitemap-parser 0.1.0 (git+https://github.com/vroland/mfnf-sitemap-parser)" = "<none>"
 "checksum mfnf_template_spec 0.1.0 (git+https://github.com/vroland/mfnf-template-spec)" = "<none>"
 "checksum mwparser_utils 0.1.0 (git+https://github.com/vroland/mediawiki-parser-utils)" = "<none>"
