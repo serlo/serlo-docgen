@@ -215,7 +215,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         tag_stmt!(
             {
                 tag_str!("Beweisschritt: ", out, "span", "proofstep-label");
-                div_wrapper!(self, &step.goal, settings, out, "proofstep-goal");
+                tag_wrapper!(self, &step.goal, settings, out, "span", "proofstep-goal");
             },
             out,
             "summary",
