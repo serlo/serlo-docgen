@@ -11,6 +11,14 @@ macro_rules! tag_wrapper {
     };
 }
 
+macro_rules! tag_stmt {
+    ($content:stmt, $out:expr, $tag:expr, $class:expr) => {
+        write!($out, "<{} class=\"{}\">", $tag, $class)?;
+        $content
+        write!($out, "</{}>", $tag)?;
+    };
+}
+
 macro_rules! div_wrapper {
     ($self:ident, $content:expr, $settings:ident, $out:ident, $class:expr) => {
         tag_wrapper!($self, $content, $settings, $out, "div", $class)
@@ -127,30 +135,32 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
             self.error(err, out)?;
             return Ok(false);
         }
-
-        writeln!(out, "<p class=\"formula\">")?;
-        match formula.formula[0] {
-            Element::Formatted(ref root) => match root.markup {
-                MarkupType::Math => {
-                    self.formel(root, settings, out)?;
-                }
-                _ => {
+        tag_stmt!(
+            {
+                if let Some(Element::Formatted(ref root)) = formula.formula.first() {
+                    if let MarkupType::Math = root.markup {
+                        self.formel(root, settings, out)?;
+                    } else {
+                        let msg = format!(
+                            "the first element of the content of \"formula\" \
+                             is not math, but {:?}!",
+                            root.markup
+                        );
+                        self.write_error(&msg, out)?;
+                    }
+                } else {
                     let msg = format!(
-                        "unknown type in formula.formula[0] in formula-template! Type: {:?}",
-                        root.markup
+                        "first element of the content of \"formula\" is not \
+                         a math element, but {:?}!",
+                        formula.formula[0]
                     );
                     self.write_error(&msg, out)?;
                 }
             },
-            _ => {
-                let msg = format!(
-                                "unknown type in formula.formula[0] in formula-template! Not a Formatted: Type: {:?}",
-                                formula.formula[0]
-                            );
-                self.write_error(&msg, out)?;
-            }
-        }
-        writeln!(out, "</p>")?;
+            out,
+            "p",
+            "formula"
+        );
         Ok(false)
     }
 
