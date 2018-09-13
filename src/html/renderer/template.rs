@@ -30,6 +30,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
             KnownTemplate::Definition(_) => {
                 self.environment_template(&parsed, settings, out, "definition")?
             }
+            KnownTemplate::Induction(induction) => self.induction(&induction, settings, out)?,
             KnownTemplate::Question(question) => self.question(&question, settings, out)?,
             KnownTemplate::ProofStep(step) => self.proofstep(&step, settings, out)?,
             KnownTemplate::ProofByCases(cases) => self.proof_by_cases(&cases, settings, out)?,
@@ -90,6 +91,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         for (index, tuple) in attrs.iter().enumerate() {
             if let (Some(case), Some(proof)) = tuple {
                 writeln!(out, "<div class=\"proofcase\"> Fall {}: </div>", index + 1)?;
+                self.run_vec(&case, settings, out)?;
                 self.run_vec(&proof, settings, out)?;
             }
         }
@@ -296,6 +298,67 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         write!(out, "</summary>")?;
         self.run_vec(&solution.solution, settings, out)?;
         write!(out, "</details>")?;
+        Ok(false)
+    }
+    fn induction(
+        &mut self,
+        induction: &Induction<'e>,
+        settings: &'s Settings,
+        out: &mut io::Write,
+    ) -> io::Result<bool> {
+        write!(out, "<div class=\"induction\">")?;
+        write!(out, "<details open><summary>")?;
+        if let Some(e) = induction.basic_set {
+            write!(out, "Aussageform, die wir für alle ")?;
+            self.run_vec(&e, settings, out)?;
+            write!(out, " beweisen wollen:")?;
+        } else {
+            write!(out, "Aussage die wir beweisen wollen: ")?;
+        };
+        write!(out, "</summary>")?;
+        self.run_vec(&induction.statement, settings, out)?;
+        write!(out, "</details>")?;
+        //Aussage
+
+        write!(out, "<details open><summary>")?;
+        write!(out, "1. Induktionsanfang:")?;
+        write!(out, "</summary>")?;
+        self.run_vec(&induction.base_case, settings, out)?;
+        write!(out, "</details>")?;
+
+        write!(out, "<details open><summary>")?;
+        write!(out, "2. Induktionsschritt:")?;
+        write!(out, "</summary>")?;
+        write!(out, "<details open><summary>")?;
+        write!(out, "2.a Induktionsvoraussetzung:")?;
+        write!(out, "</summary>")?;
+        self.run_vec(&induction.induction_hypothesis, settings, out)?;
+        write!(out, "</details>")?;
+        //IV
+
+        write!(out, "<details open><summary>")?;
+        write!(out, "2.b Induktionsbehauptung:")?;
+        write!(out, "</summary>")?;
+        self.run_vec(&induction.step_case_goal, settings, out)?;
+        write!(out, "</details>")?;
+        //IB
+
+        write!(out, "<details open><summary>")?;
+        write!(out, "2.b Induktionsbehauptung:")?;
+        write!(out, "</summary>")?;
+        self.run_vec(&induction.step_case_goal, settings, out)?;
+        write!(out, "</details>")?;
+
+        write!(out, "<details open><summary>")?;
+        write!(out, "2.c Beweis des Induktionsschritts:")?;
+        write!(out, "</summary>")?;
+        self.run_vec(&induction.step_case, settings, out)?;
+        write!(out, "</details>")?;
+        //IS
+
+        write!(out, "</details>")?;
+        write!(out, "</div>")?;
+
         Ok(false)
     }
 }
