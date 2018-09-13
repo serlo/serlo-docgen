@@ -38,9 +38,9 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         settings: &'s Settings,
         out: &mut io::Write,
     ) -> io::Result<bool> {
-        write!(out, "<p class=\"paragraph\">")?;
+        write!(out, "<div class=\"paragraph\">")?;
         self.run_vec(&root.content, settings, out)?;
-        writeln!(out, "</p>")?;
+        writeln!(out, "</div>")?;
         Ok(false)
     }
 
