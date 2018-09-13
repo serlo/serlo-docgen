@@ -31,11 +31,17 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                 let caption_content = root.caption.render(self, settings)?;
                 let license_link = format!(
                     "<a class=\"serlo-fig-license-url\" href=\"{}\">{}: {}</a>",
-                    &meta.license.detailsurl, &authors, &meta.license.shortname
+                    &urlencode(&meta.license.detailsurl),
+                    &authors,
+                    &meta.license.shortname
                 );
 
                 writeln!(out, "<figure class=\"serlo-fig-center\">")?;
-                writeln!(out, "<img src=\"{}\"/>", &image_path.to_string_lossy())?;
+                writeln!(
+                    out,
+                    "<img src=\"{}\"/>",
+                    &urlencode(&image_path.to_string_lossy())
+                )?;
                 writeln!(
                     out,
                     "<figcaption>{} ({})</figcaption>",

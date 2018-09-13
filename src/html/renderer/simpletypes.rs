@@ -63,7 +63,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         write!(
             out,
             "<a class=\"link\" href=\"{}\">",
-            escape_html(&root.target)
+            urlencode(&root.target)
         )?;
         self.run_vec(&root.caption, settings, out)?;
         writeln!(out, " </a>")?;
@@ -118,10 +118,16 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         out: &mut io::Write,
     ) -> io::Result<bool> {
         match root.name.to_lowercase().trim() {
-            "dfn" | "ref" => {
-                write!(out, "<{}>", &root.name.to_lowercase())?;
+            "dfn" => {
+                write!(out, "<dfn>")?;
                 self.run_vec(&root.content, settings, out)?;
-                write!(out, "</{}>", &root.name.to_lowercase())?;
+                write!(out, "</dfn>")?;
+            }
+            // TODO: proper footnotes
+            "ref" => {
+                write!(out, "<sup>")?;
+                self.run_vec(&root.content, settings, out)?;
+                write!(out, "</sup>")?;
             }
             "section" => (),
             _ => {

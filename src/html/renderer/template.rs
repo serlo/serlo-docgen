@@ -19,6 +19,12 @@ macro_rules! tag_stmt {
     };
 }
 
+macro_rules! tag_str {
+    ($content:expr, $out:expr, $tag:expr, $class:expr) => {
+        tag_stmt!(write!($out, $content)?, $out, $tag, $class)
+    };
+}
+
 macro_rules! div_wrapper {
     ($self:ident, $content:expr, $settings:ident, $out:ident, $class:expr) => {
         tag_wrapper!($self, $content, $settings, $out, "div", $class)
@@ -158,7 +164,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                 }
             },
             out,
-            "p",
+            "div",
             "formula"
         );
         Ok(false)
@@ -179,11 +185,11 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                     write!(out, ": ")?;
                 },
                 out,
-                "div",
-                "question-kind"
+                "span",
+                "question-label"
             );
         } else {
-            tag_stmt!(writeln!(out, "Frage: ")?, out, "div", "question-kind");
+            tag_str!("Frage: ", out, "div", "question-label");
         }
         tag_wrapper!(
             self,
@@ -206,14 +212,19 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         out: &mut io::Write,
     ) -> io::Result<bool> {
         write!(out, "<details open>")?;
-        write!(out, "<summary class =\"proofstep\">")?;
-        write!(out, "Beweisschritt:")?;
-        div_wrapper!(self, &step.goal, settings, out, "proofstep-goal");
-        write!(out, "</summary>")?;
+        tag_stmt!(
+            {
+                tag_str!("Beweisschritt: ", out, "span", "proofstep-label");
+                div_wrapper!(self, &step.goal, settings, out, "proofstep-goal");
+            },
+            out,
+            "summary",
+            "proofstep"
+        );
         div_wrapper!(self, &step.step, settings, out, "proofstep");
         write!(out, "</details>")?;
         Ok(false)
-    } //auf zeilenumbrüche achten, da in einem neuen absatz reingepackt der text (seltsamerweise)
+    }
 
     pub fn environment_template(
         &mut self,
