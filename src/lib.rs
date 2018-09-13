@@ -87,5 +87,6 @@ pub fn compose(mut root: Element, settings: &settings::Settings) -> TResult {
     root = transformations::normalize_heading_depths(root, settings)?;
     root = transformations::remove_exclusions(root, settings)?;
     root = transformations::resolve_interwiki_links(root, settings)?;
+    root = transformations::unpack_template_arguments(root, settings)?;
     Ok(root)
 }

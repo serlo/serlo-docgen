@@ -343,4 +343,19 @@ pub fn remove_whitespace_trailers(mut root: Element, settings: &Settings) -> TRe
     recurse_inplace(&remove_whitespace_trailers, root, settings)
 }
 
+/// Unpack the paragraph in template arguments if they contain one paragraph
+/// as their only content element. Usually, the user wanted no paragraph here.
+pub fn unpack_template_arguments(mut root: Element, settings: &Settings) -> TResult {
 
+    if let Element::TemplateArgument(ref mut arg) = root {
+        let mut new_content = None;
+        if let [Element::Paragraph(ref mut par)] = arg.value[..] {
+            new_content = Some(par.content.drain(..).collect());
+        }
+        if let Some(mut new) = new_content {
+            arg.value.clear();
+            arg.value.append(&mut new);
+        }
+    }
+    recurse_inplace(&unpack_template_arguments, root, settings)
+}
