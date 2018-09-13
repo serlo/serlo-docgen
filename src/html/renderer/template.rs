@@ -34,6 +34,11 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
             KnownTemplate::Question(question) => self.question(&question, settings, out)?,
             KnownTemplate::ProofStep(step) => self.proofstep(&step, settings, out)?,
             KnownTemplate::ProofByCases(cases) => self.proof_by_cases(&cases, settings, out)?,
+            KnownTemplate::NoPrint(noprint) => {
+                self.run_vec(&noprint.content, settings, out)?;
+                false
+            }
+            KnownTemplate::Todo(_) => {false}
             KnownTemplate::Theorem(_) => {
                 self.environment_template(&parsed, settings, out, "theorem")?
             }
@@ -43,6 +48,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
             KnownTemplate::Exercise(_) => {
                 self.environment_template(&parsed, settings, out, "exercise")?
             }
+            KnownTemplate::Navigation(_) => {false}
             KnownTemplate::Hint(_) => self.environment_template(&parsed, settings, out, "hint")?,
             KnownTemplate::Warning(_) => {
                 self.environment_template(&parsed, settings, out, "warning")?
@@ -74,6 +80,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         };
         Ok(false)
     }
+    //important Todos: mainarticle: link? anchor: link?, literature, important
     fn proof_by_cases(
         &mut self,
         cases: &ProofByCases<'e>,
