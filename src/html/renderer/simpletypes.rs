@@ -1,23 +1,28 @@
-
 //! HTMl renderer for all simple types like in the latex-renderer
 
 use super::HtmlRenderer;
 use mediawiki_parser::MarkupType;
 use preamble::*;
 
-
 impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
-
     pub fn heading(
         &mut self,
         root: &'e Heading,
         settings: &'s Settings,
         out: &mut io::Write,
     ) -> io::Result<bool> {
-        write!(out, "<h{} class=\"article-heading-{}\">",&root.depth, &root.depth)?;
-        self.run_vec(&root.caption,settings,out)?;
-        writeln!(out, "</h{} class=\"article-heading-{}\">",&root.depth, &root.depth)?;
-        self.run_vec(&root.content,settings,out)?;
+        write!(
+            out,
+            "<h{} class=\"article-heading-{}\">",
+            &root.depth, &root.depth
+        )?;
+        self.run_vec(&root.caption, settings, out)?;
+        writeln!(
+            out,
+            "</h{} class=\"article-heading-{}\">",
+            &root.depth, &root.depth
+        )?;
+        self.run_vec(&root.content, settings, out)?;
         Ok(false)
     }
 
@@ -38,7 +43,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         out: &mut io::Write,
     ) -> io::Result<bool> {
         write!(out, "<p class=\"paragraph\">")?;
-        self.run_vec(&root.content,settings,out)?;
+        self.run_vec(&root.content, settings, out)?;
         writeln!(out, "</p>")?;
         Ok(false)
     }
@@ -59,8 +64,12 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         settings: &'s Settings,
         out: &mut io::Write,
     ) -> io::Result<bool> {
-        write!(out, "<a class=\"link\" href=\"{}\">", escape_html(&root.target))?;
-        self.run_vec(&root.caption,settings,out)?;
+        write!(
+            out,
+            "<a class=\"link\" href=\"{}\">",
+            escape_html(&root.target)
+        )?;
+        self.run_vec(&root.caption, settings, out)?;
         writeln!(out, " </a>")?;
         Ok(false)
     }
@@ -83,7 +92,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                 write!(out, "<span class=\"italic\">")?;
             }
             MarkupType::Math => {
-                self.formel(root,settings,out)?;
+                self.formel(root, settings, out)?;
                 return Ok(false);
             }
             MarkupType::StrikeThrough => {
@@ -97,7 +106,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                 self.write_error(&msg, out)?;
             }
         }
-        self.run_vec(&root.content,settings,out)?;
+        self.run_vec(&root.content, settings, out)?;
         /*if a
         {
             write!(out, "\\)")?;
@@ -105,7 +114,6 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         writeln!(out, "</span>")?;
         Ok(false)
     }
-
 
     pub fn htmltag(
         &mut self,
@@ -116,7 +124,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         match root.name.to_lowercase().trim() {
             "dfn" | "ref" => {
                 write!(out, "<{}>", &root.name.to_lowercase())?;
-                self.run_vec(&root.content,settings,out)?;
+                self.run_vec(&root.content, settings, out)?;
                 write!(out, "</{}>", &root.name.to_lowercase())?;
             }
             "section" => (),
@@ -127,7 +135,6 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                     root.name
                 );
                 self.write_error(&msg, out)?;
-
             }
         }
         Ok(false)
@@ -139,11 +146,9 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         settings: &'s Settings,
         out: &mut io::Write,
     ) -> io::Result<bool> {
-        write!(out,"<span class=\"math\">")?;
+        write!(out, "<span class=\"math\">")?;
         self.run_vec(&root.content, settings, out)?;
         write!(out, "</span>")?;
         Ok(false)
-
     }
-
 }

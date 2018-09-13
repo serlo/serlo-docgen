@@ -111,7 +111,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                 table_info.body.render(self, settings)?,
             )
         } else {
-             table_info.body.render(self, settings)?
+            table_info.body.render(self, settings)?
         };
 
         let line_width = self.latex.max_line_width;

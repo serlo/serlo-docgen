@@ -2,15 +2,15 @@
 
 use mediawiki_parser::*;
 // re-export common util
+use meta::MediaMeta;
 pub use mwparser_utils::*;
+use serde_yaml;
 use settings::Settings;
+use std::fs::File;
 use std::io;
 use std::path::PathBuf;
 use std::process;
-use std::fs::File;
 use target::Target;
-use meta::MediaMeta;
-use serde_yaml;
 
 /// Escape LaTeX-Specific symbols
 pub fn escape_latex(input: &str) -> String {
@@ -44,13 +44,11 @@ pub fn escape_latex(input: &str) -> String {
     }
     res
 }
-pub fn escape_html(stringtoreplace: &str)-> String{
-        let mut x = str::replace(stringtoreplace, "<", "&lt;");
-        x = str::replace(&x, ">", "&gt;");
-        x
-    }
-
-
+pub fn escape_html(stringtoreplace: &str) -> String {
+    let mut x = str::replace(stringtoreplace, "<", "&lt;");
+    x = str::replace(&x, ">", "&gt;");
+    x
+}
 
 /// based on  https://github.com/bt/rust_urlencoding
 pub fn urlencode(data: &str) -> String {
@@ -58,7 +56,9 @@ pub fn urlencode(data: &str) -> String {
     for b in data.as_bytes().iter() {
         match *b as char {
             // Accepted characters
-            'A'...'Z' | 'a'...'z' | '0'...'9' | '/'| ':' | '-' | '_' | '.' | '~' => escaped.push(*b as char),
+            'A'...'Z' | 'a'...'z' | '0'...'9' | '/' | ':' | '-' | '_' | '.' | '~' => {
+                escaped.push(*b as char)
+            }
 
             // Everything else is percent-encoded
             b => escaped.push_str(format!("%{:02X}", b as u32).as_str()),
@@ -311,7 +311,6 @@ pub fn extract_content(root: Element) -> Option<Vec<Element>> {
         Element::TableRow(e) => Some(e.cells),
         Element::Text(_) | Element::Comment(_) | Element::Error(_) => None,
     }
-
 }
 
 #[derive(Debug)]
@@ -325,18 +324,19 @@ pub fn load_media_meta(name: &[Element], settings: &Settings) -> MetaLoadResult<
     let mut file_path = build_media_path(name, settings, PathMode::ABSOLUTE);
     let mut filename = match file_path.file_name() {
         Some(n) => n,
-        None => return MetaLoadResult::IOError(
-            file_path.clone(), io::Error::new(io::ErrorKind::NotFound, "File not found.")
-        )
+        None => {
+            return MetaLoadResult::IOError(
+                file_path.clone(),
+                io::Error::new(io::ErrorKind::NotFound, "File not found."),
+            )
+        }
     }.to_os_string();
     filename.push(".meta");
     file_path.set_file_name(filename);
 
     let file = match File::open(&file_path) {
         Ok(f) => f,
-        Err(e) => {
-            return MetaLoadResult::IOError(file_path, e)
-        }
+        Err(e) => return MetaLoadResult::IOError(file_path, e),
     };
     match serde_yaml::from_reader(&file) {
         Ok(m) => MetaLoadResult::Meta(m),
@@ -356,9 +356,8 @@ pub fn mapped_media_path(
     target: &Target,
     name: &[Element],
     settings: &Settings,
-    mode: PathMode
+    mode: PathMode,
 ) -> PathBuf {
-
     let file_path = build_media_path(name, settings, mode);
     let ext = file_path.extension().unwrap_or_default();
 
@@ -368,12 +367,7 @@ pub fn mapped_media_path(
     file_path.with_extension(&target_extension)
 }
 
-pub fn build_media_path(
-    name: &[Element],
-    settings: &Settings,
-    mode: PathMode
-) -> PathBuf {
-
+pub fn build_media_path(name: &[Element], settings: &Settings, mode: PathMode) -> PathBuf {
     let name_str = extract_plain_text(name);
     let mut trimmed = name_str.trim();
 
@@ -386,9 +380,7 @@ pub fn build_media_path(
         PathMode::ABSOLUTE => settings.general.base_path.clone(),
         PathMode::RELATIVE => PathBuf::new(),
     };
-    path
-        .join(&settings.general.media_path)
-        .join(&name_path)
+    path.join(&settings.general.media_path).join(&name_path)
 }
 
 pub fn is_file(iref: &InternalReference, settings: &Settings) -> bool {

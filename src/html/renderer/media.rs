@@ -26,21 +26,27 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
             let authors = meta.license.authors.join(", ");
 
             if is_centered(root) {
-                let image_path = mapped_media_path(self.html, &root.target,
-                                                settings, PathMode::RELATIVE);
+                let image_path =
+                    mapped_media_path(self.html, &root.target, settings, PathMode::RELATIVE);
                 let caption_content = root.caption.render(self, settings)?;
-                let license_link = format!("<a class=\"serlo-fig-license-url\" href=\"{}\">{}: {}</a>",
-                    &meta.license.detailsurl, &authors, &meta.license.shortname);
+                let license_link = format!(
+                    "<a class=\"serlo-fig-license-url\" href=\"{}\">{}: {}</a>",
+                    &meta.license.detailsurl, &authors, &meta.license.shortname
+                );
 
                 writeln!(out, "<figure class=\"serlo-fig-center\">")?;
                 writeln!(out, "<img src=\"{}\"/>", &image_path.to_string_lossy())?;
-                writeln!(out, "<figcaption>{} ({})</figcaption>", &caption_content, &license_link)?;
+                writeln!(
+                    out,
+                    "<figcaption>{} ({})</figcaption>",
+                    &caption_content, &license_link
+                )?;
                 writeln!(out, "</figure>")?;
             } else {
                 self.write_error("non-centered image not implemented, yet!", out)?;
             }
 
-            return Ok(false)
+            return Ok(false);
         } else {
             self.write_error("internal links not implemented, yet!", out)?;
         }

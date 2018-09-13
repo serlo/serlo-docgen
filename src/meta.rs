@@ -26,5 +26,5 @@ pub struct MediaLicense {
     /// Link to a page with more detailed information (mostly wikimedia commons)
     pub detailsurl: String,
     /// Original filename of the image
-    pub filename: String
+    pub filename: String,
 }

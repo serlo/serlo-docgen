@@ -3,7 +3,6 @@ use mfnf_template_spec::*;
 use mwparser_utils::*;
 use preamble::*;
 
-
 impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
     pub fn template(
         &mut self,
@@ -26,32 +25,57 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         };
 
         match parsed {
-            KnownTemplate::Formula(formula) => self.formula(&formula, settings, out)?,//self.formula(&formula, settings, out)?,
+            KnownTemplate::Formula(formula) => self.formula(&formula, settings, out)?, //self.formula(&formula, settings, out)?,
             //KnownTemplate::Important(important) => writeln!(out, "Important")?,//self.important(settings, &important, out)?,
-            KnownTemplate::Definition(_) => self.environment_template(&parsed, settings, out, "definition")?,
+            KnownTemplate::Definition(_) => {
+                self.environment_template(&parsed, settings, out, "definition")?
+            }
             KnownTemplate::Question(question) => self.question(&question, settings, out)?,
             KnownTemplate::ProofStep(step) => self.proofstep(&step, settings, out)?,
             KnownTemplate::ProofByCases(cases) => self.proof_by_cases(&cases, settings, out)?,
-            KnownTemplate::Theorem(_) => self.environment_template(&parsed, settings, out, "theorem")?,
-            KnownTemplate::Example(_) => self.environment_template(&parsed, settings, out, "example")?,
-            KnownTemplate::Exercise(_) => self.environment_template(&parsed, settings, out, "exercise")?,
+            KnownTemplate::Theorem(_) => {
+                self.environment_template(&parsed, settings, out, "theorem")?
+            }
+            KnownTemplate::Example(_) => {
+                self.environment_template(&parsed, settings, out, "example")?
+            }
+            KnownTemplate::Exercise(_) => {
+                self.environment_template(&parsed, settings, out, "exercise")?
+            }
             KnownTemplate::Hint(_) => self.environment_template(&parsed, settings, out, "hint")?,
-            KnownTemplate::Warning(_) => self.environment_template(&parsed, settings, out, "warning")?,
-            KnownTemplate::Proof(_) => self.environment_template(&parsed, settings, out, "proof")?,
-            KnownTemplate::AlternativeProof(_) => self.environment_template(&parsed, settings, out, "alternativeproof")?,
-            KnownTemplate::ProofSummary(_) => self.environment_template(&parsed, settings, out, "proofsummary")?,
-            KnownTemplate::Solution(_) => self.environment_template(&parsed, settings, out, "solution")?,
-            KnownTemplate::SolutionProcess(_) => self.environment_template(&parsed, settings, out, "solutionprocess")?,
+            KnownTemplate::Warning(_) => {
+                self.environment_template(&parsed, settings, out, "warning")?
+            }
+            KnownTemplate::Proof(_) => {
+                self.environment_template(&parsed, settings, out, "proof")?
+            }
+            KnownTemplate::AlternativeProof(_) => {
+                self.environment_template(&parsed, settings, out, "alternativeproof")?
+            }
+            KnownTemplate::ProofSummary(_) => {
+                self.environment_template(&parsed, settings, out, "proofsummary")?
+            }
+            KnownTemplate::Solution(_) => {
+                self.environment_template(&parsed, settings, out, "solution")?
+            }
+            KnownTemplate::SolutionProcess(_) => {
+                self.environment_template(&parsed, settings, out, "solutionprocess")?
+            }
             KnownTemplate::Smiley(smiley) => {
-                write!(out, "{}",
+                write!(
+                    out,
+                    "{}",
                     smiley_to_unicode(&extract_plain_text(&smiley.name.unwrap_or(&[])))
                         .unwrap_or('\u{01f603}')
-                )?; false
-            },
-            _ => {writeln!(out, "irgendetwas anderes")?; false}
+                )?;
+                false
+            }
+            _ => {
+                writeln!(out, "irgendetwas anderes")?;
+                false
+            }
         };
         Ok(false)
-
     }
     fn proof_by_cases(
         &mut self,
@@ -74,9 +98,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
             }
         }
         Ok(false)
-
     }
-
 
     fn formula(
         &mut self,
@@ -84,7 +106,6 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         settings: &'s Settings,
         out: &mut io::Write,
     ) -> io::Result<bool> {
-
         let error = formula
             .formula
             .iter()
@@ -94,8 +115,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                 } else {
                     None
                 }
-            })
-            .next();
+            }).next();
 
         if let Some(err) = error {
             self.error(err, out)?;
@@ -104,20 +124,20 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
 
         writeln!(out, "<p class=\"formula\">")?;
         match formula.formula[0] {
-            Element::Formatted(ref root) => {
-                match root.markup {
-                    MarkupType::Math => {
-                        self.formel(root, settings, out)?;
-                    },
-                    _ => { let msg = format!(
-                                        "unknown type in formula.formula[0] in formula-template! Type: {:?}",
-                                        root.markup
-                                    );
-                        self.write_error(&msg, out)?;
-                    }
+            Element::Formatted(ref root) => match root.markup {
+                MarkupType::Math => {
+                    self.formel(root, settings, out)?;
+                }
+                _ => {
+                    let msg = format!(
+                        "unknown type in formula.formula[0] in formula-template! Type: {:?}",
+                        root.markup
+                    );
+                    self.write_error(&msg, out)?;
                 }
             },
-            _ => { let msg = format!(
+            _ => {
+                let msg = format!(
                                 "unknown type in formula.formula[0] in formula-template! Not a Formatted: Type: {:?}",
                                 formula.formula[0]
                             );
@@ -133,45 +153,44 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         question: &Question<'e>,
         settings: &'s Settings,
         out: &mut io::Write,
-    ) -> io::Result<bool>{
+    ) -> io::Result<bool> {
         write!(out, "<details>")?;
         write!(out, "<summary class =\"question\">")?;
         if let Some(kind) = question.kind {
-            write!(out,"<div class=\"fragenart\" style=\"display: inline;\">")?;
+            write!(out, "<div class=\"fragenart\" style=\"display: inline;\">")?;
             self.run_vec(&kind, settings, out)?;
             write!(out, ": ")?;
-            write!(out,"</div>")?;
-        }
-        else{
-            write!(out,"<div class=\"fragenart\" style=\"display: inline;\">")?;
+            write!(out, "</div>")?;
+        } else {
+            write!(out, "<div class=\"fragenart\" style=\"display: inline;\">")?;
             write!(out, "Frage: ")?;
-            write!(out,"</div>")?;
+            write!(out, "</div>")?;
         }
         self.run_vec(&question.question, settings, out)?;
         write!(out, "</summary>")?;
-        write!(out,"<div class=\"answer\">")?;
+        write!(out, "<div class=\"answer\">")?;
         self.run_vec(&question.answer, settings, out)?;
-        write!(out,"</div>")?;
+        write!(out, "</div>")?;
         write!(out, "</details>")?;
         Ok(false)
-    }//it is impportant to specify in css: display: inline, otherwise weird line break
+    } //it is impportant to specify in css: display: inline, otherwise weird line break
 
     pub fn proofstep(
         &mut self,
         step: &ProofStep<'e>,
         settings: &'s Settings,
         out: &mut io::Write,
-    ) -> io::Result<bool>{
+    ) -> io::Result<bool> {
         write!(out, "<details open>")?;
         write!(out, "<summary class =\"proofstep\">")?;
         write!(out, "Beweisschritt: <br>")?;
         self.run_vec(&step.goal, settings, out)?;
         write!(out, "</summary>")?;
-        write!(out,"<div class=\"proofstep\">")?;
+        write!(out, "<div class=\"proofstep\">")?;
         self.run_vec(&step.step, settings, out)?;
         write!(out, "</details>")?;
         Ok(false)
-    }//auf zeilenumbrüche achten, da in einem neuen absatz reingepackt der text (seltsamerweise)
+    } //auf zeilenumbrüche achten, da in einem neuen absatz reingepackt der text (seltsamerweise)
 
     pub fn environment_template(
         &mut self,
@@ -181,52 +200,50 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         typ: &str,
     ) -> io::Result<bool> {
         //let title = template.find("title").map(|a| a.value).unwrap_or(&[]);
-    //    let title_text = title.render(self, settings)?;
-        write!(out, "<div class=\"{}\">",typ)?;
+        //    let title_text = title.render(self, settings)?;
+        write!(out, "<div class=\"{}\">", typ)?;
         match template {
             KnownTemplate::Definition(_) => {
                 write!(out, "Definition")?;
-            },
+            }
             KnownTemplate::Theorem(_) => {
                 write!(out, "Theorem")?;
-            },
+            }
             KnownTemplate::Example(_) => {
                 write!(out, "Beispiel")?;
-            },
+            }
             KnownTemplate::Exercise(_) => {
                 write!(out, "Aufgabe")?;
-            },
+            }
             KnownTemplate::Hint(_) => {
                 write!(out, "Hinweis")?;
-            },
+            }
             KnownTemplate::Warning(_) => {
                 write!(out, "Warnung")?;
-            },
+            }
             KnownTemplate::Proof(_) => {
                 write!(out, "Beweis")?;
-            },
+            }
             KnownTemplate::AlternativeProof(_) => {
                 write!(out, "Alternativer Beweis")?;
-            },
+            }
             KnownTemplate::ProofSummary(_) => {
                 write!(out, "Beweiszusammenfassung")?;
-            },
+            }
             KnownTemplate::Solution(_) => {
                 write!(out, "Lösung")?;
-            },
+            }
             KnownTemplate::SolutionProcess(_) => {
                 write!(out, "Lösungsweg")?;
             }
-            _ => write!(out, "FEHLER")?
-
+            _ => write!(out, "FEHLER")?,
         }
         write!(out, ": ")?;
         let title = template.find("title");
         if let Some(render_title) = title {
             if let Element::Paragraph(ref x) = render_title.value[0] {
                 self.run_vec(&x.content, settings, out)?;
-            }
-            else {
+            } else {
                 self.run_vec(&render_title.value, settings, out)?;
             }
         }
@@ -277,6 +294,4 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         self.run_vec(&solution.solution, settings, out)?;
         Ok(false)
     }
-
-
 }

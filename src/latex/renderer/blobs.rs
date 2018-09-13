@@ -29,7 +29,7 @@ alias!(
 alias!(
     LICENSE_TEXT,
     "Abb. \\arabic{{imagelabel}}: \
-    \\protect\\href{{{}}}{{\\textbf{{{}}}}} by {} \\textit{{({})}}"
+     \\protect\\href{{{}}}{{\\textbf{{{}}}}} by {} \\textit{{({})}}"
 );
 
 alias!(

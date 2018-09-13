@@ -1,11 +1,11 @@
 use html::HTMLTarget;
 use preamble::*;
 
-mod simpletypes;
-mod template;
 mod list;
 mod media;
+mod simpletypes;
 mod table;
+mod template;
 
 pub struct HtmlRenderer<'e, 't> {
     pub path: Vec<&'e Element>,

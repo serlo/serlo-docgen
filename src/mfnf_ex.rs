@@ -3,27 +3,29 @@
 //! Applies some transformations to the input tree and exports it as defined by the given target.
 
 extern crate mediawiki_parser;
-extern crate serde_yaml;
 extern crate serde_json;
+extern crate serde_yaml;
 #[macro_use]
 extern crate structopt;
 extern crate mfnf_export;
 extern crate mwparser_utils;
 
-use std::str;
-use std::process;
-use std::io;
 use std::fs;
+use std::io;
 use std::path::PathBuf;
+use std::process;
+use std::str;
 use structopt::StructOpt;
 
+use mediawiki_parser::transformations::TResult;
 use mfnf_export::*;
 use mwparser_utils::CachedTexChecker;
-use mediawiki_parser::transformations::TResult;
-
 
 #[derive(Debug, StructOpt)]
-#[structopt(name = "mfnf_ex", about = "This program renders an article syntax tree to a serial format (like LaTeX).")]
+#[structopt(
+    name = "mfnf_ex",
+    about = "This program renders an article syntax tree to a serial format (like LaTeX)."
+)]
 struct Args {
     /// Dump the default settings to stdout.
     #[structopt(short = "d", long = "dump-config")]
@@ -71,8 +73,7 @@ fn main() -> Result<(), std::io::Error> {
 
     let general_settings = if let Some(path) = args.config {
         let file = fs::File::open(&path)?;
-        serde_yaml::from_reader(&file)
-            .expect("Error reading settings:")
+        serde_yaml::from_reader(&file).expect("Error reading settings:")
     } else {
         GeneralSettings::default()
     };
@@ -106,21 +107,21 @@ fn main() -> Result<(), std::io::Error> {
     }
 
     if args.dump_config {
-        println!("{}", serde_yaml::to_string(&settings.general)
-            .expect("could not serialize default settings!"));
+        println!(
+            "{}",
+            serde_yaml::to_string(&settings.general)
+                .expect("could not serialize default settings!")
+        );
         process::exit(0);
     }
 
     if let Some(path) = args.marker_path {
         let file = fs::File::open(&path)?;
-        settings.runtime.markers = serde_yaml::from_reader(&file)
-            .expect("Error reading markers:")
+        settings.runtime.markers = serde_yaml::from_reader(&file).expect("Error reading markers:")
     }
 
     if let Some(path) = args.texvccheck_path {
-        settings.runtime.tex_checker = Some(CachedTexChecker::new(
-            &path, 10_000
-        ));
+        settings.runtime.tex_checker = Some(CachedTexChecker::new(&path, 10_000));
     } else {
         eprintln!("Warning: no texvccheck path, won't perform checks!");
     }
@@ -151,20 +152,22 @@ fn main() -> Result<(), std::io::Error> {
     } else {
         handle_transformation_result(&orig_root)
     };
-    target.export(root, &settings, &args.target_args, &mut export_result)
+    target
+        .export(root, &settings, &args.target_args, &mut export_result)
         .expect("target export failed!");
     println!("{}", str::from_utf8(&export_result).unwrap());
     Ok(())
 }
 
 fn handle_transformation_result(result: &TResult) -> &mediawiki_parser::Element {
-
-     match *result {
+    match *result {
         Ok(ref e) => e,
         Err(ref e) => {
             eprintln!("{}", e);
-            println!("{}", serde_yaml::to_string(&e)
-                .expect("Could not serialize error!"));
+            println!(
+                "{}",
+                serde_yaml::to_string(&e).expect("Could not serialize error!")
+            );
             process::exit(1);
         }
     }

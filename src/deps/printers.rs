@@ -62,12 +62,10 @@ impl<'e, 's: 'e, 't> Traversion<'e, &'s Settings> for FilesPrinter<'e, 't> {
             }
 
             let file_path = build_media_path(&iref.target, settings, PathMode::ABSOLUTE);
-            let image_path = mapped_media_path(self.target, &iref.target,
-                                              settings, PathMode::ABSOLUTE);
+            let image_path =
+                mapped_media_path(self.target, &iref.target, settings, PathMode::ABSOLUTE);
             write!(out, "\\\n\t{}", &image_path.to_string_lossy())?;
             write!(out, "\\\n\t{}.meta", &file_path.to_string_lossy())?;
-
-
         };
         Ok(true)
     }

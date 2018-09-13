@@ -141,9 +141,18 @@ impl Default for GeneralSettings {
                 ("n:", "https://de.wikinews.org/wiki/"),
                 ("v:", "https://de.wikiversity.org/wiki/"),
                 ("wikt:", "https://de.wiktionary.org/wiki/"),
-                ("mathe_für_nicht-freaks:", "https://de.wikibooks.org/wiki/Mathe_für_Nicht-Freaks:"),
-                ("mathe für nicht-freaks:", "https://de.wikibooks.org/wiki/Mathe_für_Nicht-Freaks:")
-            ].iter().map(|e| (e.0.to_string(), e.1.to_string())).collect(),
+                (
+                    "mathe_für_nicht-freaks:",
+                    "https://de.wikibooks.org/wiki/Mathe_für_Nicht-Freaks:",
+                ),
+                (
+                    "mathe für nicht-freaks:",
+                    "https://de.wikibooks.org/wiki/Mathe_für_Nicht-Freaks:",
+                ),
+            ]
+                .iter()
+                .map(|e| (e.0.to_string(), e.1.to_string()))
+                .collect(),
             file_prefixes: string_vec!["file:", "datei:", "bild:"],
             base_path: ".".into(),
             media_path: "media".into(),

@@ -116,14 +116,14 @@ pub fn include_sections_vec<'a>(
                     return Ok(result);
                 }
 
-                let mut section_tree: Vec<Element> = match serde_yaml::from_reader(&section_str.unwrap())
-                {
-                    Ok(root) => root,
-                    Err(_) => {
-                        result.push(file_error);
-                        return Ok(result);
-                    }
-                };
+                let mut section_tree: Vec<Element> =
+                    match serde_yaml::from_reader(&section_str.unwrap()) {
+                        Ok(root) => root,
+                        Err(_) => {
+                            result.push(file_error);
+                            return Ok(result);
+                        }
+                    };
 
                 result.push(Element::Comment(Comment {
                     position: template.position.clone(),
@@ -291,12 +291,12 @@ pub fn remove_exclusions(mut root: Element, settings: &Settings) -> TResult {
 
 /// Resolve interwiki links.
 pub fn resolve_interwiki_links(mut root: Element, settings: &Settings) -> TResult {
-
     if let Element::InternalReference(ref iref) = root {
         let text = extract_plain_text(&iref.target);
         if let Some(position) = text.find(":") {
-
-            let interlink_result = settings.general.interwiki_link_mapping
+            let interlink_result = settings
+                .general
+                .interwiki_link_mapping
                 .get(text[0..position + 1].to_lowercase().trim());
 
             if let Some(replacement) = interlink_result {
@@ -307,7 +307,7 @@ pub fn resolve_interwiki_links(mut root: Element, settings: &Settings) -> TResul
                         r.push_str(&text[position + 1..]);
                         r
                     },
-                    caption: iref.caption.clone()
+                    caption: iref.caption.clone(),
                 };
                 return Ok(Element::ExternalReference(reference));
             }

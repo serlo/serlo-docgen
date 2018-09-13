@@ -17,8 +17,8 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
 
         for image in &root.content {
             if let Element::InternalReference(ref iref) = *image {
-                let path = mapped_media_path(self.latex, &iref.target,
-                                             settings, PathMode::RELATIVE);
+                let path =
+                    mapped_media_path(self.latex, &iref.target, settings, PathMode::RELATIVE);
                 let caption = iref.caption.render(self, settings)?;
 
                 // collect image options
@@ -29,7 +29,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
 
                 let license_text = match self.get_license_text(iref, settings, out)? {
                     Some(s) => s,
-                    None => return Ok(false)
+                    None => return Ok(false),
                 };
 
                 let mut inner = format!(

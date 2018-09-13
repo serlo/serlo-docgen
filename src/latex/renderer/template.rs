@@ -43,7 +43,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
             | KnownTemplate::Solution(_)
             | KnownTemplate::SolutionProcess(_) => {
                 self.environment_template(settings, &parsed, out)?
-            },
+            }
             KnownTemplate::GroupExercise(group) => self.group_exercise(&group, settings, out)?,
             KnownTemplate::ProofStep(step) => self.proofstep(&step, settings, out)?,
             KnownTemplate::Anchor(anchor) => self.anchor(&anchor, out)?,
@@ -81,8 +81,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                 } else {
                     None
                 }
-            })
-            .next();
+            }).next();
 
         if let Some(err) = error {
             self.error(err, settings, out)?;
@@ -114,17 +113,16 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         self.run_vec(&step.step, settings, out)
     }
 
-    fn literature(
-        &mut self,
-        literature: &Literature<'e>,
-        out: &mut io::Write,
-    ) -> io::Result<()> {
+    fn literature(&mut self, literature: &Literature<'e>, out: &mut io::Write) -> io::Result<()> {
         let mut lit = String::new();
         if let Some(author) = literature.author {
             lit.push_str(&extract_plain_text(author));
             lit.push_str(": ");
         }
-        lit.push_str(&format!("\\emph{{{}}}", &extract_plain_text(literature.title)));
+        lit.push_str(&format!(
+            "\\emph{{{}}}",
+            &extract_plain_text(literature.title)
+        ));
 
         if let Some(publisher) = literature.publisher {
             lit.push_str(". ");
@@ -205,27 +203,33 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         let tasks;
         let solutions;
         {
-            let mut build_items = | solution | -> Vec<String> {
-                group.present.iter()
-                .filter(|a| a.name.starts_with("subtask") && (if solution {
-                        a.name.ends_with("solution")
-                    } else {
-                        !a.name.ends_with("solution")
-                }))
-                .map(|a| {
-                    let mut s = "\\item ".to_string();
-                    s.push_str(&a.value.render(self, settings)
-                        .expect("unexpected error during latex rendering!").trim());
-                    s
-                }).collect()
+            let mut build_items = |solution| -> Vec<String> {
+                group
+                    .present
+                    .iter()
+                    .filter(|a| {
+                        a.name.starts_with("subtask")
+                            && (if solution {
+                                a.name.ends_with("solution")
+                            } else {
+                                !a.name.ends_with("solution")
+                            })
+                    }).map(|a| {
+                        let mut s = "\\item ".to_string();
+                        s.push_str(
+                            &a.value
+                                .render(self, settings)
+                                .expect("unexpected error during latex rendering!")
+                                .trim(),
+                        );
+                        s
+                    }).collect()
             };
 
             let task_list = build_items(false);
             let solution_list = build_items(true);
-            tasks = format!(LIST!(), "enumerate",
-                            &task_list.join("\n"), "enumerate");
-            solutions = format!(LIST!(), "enumerate",
-                                &solution_list.join("\n"), "enumerate");
+            tasks = format!(LIST!(), "enumerate", &task_list.join("\n"), "enumerate");
+            solutions = format!(LIST!(), "enumerate", &solution_list.join("\n"), "enumerate");
         }
 
         let mut exercise = if let Some(exercise_raw) = group.exercise {
