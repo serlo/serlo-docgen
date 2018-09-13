@@ -43,12 +43,20 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                 self.environment_template(&parsed, settings, out, "exercise")?
             }
             KnownTemplate::Hint(_) => self.environment_template(&parsed, settings, out, "hint")?,
-            KnownTemplate::Warning(_) => self.environment_template(&parsed, settings, out, "warning")?,
+            KnownTemplate::Warning(_) => {
+                self.environment_template(&parsed, settings, out, "warning")?
+            }
             KnownTemplate::Proof(_) => self.environment_template(&parsed, settings, out, "proof")?,
-            KnownTemplate::AlternativeProof(_) => self.environment_template(&parsed, settings, out, "alternativeproof")?,
-            KnownTemplate::ProofSummary(_) => self.environment_template(&parsed, settings, out, "proofsummary")?,
+            KnownTemplate::AlternativeProof(_) => {
+                self.environment_template(&parsed, settings, out, "alternativeproof")?
+            }
+            KnownTemplate::ProofSummary(_) => {
+                self.environment_template(&parsed, settings, out, "proofsummary")?
+            }
             KnownTemplate::Solution(solution) => self.solution(&solution, settings, out)?,
-            KnownTemplate::SolutionProcess(_) => self.environment_template(&parsed, settings, out, "solutionprocess")?,
+            KnownTemplate::SolutionProcess(_) => {
+                self.environment_template(&parsed, settings, out, "solutionprocess")?
+            }
             KnownTemplate::Smiley(smiley) => {
                 write!(
                     out,
@@ -103,7 +111,8 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                 } else {
                     None
                 }
-            }).next();
+            })
+            .next();
 
         if let Some(err) = error {
             self.error(err, out)?;
@@ -145,11 +154,10 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         write!(out, "<details>")?;
         write!(out, "<summary class =\"question\">")?;
         if let Some(kind) = question.kind {
-            write!(out,"<div class=\"fragenart\" style=\"display: inline;\">")?;
+            write!(out, "<div class=\"fragenart\" style=\"display: inline;\">")?;
             if let [Element::Paragraph(ref par)] = kind {
                 self.run_vec(&par.content, settings, out)?;
-            }
-            else {
+            } else {
                 self.run_vec(&kind, settings, out)?;
             }
             write!(out, ": ")?;
@@ -235,9 +243,8 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         let title = template.find("title");
         if let Some(render_title) = title {
             if let [Element::Paragraph(ref par)] = render_title.value {
-                    self.run_vec(&par.content, settings, out)?;
-            }
-            else {
+                self.run_vec(&par.content, settings, out)?;
+            } else {
                 self.run_vec(&render_title.value, settings, out)?;
             }
         }
@@ -282,8 +289,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         if let Some(render_title) = &solution.title {
             if let [Element::Paragraph(ref par)] = render_title {
                 self.run_vec(&par.content, settings, out)?;
-            }
-            else {
+            } else {
                 self.run_vec(&render_title, settings, out)?;
             }
         }

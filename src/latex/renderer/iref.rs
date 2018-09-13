@@ -27,7 +27,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                 &path::PathBuf::from(&meta.license.url)
                     .file_name()
                     .map(|f| f.to_string_lossy())
-                    .unwrap_or_default()
+                    .unwrap_or_default(),
             ),
             &escape_latex(&authors),
             &escape_latex(&meta.license.shortname),

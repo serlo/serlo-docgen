@@ -11,10 +11,14 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         settings: &'s Settings,
         out: &mut io::Write,
     ) -> io::Result<bool> {
-        write!(out, "<h{} class=\"article-heading-{}\">",&root.depth, &root.depth)?;
-        self.run_vec(&root.caption,settings,out)?;
-        writeln!(out, "</h{}>",&root.depth)?;
-        self.run_vec(&root.content,settings,out)?;
+        write!(
+            out,
+            "<h{} class=\"article-heading-{}\">",
+            &root.depth, &root.depth
+        )?;
+        self.run_vec(&root.caption, settings, out)?;
+        writeln!(out, "</h{}>", &root.depth)?;
+        self.run_vec(&root.content, settings, out)?;
         Ok(false)
     }
 
