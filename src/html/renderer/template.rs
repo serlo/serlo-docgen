@@ -43,24 +43,12 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                 self.environment_template(&parsed, settings, out, "exercise")?
             }
             KnownTemplate::Hint(_) => self.environment_template(&parsed, settings, out, "hint")?,
-            KnownTemplate::Warning(_) => {
-                self.environment_template(&parsed, settings, out, "warning")?
-            }
-            KnownTemplate::Proof(_) => {
-                self.environment_template(&parsed, settings, out, "proof")?
-            }
-            KnownTemplate::AlternativeProof(_) => {
-                self.environment_template(&parsed, settings, out, "alternativeproof")?
-            }
-            KnownTemplate::ProofSummary(_) => {
-                self.environment_template(&parsed, settings, out, "proofsummary")?
-            }
-            KnownTemplate::Solution(_) => {
-                self.environment_template(&parsed, settings, out, "solution")?
-            }
-            KnownTemplate::SolutionProcess(_) => {
-                self.environment_template(&parsed, settings, out, "solutionprocess")?
-            }
+            KnownTemplate::Warning(_) => self.environment_template(&parsed, settings, out, "warning")?,
+            KnownTemplate::Proof(_) => self.environment_template(&parsed, settings, out, "proof")?,
+            KnownTemplate::AlternativeProof(_) => self.environment_template(&parsed, settings, out, "alternativeproof")?,
+            KnownTemplate::ProofSummary(_) => self.environment_template(&parsed, settings, out, "proofsummary")?,
+            KnownTemplate::Solution(solution) => self.solution(&solution, settings, out)?,
+            KnownTemplate::SolutionProcess(_) => self.environment_template(&parsed, settings, out, "solutionprocess")?,
             KnownTemplate::Smiley(smiley) => {
                 write!(
                     out,
@@ -157,8 +145,13 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         write!(out, "<details>")?;
         write!(out, "<summary class =\"question\">")?;
         if let Some(kind) = question.kind {
-            write!(out, "<div class=\"fragenart\" style=\"display: inline;\">")?;
-            self.run_vec(&kind, settings, out)?;
+            write!(out,"<div class=\"fragenart\" style=\"display: inline;\">")?;
+            if let [Element::Paragraph(ref par)] = kind {
+                self.run_vec(&par.content, settings, out)?;
+            }
+            else {
+                self.run_vec(&kind, settings, out)?;
+            }
             write!(out, ": ")?;
             write!(out, "</div>")?;
         } else {
@@ -241,9 +234,10 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         write!(out, ": ")?;
         let title = template.find("title");
         if let Some(render_title) = title {
-            if let Element::Paragraph(ref x) = render_title.value[0] {
-                self.run_vec(&x.content, settings, out)?;
-            } else {
+            if let [Element::Paragraph(ref par)] = render_title.value {
+                    self.run_vec(&par.content, settings, out)?;
+            }
+            else {
                 self.run_vec(&render_title.value, settings, out)?;
             }
         }
@@ -284,14 +278,18 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         settings: &'s Settings,
         out: &mut io::Write,
     ) -> io::Result<bool> {
-        write!(out, "<details class=\"solution\"> <summary> Lösung")?;
-        if let Some(title) = &solution.title {
-            write!(out, " (")?;
-            self.run_vec(title, settings, out)?;
-            write!(out, ")")?;
+        write!(out, "<details class=\"solution\"> <summary> Lösung: ")?;
+        if let Some(render_title) = &solution.title {
+            if let [Element::Paragraph(ref par)] = render_title {
+                self.run_vec(&par.content, settings, out)?;
+            }
+            else {
+                self.run_vec(&render_title, settings, out)?;
+            }
         }
-        write!(out, " ")?;
+        write!(out, "</summary>")?;
         self.run_vec(&solution.solution, settings, out)?;
+        write!(out, "</details>")?;
         Ok(false)
     }
 }
