@@ -3,6 +3,20 @@ use mfnf_template_spec::*;
 use mwparser_utils::*;
 use preamble::*;
 
+macro_rules! tag_wrapper {
+    ($self: ident, $content:expr, $settings:ident, $out:ident, $tag:expr, $class:expr) => {
+        write!($out, "<{} class=\"{}\">", $tag, $class)?;
+        $self.run_vec($content, $settings, $out)?;
+        write!($out, "</{}>", $tag)?;
+    }
+}
+
+macro_rules! div_wrapper {
+    ($self: ident, $content:expr, $settings:ident, $out:ident, $class:expr) => {
+        tag_wrapper!($self, $content, $settings, $out, "div", $class)
+    }
+}
+
 impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
     pub fn template(
         &mut self,
