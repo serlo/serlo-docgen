@@ -173,14 +173,17 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         write!(out, "<details>")?;
         write!(out, "<summary class =\"question\">")?;
         if let Some(kind) = question.kind {
-            write!(out, "<div class=\"question-kind\">")?;
-            self.run_vec(&kind, settings, out)?;
-            write!(out, ": ")?;
-            write!(out, "</div>")?;
+            tag_stmt!(
+                {
+                    self.run_vec(&kind, settings, out)?;
+                    write!(out, ": ")?;
+                },
+                out,
+                "div",
+                "question-kind"
+            );
         } else {
-            write!(out, "<div class=\"question-kind\">")?;
-            write!(out, "Frage: ")?;
-            write!(out, "</div>")?;
+            tag_stmt!(writeln!(out, "Frage: ")?, out, "div", "question-kind");
         }
         tag_wrapper!(
             self,
