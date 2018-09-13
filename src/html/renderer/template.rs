@@ -97,9 +97,9 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         ];
         for (index, tuple) in attrs.iter().enumerate() {
             if let (Some(case), Some(proof)) = tuple {
-                writeln!(out, "<div class=\"proofcase\"> Fall {}: </div>", index + 1)?;
-                self.run_vec(&case, settings, out)?;
-                self.run_vec(&proof, settings, out)?;
+                writeln!(out, "<span class=\"proofcase\">Fall {}:</span>", index + 1)?;
+                div_wrapper!(self, &case, settings, out, "proofcase-case");
+                div_wrapper!(self, &proof, settings, out, "proofcase-proof");
             }
         }
         Ok(false)
