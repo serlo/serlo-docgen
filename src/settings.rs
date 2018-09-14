@@ -149,7 +149,8 @@ impl Default for GeneralSettings {
                     "mathe für nicht-freaks:",
                     "https://de.wikibooks.org/wiki/Mathe_für_Nicht-Freaks:",
                 ),
-            ].iter()
+            ]
+                .iter()
                 .map(|e| (e.0.to_string(), e.1.to_string()))
                 .collect(),
             file_prefixes: string_vec!["file:", "datei:", "bild:"],

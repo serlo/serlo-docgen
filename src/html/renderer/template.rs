@@ -134,8 +134,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                 } else {
                     None
                 }
-            })
-            .next();
+            }).next();
 
         if let Some(err) = error {
             self.error(err, out)?;
