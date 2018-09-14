@@ -29,7 +29,7 @@ impl<'e, 's: 'e> Traversion<'e, &'s Settings> for ThumbCollector<'e> {
 /// Move thumbnail images to a gallery under the current heading.
 pub fn hoist_thumbnails(mut root: Element, settings: &Settings) -> TResult {
     if let Element::Heading(ref mut heading) = root {
-        let thumbs = {
+        let mut thumbs = {
             let mut collector = ThumbCollector {
                 path: vec![],
                 thumbs: vec![],
@@ -41,16 +41,34 @@ pub fn hoist_thumbnails(mut root: Element, settings: &Settings) -> TResult {
         };
 
         if !thumbs.is_empty() {
-            let marker = TagAttribute {
-                position: heading.position.clone(),
-                key: "from_thumbs".into(),
-                value: "true".into(),
+            // single thumb
+            let gallery = if thumbs.len() == 1 {
+                let mut img = thumbs.pop().unwrap();
+                if let Element::InternalReference(ref mut iref) = img {
+                    iref.options.clear();
+                    iref.options.push(vec![Element::Text(Text {
+                        position: Span::any(),
+                        text: "center".into(),
+                    })]);
+                    iref.options.push(vec![Element::Text(Text {
+                        position: Span::any(),
+                        text: "from_thumb".into(),
+                    })]);
+                }
+                img
+            // multiple thumbs
+            } else {
+                let marker = TagAttribute {
+                    position: heading.position.clone(),
+                    key: "from_thumbs".into(),
+                    value: "true".into(),
+                };
+                Element::Gallery(Gallery {
+                    position: heading.position.clone(),
+                    attributes: vec![marker],
+                    content: thumbs,
+                })
             };
-            let gallery = Element::Gallery(Gallery {
-                position: heading.position.clone(),
-                attributes: vec![marker],
-                content: thumbs,
-            });
             heading.content.insert(0, gallery);
         }
     };

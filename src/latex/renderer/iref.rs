@@ -64,6 +64,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
             if is_thumb(root) {
                 let msg = "Thumbnail images should have been moved into galleries.";
                 self.write_error(msg, out)?;
+                eprintln!("error!");
                 return Ok(false);
             }
 
@@ -81,7 +82,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                     &image_path.to_string_lossy(),
                 );
 
-                if self.latex.centered_image_captions {
+                if self.latex.centered_image_captions || iref_has_option(root, &["from_thumb"]) {
                     fig_content.push('\n');
                     fig_content.push_str(&format!(FIGURE_CAPTION!(), &cap_content));
                 }

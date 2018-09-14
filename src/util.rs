@@ -202,22 +202,21 @@ fn is_plain_file(path: &PathBuf) -> bool {
     }
 }
 
-/// Returns wether an image is semantically a thumbnail image.
-pub fn is_thumb(image: &InternalReference) -> bool {
-    let thumb_indicators = ["thumb", "miniatur"];
+pub fn iref_has_option(image: &InternalReference, options: &[&str]) -> bool {
     image
         .options
         .iter()
-        .any(|ref o| thumb_indicators.contains(&extract_plain_text(o).to_lowercase().trim()))
+        .any(|ref o| options.contains(&extract_plain_text(o).to_lowercase().trim()))
+}
+
+/// Returns wether an image is semantically a thumbnail image.
+pub fn is_thumb(image: &InternalReference) -> bool {
+    iref_has_option(image, &["thumbnail", "thumb", "miniatur", "mini"])
 }
 
 /// Returns wether an image is semantically a centered image.
 pub fn is_centered(image: &InternalReference) -> bool {
-    let thumb_indicators = ["center", "zentriert"];
-    image
-        .options
-        .iter()
-        .any(|ref o| thumb_indicators.contains(&extract_plain_text(o).to_lowercase().trim()))
+    iref_has_option(image, &["center", "zentriert"])
 }
 
 /// Path of a section file.
