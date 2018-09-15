@@ -63,6 +63,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                 false
             }
             KnownTemplate::Navigation(_) => false,
+            KnownTemplate::Important(important) => self.important(settings, &important, out)?,
             KnownTemplate::Todo(_) => false,
             KnownTemplate::Theorem(_)
             | KnownTemplate::Definition(_)
@@ -116,6 +117,23 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                 div_wrapper!(self, &proof, settings, out, "proofcase-proof");
             }
         }
+        Ok(false)
+    }
+    fn important(
+        &mut self,
+        settings: &'s Settings,
+        template: &Important<'e>,
+        out: &mut io::Write,
+    ) -> io::Result<bool> {
+        tag_stmt!(
+            {
+                write!(out, "Hinweis:")?;
+                self.run_vec(&template.content, settings, out)?;
+            },
+            out,
+            "div",
+            "important"
+        );
         Ok(false)
     }
 
