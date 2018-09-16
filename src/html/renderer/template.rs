@@ -153,7 +153,8 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                 } else {
                     None
                 }
-            }).next();
+            })
+            .next();
 
         if let Some(err) = error {
             self.error(err, out)?;
@@ -302,7 +303,6 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
             {
                 if let Some(render_title) = &group.title {
                     div_wrapper!(self, &render_title, settings, out, "exercise-title");
-
                 };
                 if let Some(exercise) = &group.exercise {
                     div_wrapper!(self, &exercise, settings, out, "exercise-content");
@@ -310,22 +310,44 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                 if let Some(explanation) = &group.explanation {
                     div_wrapper!(self, &explanation, settings, out, "exercise-explanation");
                 };
-                let subtaskts = [group.subtask1, group.subtask2, group.subtask3, group.subtask4, group.subtask5, group.subtask6];
-                let solutions = [group.subtask1_solution, group.subtask2_solution, group.subtask3_solution, group.subtask4_solution, group.subtask5_solution, group.subtask6_solution];
+                let subtaskts = [
+                    group.subtask1,
+                    group.subtask2,
+                    group.subtask3,
+                    group.subtask4,
+                    group.subtask5,
+                    group.subtask6,
+                ];
+                let solutions = [
+                    group.subtask1_solution,
+                    group.subtask2_solution,
+                    group.subtask3_solution,
+                    group.subtask4_solution,
+                    group.subtask5_solution,
+                    group.subtask6_solution,
+                ];
                 for (index, item) in subtaskts.iter().enumerate() {
                     if let Some(subtask) = item {
-                        writeln!(out, "<span class=\"exercise\">Aufgabe {}:</span>", index + 1)?;
+                        writeln!(
+                            out,
+                            "<span class=\"exercise\">Aufgabe {}:</span>",
+                            index + 1
+                        )?;
                         div_wrapper!(self, &subtask, settings, out, "exercise-exercise");
                     }
                 }
                 write!(out, "<details open class =\"group_exercise-solution\">");
                 tag_str!("Lösung: ", out, "summary", "group_exercise-solution-title");
-                        for (index, item) in solutions.iter().enumerate() {
-                            if let Some(solution) = item {
-                                writeln!(out, "<span class=\"solution\">Lösung Teilaufgabe {}:</span>", index + 1)?;
-                                div_wrapper!(self, &solution, settings, out, "exercise-exercise");
-                            }
-                        }
+                for (index, item) in solutions.iter().enumerate() {
+                    if let Some(solution) = item {
+                        writeln!(
+                            out,
+                            "<span class=\"solution\">Lösung Teilaufgabe {}:</span>",
+                            index + 1
+                        )?;
+                        div_wrapper!(self, &solution, settings, out, "exercise-exercise");
+                    }
+                }
                 write!(out, "</details>");
             },
             out,
