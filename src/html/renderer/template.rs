@@ -336,7 +336,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                         div_wrapper!(self, &subtask, settings, out, "exercise-exercise");
                     }
                 }
-                write!(out, "<details open class =\"group_exercise-solution\">");
+                write!(out, "<details open class =\"group_exercise-solution\">")?;
                 tag_str!("Lösung: ", out, "summary", "group_exercise-solution-title");
                 for (index, item) in solutions.iter().enumerate() {
                     if let Some(solution) = item {
@@ -348,7 +348,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                         div_wrapper!(self, &solution, settings, out, "exercise-exercise");
                     }
                 }
-                write!(out, "</details>");
+                write!(out, "</details>")?;
             },
             out,
             "div",
