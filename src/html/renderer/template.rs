@@ -208,7 +208,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                 "question-label"
             );
         } else {
-            tag_str!("Frage: ", out, "div", "question-label");
+            tag_str!("Frage: ", out, "span", "question-label");
         }
         tag_wrapper!(
             self,
@@ -282,7 +282,6 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                 "environment-title"
             );
         }
-
         for attribute in template.present() {
             if attribute.name == "title" {
                 continue;
