@@ -128,7 +128,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
     ) -> io::Result<bool> {
         tag_stmt!(
             {
-                write!(out, "Hinweis:")?;
+                //write!(out, "Hinweis:")?;
                 self.run_vec(&template.content, settings, out)?;
             },
             out,
