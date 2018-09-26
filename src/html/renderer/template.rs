@@ -287,7 +287,33 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                 continue;
             }
             let class = format!("env-{}", &attribute.name);
-            div_wrapper!(self, &attribute.value, settings, out, &class);
+            let class_title = format!("title-env-{}", &attribute.name);
+            let attribute_name = match attribute.name.as_ref() {
+                "example"  => "Beispiel: ",
+                "solutionprocess" => "Wie komme ich auf den Beweis?",
+                "summary" => "Zusammenfassung",
+                "proof" => "Beweis",
+                "explanation" => "Erklärung",
+                _ => ""
+
+            };
+            tag_stmt!(
+                {
+                    tag_stmt!(
+                        {
+                            write!(out, "{}", &attribute_name)?;
+                        },
+                        out,
+                        "span",
+                        &class_title
+                    );
+                    self.run_vec(&attribute.value, settings, out)?;
+                },
+                out,
+                "div",
+                &class
+            );
+            //div_wrapper!(self, &attribute.value, settings, out, &class);
         }
         write!(out, "</div>")?;
         Ok(false)
