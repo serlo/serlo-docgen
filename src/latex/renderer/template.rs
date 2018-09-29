@@ -81,8 +81,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                 } else {
                     None
                 }
-            })
-            .next();
+            }).next();
 
         if let Some(err) = error {
             self.error(err, settings, out)?;
@@ -209,13 +208,13 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                     .present
                     .iter()
                     .filter(|a| {
-                        a.name.starts_with("subtask") && (if solution {
-                            a.name.ends_with("solution")
-                        } else {
-                            !a.name.ends_with("solution")
-                        })
-                    })
-                    .map(|a| {
+                        a.name.starts_with("subtask")
+                            && (if solution {
+                                a.name.ends_with("solution")
+                            } else {
+                                !a.name.ends_with("solution")
+                            })
+                    }).map(|a| {
                         let mut s = "\\item ".to_string();
                         s.push_str(
                             &a.value
@@ -224,8 +223,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                                 .trim(),
                         );
                         s
-                    })
-                    .collect()
+                    }).collect()
             };
 
             let task_list = build_items(false);
