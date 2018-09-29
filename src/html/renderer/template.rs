@@ -81,18 +81,25 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
             }
             KnownTemplate::Solution(solution) => self.solution(&solution, settings, out)?,
             KnownTemplate::Smiley(smiley) => {
-                write!(
-                    out,
-                    "{}",
-                    smiley_to_unicode(&extract_plain_text(&smiley.name.unwrap_or(&[])))
-                        .unwrap_or('\u{01f603}')
-                )?;
+
+                let text = extract_plain_text(&smiley.name.unwrap_or(&[]));
+                let unicode = smiley_to_unicode(&text).unwrap_or('\u{01f603}');
+
+                write!(out, "{}", &unicode)?;
                 false
-            }
-            _ => {
-                writeln!(out, "irgendetwas anderes")?;
+            },
+            KnownTemplate::Anchor(_) => {
+                self.write_error("TODO", out)?;
                 false
-            }
+            },
+            KnownTemplate::Mainarticle(_) => {
+                self.write_error("TODO", out)?;
+                false
+            },
+            KnownTemplate::Literature(_) => {
+                self.write_error("TODO", out)?;
+                false
+            },
         };
         Ok(false)
     }
@@ -113,7 +120,12 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         ];
         for (index, tuple) in attrs.iter().enumerate() {
             if let (Some(case), Some(proof)) = tuple {
-                writeln!(out, "<span class=\"proofcase\">Fall {}:</span>", index + 1)?;
+                writeln!(
+                    out,
+                    "<span class=\"proofcase\">{} {}:</span>",
+                    self.html.strings.proofcase_caption,
+                    index + 1
+                )?;
                 div_wrapper!(self, &case, settings, out, "proofcase-case");
                 div_wrapper!(self, &proof, settings, out, "proofcase-proof");
             }
