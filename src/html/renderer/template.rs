@@ -126,15 +126,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         template: &Important<'e>,
         out: &mut io::Write,
     ) -> io::Result<bool> {
-        tag_stmt!(
-            {
-                //write!(out, "Hinweis:")?;
-                self.run_vec(&template.content, settings, out)?;
-            },
-            out,
-            "div",
-            "important"
-        );
+        div_wrapper!(self, &template.content, settings, out, "important");
         Ok(false)
     }
 
@@ -153,8 +145,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                 } else {
                     None
                 }
-            })
-            .next();
+            }).next();
 
         if let Some(err) = error {
             self.error(err, out)?;
@@ -162,24 +153,28 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         }
         tag_stmt!(
             {
-                if let Some(Element::Formatted(ref root)) = formula.formula.first() {
-                    if let MarkupType::Math = root.markup {
-                        self.formel(root, settings, out)?;
-                    } else {
+                let refs: Vec<&Element> = formula.formula.iter().collect();
+                match refs[..] {
+                    [&Element::Formatted(ref root)] => {
+                        if let MarkupType::Math = root.markup {
+                            self.formel(root, settings, out)?;
+                        } else {
+                            let msg = format!(
+                                "the first element of the content of \"formula\" \
+                                 is not math, but {:?}!",
+                                root.markup
+                            );
+                            self.write_error(&msg, out)?;
+                        }
+                    }
+                    _ => {
                         let msg = format!(
-                            "the first element of the content of \"formula\" \
-                             is not math, but {:?}!",
-                            root.markup
+                            "the content of \"formula\" is not \
+                             only a math element, but {:?}!",
+                            formula.formula
                         );
                         self.write_error(&msg, out)?;
                     }
-                } else {
-                    let msg = format!(
-                        "first element of the content of \"formula\" is not \
-                         a math element, but {:?}!",
-                        formula.formula[0]
-                    );
-                    self.write_error(&msg, out)?;
                 }
             },
             out,
@@ -289,13 +284,12 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
             let class = format!("env-{}", &attribute.name);
             let class_title = format!("title-env-{}", &attribute.name);
             let attribute_name = match attribute.name.as_ref() {
-                "example"  => "Beispiel: ",
+                "example" => "Beispiel: ",
                 "solutionprocess" => "Wie komme ich auf den Beweis?",
                 "summary" => "Zusammenfassung",
                 "proof" => "Beweis",
                 "explanation" => "Erklärung",
-                _ => ""
-
+                _ => "",
             };
             tag_stmt!(
                 {
@@ -381,26 +375,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         );
         Ok(false)
     }
-    /*pub fn exercise(
-        &mut self,
-        exercise: &Exercise<'e>,
-        settings: &'s Settings,
-        out: &mut io::Write,
-    ) -> io::Result<bool> {
-        write!(out, "<div class=\"aufgabe\"> Aufgabe")?;
-        if let Some(title) = &exercise.title {
-            write!(out, "(")?;
-            self.run_vec(&title, settings, out)?;
-            write!(out, ") ")?;
-        };
-        write(out, ":")?;
-        self.run_vec(&exercise.exercise, settings, out)?;
-        if let Some(solution) = &exercise.solution {
-            self.run_vec(&solution, settings,out)?;
-        };
-        Ok(false)
 
-    }*/
     pub fn solution(
         &mut self,
         solution: &Solution<'e>,
