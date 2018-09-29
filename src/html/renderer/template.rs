@@ -21,7 +21,7 @@ macro_rules! tag_stmt {
 
 macro_rules! tag_str {
     ($content:expr, $out:expr, $tag:expr, $class:expr) => {
-        tag_stmt!(write!($out, $content)?, $out, $tag, $class)
+        tag_stmt!(write!($out, "{}", $content)?, $out, $tag, $class)
     };
 }
 
@@ -81,25 +81,24 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
             }
             KnownTemplate::Solution(solution) => self.solution(&solution, settings, out)?,
             KnownTemplate::Smiley(smiley) => {
-
                 let text = extract_plain_text(&smiley.name.unwrap_or(&[]));
                 let unicode = smiley_to_unicode(&text).unwrap_or('\u{01f603}');
 
                 write!(out, "{}", &unicode)?;
                 false
-            },
+            }
             KnownTemplate::Anchor(_) => {
                 self.write_error("TODO", out)?;
                 false
-            },
+            }
             KnownTemplate::Mainarticle(_) => {
                 self.write_error("TODO", out)?;
                 false
-            },
+            }
             KnownTemplate::Literature(_) => {
                 self.write_error("TODO", out)?;
                 false
-            },
+            }
         };
         Ok(false)
     }
@@ -212,10 +211,11 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                 },
                 out,
                 "span",
-                "question-label"
+                "question-caption"
             );
         } else {
-            tag_str!("Frage: ", out, "span", "question-label");
+            let caption = format!("{}: ", &self.html.strings.question_caption);
+            tag_str!(&caption, out, "span", "question-caption");
         }
         tag_wrapper!(
             self,
@@ -240,7 +240,8 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         write!(out, "<details open>")?;
         tag_stmt!(
             {
-                tag_str!("Beweisschritt: ", out, "span", "proofstep-label");
+                let caption = format!("{}: ", &self.html.strings.proofstep_caption);
+                tag_str!(&caption, out, "span", "proofstep-caption");
                 tag_wrapper!(self, &step.goal, settings, out, "span", "proofstep-goal");
             },
             out,
@@ -259,22 +260,20 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         out: &mut io::Write,
         class: &str,
     ) -> io::Result<bool> {
-        //let title = template.find("title").map(|a| a.value).unwrap_or(&[]);
-        //    let title_text = title.render(self, settings)?;
         write!(out, "<div class=\"{} environment\">", class)?;
         let name = match template {
-            KnownTemplate::Definition(_) => "Definition",
-            KnownTemplate::Theorem(_) => "Theorem",
-            KnownTemplate::Example(_) => "Beispiel",
-            KnownTemplate::Exercise(_) => "Aufgabe",
-            KnownTemplate::Hint(_) => "Hinweis",
-            KnownTemplate::Warning(_) => "Warnung",
-            KnownTemplate::Proof(_) => "Beweis",
-            KnownTemplate::AlternativeProof(_) => "Alternativer Beweis",
-            KnownTemplate::ProofSummary(_) => "Beweiszusammenfassung",
-            KnownTemplate::Solution(_) => "Lösung",
-            KnownTemplate::SolutionProcess(_) => "Lösungsweg",
-            _ => "FEHLER",
+            KnownTemplate::Definition(_) => &self.html.strings.definition_caption,
+            KnownTemplate::Theorem(_) => &self.html.strings.theorem_caption,
+            KnownTemplate::Example(_) => &self.html.strings.example_caption,
+            KnownTemplate::Exercise(_) => &self.html.strings.exercise_caption,
+            KnownTemplate::Hint(_) => &self.html.strings.hint_caption,
+            KnownTemplate::Warning(_) => &self.html.strings.warning_caption,
+            KnownTemplate::Proof(_) => &self.html.strings.proof_caption,
+            KnownTemplate::AlternativeProof(_) => &self.html.strings.alternativeproof_caption,
+            KnownTemplate::ProofSummary(_) => &self.html.strings.proofsummary_caption,
+            KnownTemplate::Solution(_) => &self.html.strings.solution_caption,
+            KnownTemplate::SolutionProcess(_) => &self.html.strings.solutionprocess_caption,
+            _ => "Unknown Template",
         };
         write!(out, "{}: ", &name)?;
 
@@ -296,30 +295,22 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
             let class = format!("env-{}", &attribute.name);
             let class_title = format!("title-env-{}", &attribute.name);
             let attribute_name = match attribute.name.as_ref() {
-                "example" => "Beispiel: ",
-                "solutionprocess" => "Wie komme ich auf den Beweis?",
-                "summary" => "Zusammenfassung",
-                "proof" => "Beweis",
-                "explanation" => "Erklärung",
+                "example" => &self.html.strings.example_caption,
+                "solutionprocess" => &self.html.strings.solutionprocess_env_caption,
+                "summary" => &self.html.strings.summary_env_caption,
+                "proof" => &self.html.strings.proof_caption,
+                "explanation" => &self.html.strings.explanation_env_caption,
                 _ => "",
             };
             tag_stmt!(
                 {
-                    tag_stmt!(
-                        {
-                            write!(out, "{}", &attribute_name)?;
-                        },
-                        out,
-                        "span",
-                        &class_title
-                    );
+                    tag_str!(&attribute_name, out, "span", &class_title);
                     self.run_vec(&attribute.value, settings, out)?;
                 },
                 out,
                 "div",
                 &class
             );
-            //div_wrapper!(self, &attribute.value, settings, out, &class);
         }
         write!(out, "</div>")?;
         Ok(false)
@@ -359,24 +350,29 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                 ];
                 for (index, item) in subtaskts.iter().enumerate() {
                     if let Some(subtask) = item {
-                        writeln!(
-                            out,
-                            "<span class=\"exercise\">Aufgabe {}:</span>",
-                            index + 1
-                        )?;
+                        let caption =
+                            format!("{} {}: ", &self.html.strings.exercise_caption, index + 1);
+                        tag_str!(&caption, out, "span", "exercise-exercise-caption");
                         div_wrapper!(self, &subtask, settings, out, "exercise-exercise");
                     }
                 }
-                write!(out, "<details open class =\"group_exercise-solution\">")?;
-                tag_str!("Lösung: ", out, "summary", "group_exercise-solution-title");
+                write!(out, "<details open class =\"exercise-solution-container\">")?;
+                let solution_caption = format!("{}: ", &self.html.strings.solution_caption);
+                tag_str!(
+                    &solution_caption,
+                    out,
+                    "summary",
+                    "group_exercise-solution-title"
+                );
                 for (index, item) in solutions.iter().enumerate() {
                     if let Some(solution) = item {
-                        writeln!(
-                            out,
-                            "<span class=\"solution\">Lösung Teilaufgabe {}:</span>",
+                        let caption = format!(
+                            "{} {}: ",
+                            &self.html.strings.exercise_part_solution_caption,
                             index + 1
-                        )?;
-                        div_wrapper!(self, &solution, settings, out, "exercise-exercise");
+                        );
+                        tag_str!(&caption, out, "span", "exercise-solution-caption");
+                        div_wrapper!(self, &solution, settings, out, "exercise-solution");
                     }
                 }
                 write!(out, "</details>")?;
@@ -394,72 +390,121 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         settings: &'s Settings,
         out: &mut io::Write,
     ) -> io::Result<bool> {
-        write!(out, "<details class=\"solution\"> <summary> Lösung: ")?;
-        if let Some(render_title) = &solution.title {
-            self.run_vec(&render_title, settings, out)?;
-        }
-        write!(out, "</summary>")?;
-        self.run_vec(&solution.solution, settings, out)?;
-        write!(out, "</details>")?;
+        tag_stmt!(
+            {
+                tag_stmt!(
+                    {
+                        let caption = format!("{}: ", &self.html.strings.solution_caption);
+                        tag_str!(&caption, out, "span", "solution-caption");
+                        if let Some(render_title) = &solution.title {
+                            self.run_vec(&render_title, settings, out)?;
+                        }
+                    },
+                    out,
+                    "summary",
+                    "solution-summary"
+                );
+                self.run_vec(&solution.solution, settings, out)?;
+            },
+            out,
+            "details",
+            "solution"
+        );
         Ok(false)
     }
+
     fn induction(
         &mut self,
         induction: &Induction<'e>,
         settings: &'s Settings,
         out: &mut io::Write,
     ) -> io::Result<bool> {
+        let strings = &self.html.strings;
+
         write!(out, "<div class=\"induction\">")?;
-        write!(out, "<details open><summary>")?;
         if let Some(e) = induction.basic_set {
-            write!(out, "Aussageform, die wir für alle ")?;
-            self.run_vec(&e, settings, out)?;
-            write!(out, " beweisen wollen:")?;
+            let set = e.render(self, settings)?;
+            let msg = str::replace(&strings.induction_intro_basicset, "{}", &set);
+            tag_str!(&msg, out, "span", "induction-intro");
         } else {
-            write!(out, "Aussage die wir beweisen wollen: ")?;
+            tag_str!(
+                &strings.induction_intro_default,
+                out,
+                "span",
+                "induction-intro"
+            );
         };
-        write!(out, "</summary>")?;
         self.run_vec(&induction.statement, settings, out)?;
-        write!(out, "</details>")?;
-        //Aussage
 
-        write!(out, "<details open><summary>")?;
-        write!(out, "1. Induktionsanfang:")?;
-        write!(out, "</summary>")?;
-        self.run_vec(&induction.base_case, settings, out)?;
-        write!(out, "</details>")?;
+        tag_stmt!(
+            {
+                write!(out, "<li><details open><summary>")?;
+                tag_str!(
+                    &strings.induction_base_case,
+                    out,
+                    "span",
+                    "induction-base-caption"
+                );
+                write!(out, "</summary>")?;
+                self.run_vec(&induction.base_case, settings, out)?;
+                write!(out, "</details></li>")?;
 
-        write!(out, "<details open><summary>")?;
-        write!(out, "2. Induktionsschritt:")?;
-        write!(out, "</summary>")?;
-        write!(out, "<details open><summary>")?;
-        write!(out, "2.a Induktionsvoraussetzung:")?;
-        write!(out, "</summary>")?;
-        self.run_vec(&induction.induction_hypothesis, settings, out)?;
-        write!(out, "</details>")?;
-        //IV
+                write!(out, "<li><details open><summary>")?;
+                tag_str!(
+                    &strings.induction_step,
+                    out,
+                    "span",
+                    "induction-step-caption"
+                );
+                write!(out, "</summary>")?;
 
-        write!(out, "<details open><summary>")?;
-        write!(out, "2.b Induktionsbehauptung:")?;
-        write!(out, "</summary>")?;
-        self.run_vec(&induction.step_case_goal, settings, out)?;
-        write!(out, "</details>")?;
-        //IB
+                tag_stmt!(
+                    {
+                        write!(out, "<li><details open><summary>")?;
+                        tag_str!(
+                            &strings.induction_hypothesis,
+                            out,
+                            "span",
+                            "induction-hypothesis-caption"
+                        );
+                        write!(out, "</summary>")?;
+                        self.run_vec(&induction.induction_hypothesis, settings, out)?;
+                        write!(out, "</details></li>")?;
 
-        write!(out, "<details open><summary>")?;
-        write!(out, "2.b Induktionsbehauptung:")?;
-        write!(out, "</summary>")?;
-        self.run_vec(&induction.step_case_goal, settings, out)?;
-        write!(out, "</details>")?;
+                        write!(out, "<li><details open><summary>")?;
+                        tag_str!(
+                            &strings.induction_step_goal,
+                            out,
+                            "span",
+                            "induction-step-goal-caption"
+                        );
+                        write!(out, "</summary>")?;
+                        self.run_vec(&induction.step_case_goal, settings, out)?;
+                        write!(out, "</details></li>")?;
 
-        write!(out, "<details open><summary>")?;
-        write!(out, "2.c Beweis des Induktionsschritts:")?;
-        write!(out, "</summary>")?;
-        self.run_vec(&induction.step_case, settings, out)?;
-        write!(out, "</details>")?;
-        //IS
+                        write!(out, "<li><details open><summary>")?;
+                        tag_str!(
+                            &strings.induction_step_proof,
+                            out,
+                            "span",
+                            "induction-step-proof-caption"
+                        );
+                        write!(out, "</summary>")?;
+                        self.run_vec(&induction.step_case, settings, out)?;
+                        write!(out, "</details></li>")?;
+                    },
+                    out,
+                    "ol",
+                    "induction-inner-list"
+                );
 
-        write!(out, "</details>")?;
+                write!(out, "</details></li>")?;
+            },
+            out,
+            "ol",
+            "induction-outer-list"
+        );
+
         write!(out, "</div>")?;
 
         Ok(false)
