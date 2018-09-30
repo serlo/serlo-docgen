@@ -261,6 +261,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         class: &str,
     ) -> io::Result<bool> {
         write!(out, "<div class=\"{} environment\">", class)?;
+        write!(out, "<div class=\"icon icon-{}\">", class)?;
         let name = match template {
             KnownTemplate::Definition(_) => &self.html.strings.definition_caption,
             KnownTemplate::Theorem(_) => &self.html.strings.theorem_caption,
@@ -292,7 +293,8 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
             if attribute.name == "title" {
                 continue;
             }
-            let class = format!("env-{}", &attribute.name);
+            let class_attribute = format!("env-{}", &attribute.name);
+            let icon_name = format!("icon icon-{}", &attribute.name);
             let class_title = format!("title-env-{}", &attribute.name);
             let attribute_name = match attribute.name.as_ref() {
                 "example" => &self.html.strings.example_caption,
@@ -304,14 +306,28 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
             };
             tag_stmt!(
                 {
-                    tag_str!(&attribute_name, out, "span", &class_title);
-                    self.run_vec(&attribute.value, settings, out)?;
+                    if attribute.name.to_string() == class.to_string() {
+                        tag_str!(&attribute_name, out, "span", &class_title);
+                        self.run_vec(&attribute.value, settings, out)?;
+                    } //catches the case, that the attribute has the same name as the type and so that the icon is rendered two times
+                    else {
+                        tag_stmt!(
+                            {
+                                tag_str!(&attribute_name, out, "span", &class_title);
+                                self.run_vec(&attribute.value, settings, out)?;
+                            },
+                            out,
+                            "div",
+                            &icon_name
+                        );
+                    }
                 },
                 out,
                 "div",
-                &class
+                &class_attribute
             );
         }
+        write!(out, "</div>")?;
         write!(out, "</div>")?;
         Ok(false)
     }
@@ -394,21 +410,28 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
             {
                 tag_stmt!(
                     {
-                        let caption = format!("{}: ", &self.html.strings.solution_caption);
-                        tag_str!(&caption, out, "span", "solution-caption");
-                        if let Some(render_title) = &solution.title {
-                            self.run_vec(&render_title, settings, out)?;
-                        }
+                        tag_stmt!(
+                            {
+                                let caption = format!("{}: ", &self.html.strings.solution_caption);
+                                tag_str!(&caption, out, "span", "solution-caption");
+                                if let Some(render_title) = &solution.title {
+                                    self.run_vec(&render_title, settings, out)?;
+                                }
+                            },
+                            out,
+                            "summary",
+                            "solution-summary"
+                        );
+                        self.run_vec(&solution.solution, settings, out)?;
                     },
                     out,
-                    "summary",
-                    "solution-summary"
+                    "details",
+                    "solution"
                 );
-                self.run_vec(&solution.solution, settings, out)?;
             },
             out,
-            "details",
-            "solution"
+            "div",
+            "icon icon-solution"
         );
         Ok(false)
     }
