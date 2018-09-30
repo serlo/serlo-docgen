@@ -156,7 +156,8 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                 } else {
                     None
                 }
-            }).next();
+            })
+            .next();
 
         if let Some(err) = error {
             self.error(err, out)?;
@@ -309,7 +310,8 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                     if attribute.name.to_string() == class.to_string() {
                         tag_str!(&attribute_name, out, "span", &class_title);
                         self.run_vec(&attribute.value, settings, out)?;
-                    } //catches the case, that the attribute has the same name as the type and so that the icon is rendered two times
+                    }
+                    //catches the case, that the attribute has the same name as the type and so that the icon is rendered two times
                     else {
                         tag_stmt!(
                             {
