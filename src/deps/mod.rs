@@ -28,11 +28,19 @@ fn run_deps_printer(
     args: &[String],
     out: &mut io::Write,
 ) -> io::Result<()> {
+    // check of supplied targets, throw an error if target is not found.
+    let mut target_list = args.to_vec();
+
     for (target_name, target) in &settings.general.targets {
         let target = target.get_target();
         if !args.contains(&target_name) {
             continue;
         }
+        target_list = target_list
+            .iter()
+            .filter(|s| s != &target_name)
+            .map(|s| s.clone())
+            .collect();
 
         // apply exclusions
         let root = {
@@ -71,6 +79,11 @@ fn run_deps_printer(
             }
         };
         writeln!(out)?;
+    }
+
+    if !target_list.is_empty() {
+        eprintln!("The following targets are not defined: {}", &target_list.join(", "));
+        process::exit(2);
     }
     Ok(())
 }
