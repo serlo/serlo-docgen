@@ -146,19 +146,21 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         template: &Todo<'e>,
         out: &mut io::Write,
     ) -> io::Result<bool> {
-        tag_stmt!(
-            {
-                write!(out, "<details>")?;
-                write!(out, "<summary class =\"todo\">")?;
-                write!(out, "TODO: ")?;
-                write!(out, "</summary>")?;
-                self.run_vec(&template.todo, settings, out)?;
-                write!(out, "</details>")?;
-            },
-            out,
-            "div",
-            "todo"
-        );
+        if self.html.with_todo {
+            tag_stmt!(
+                {
+                    write!(out, "<details>")?;
+                    write!(out, "<summary class =\"todo\">")?;
+                    write!(out, "TODO: ")?;
+                    write!(out, "</summary>")?;
+                    self.run_vec(&template.todo, settings, out)?;
+                    write!(out, "</details>")?;
+                },
+                out,
+                "div",
+                "todo"
+            );
+        }
         Ok(false)
     }
     fn formula(
