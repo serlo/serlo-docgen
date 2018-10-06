@@ -24,12 +24,16 @@ use mwparser_utils::CachedTexChecker;
 #[derive(Debug, StructOpt)]
 #[structopt(
     name = "mfnf_ex",
-    about = "This program renders an article syntax tree to a serial format (like LaTeX)."
+    about = "This program renders an article syntax tree to a serial format (like LaTeX, HTML, ...)."
 )]
 struct Args {
     /// Dump the default settings to stdout.
-    #[structopt(short = "d", long = "dump-config")]
+    #[structopt(long = "dump-config")]
     dump_config: bool,
+    /// List the available targets.
+    #[structopt(long = "list-targets")]
+    list_targets: bool,
+
     /// Path to the input file.
     #[structopt(parse(from_os_str), short = "i", long = "input")]
     input_file: Option<PathBuf>,
@@ -59,7 +63,7 @@ struct Args {
     #[structopt(short = "r", long = "revision")]
     doc_revision: Option<String>,
 
-    /// The export target. (e.g. `latex` or `latex.print`)
+    /// The export target. (e.g. `latex` or `html.print`)
     #[structopt()]
     target: String,
 
@@ -112,6 +116,16 @@ fn main() -> Result<(), std::io::Error> {
             serde_yaml::to_string(&settings.general)
                 .expect("could not serialize default settings!")
         );
+        process::exit(0);
+    }
+
+    if args.list_targets {
+        let targets = settings.general.targets
+            .iter()
+            .map(|t| t.0.to_string())
+            .collect::<Vec<String>>();
+
+        println!("{}", targets.join(", "));
         process::exit(0);
     }
 
