@@ -8,6 +8,7 @@ mod renderer;
 #[serde(default)]
 pub struct HTMLTarget {
     strings: HTMLStrings,
+    with_todo: bool,
 }
 
 /// all user-facing static strings.

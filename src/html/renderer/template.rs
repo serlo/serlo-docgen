@@ -65,7 +65,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
             }
             KnownTemplate::Navigation(_) => false,
             KnownTemplate::Important(important) => self.important(settings, &important, out)?,
-            KnownTemplate::Todo(_) => false,
+            KnownTemplate::Todo(todo) => self.todo(settings, &todo, out)?,
             KnownTemplate::Theorem(_)
             | KnownTemplate::Definition(_)
             | KnownTemplate::SolutionProcess(_)
@@ -140,7 +140,27 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         div_wrapper!(self, &template.content, settings, out, "important");
         Ok(false)
     }
-
+    fn todo(
+        &mut self,
+        settings: &'s Settings,
+        template: &Todo<'e>,
+        out: &mut io::Write,
+    ) -> io::Result<bool> {
+        tag_stmt!(
+            {
+                write!(out, "<details>")?;
+                write!(out, "<summary class =\"todo\">")?;
+                write!(out, "TODO: ")?;
+                write!(out, "</summary>")?;
+                self.run_vec(&template.todo, settings, out)?;
+                write!(out, "</details>")?;
+            },
+            out,
+            "div",
+            "todo"
+        );
+        Ok(false)
+    }
     fn formula(
         &mut self,
         formula: &Formula<'e>,
