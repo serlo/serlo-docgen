@@ -29,6 +29,8 @@ pub struct LatexTarget {
     centered_image_captions: bool,
     /// Render todo boxes?
     with_todo: bool,
+    /// Number environments?
+    environment_numbers: bool,
 
     /// Templates which can be exported as an environment.
     /// The template may have a `title` attribute and a content
@@ -48,6 +50,7 @@ impl Default for LatexTarget {
             gallery_images_per_row: 2,
             centered_image_captions: true,
             with_todo: false,
+            environment_numbers: false,
             environments: string_value_map![
                 "definition" => string_vec!["definition"],
                 "example" => string_vec!["example"],

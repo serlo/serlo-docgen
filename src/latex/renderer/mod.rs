@@ -114,7 +114,12 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
 
         let arg_string: String = args.iter().map(|a| format!("[{}]", a)).collect();
         let content = indent_and_trim(content, indent, line_width);
-        writeln!(out, GENERIC_ENV!(), name, &arg_string, content, name)
+        let name = if self.latex.environment_numbers {
+            name.to_string()
+        } else {
+            format!("{}*", name)
+        };
+        writeln!(out, GENERIC_ENV!(), &name, &arg_string, content, name)
     }
 
     fn write_error(&self, message: &str, out: &mut io::Write) -> io::Result<()> {

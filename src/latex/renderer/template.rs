@@ -121,12 +121,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
     ) -> io::Result<()> {
         if self.latex.with_todo {
             let text = todo.todo.render(self, settings)?;
-            self.environment(
-                "todo",
-                &[],
-                &format!("{}\n", text.trim()),
-                out,
-            )?;
+            self.environment("todo", &[], &format!("{}\n", text.trim()), out)?;
         }
         Ok(())
     }
