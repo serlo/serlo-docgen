@@ -60,7 +60,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
             )?,
             // TODO: replace noprint with a sematic version, ignore for now.
             KnownTemplate::NoPrint(noprint) => self.run_vec(&noprint.content, settings, out)?,
-            KnownTemplate::Todo(_) => (),
+            KnownTemplate::Todo(todo) => self.todo(&todo, settings, out)?,
         };
         Ok(false)
     }
@@ -111,6 +111,24 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         let goal = step.goal.render(self, settings)?;
         writeln!(out, PROOF_STEP_CAPTION!(), name.trim(), goal.trim())?;
         self.run_vec(&step.step, settings, out)
+    }
+
+    fn todo(
+        &mut self,
+        todo: &Todo<'e>,
+        settings: &'s Settings,
+        out: &mut io::Write,
+    ) -> io::Result<()> {
+        if self.latex.with_todo {
+            let text = todo.todo.render(self, settings)?;
+            self.environment(
+                "todo",
+                &[],
+                &format!("{}\n", text.trim()),
+                out,
+            )?;
+        }
+        Ok(())
     }
 
     fn literature(&mut self, literature: &Literature<'e>, out: &mut io::Write) -> io::Result<()> {

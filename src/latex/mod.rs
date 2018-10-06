@@ -27,6 +27,8 @@ pub struct LatexTarget {
     image_height: f32,
     /// Show caption for embedded images?
     centered_image_captions: bool,
+    /// Render todo boxes?
+    with_todo: bool,
 
     /// Templates which can be exported as an environment.
     /// The template may have a `title` attribute and a content
@@ -45,6 +47,7 @@ impl Default for LatexTarget {
             image_height: 0.2,
             gallery_images_per_row: 2,
             centered_image_captions: true,
+            with_todo: false,
             environments: string_value_map![
                 "definition" => string_vec!["definition"],
                 "example" => string_vec!["example"],
