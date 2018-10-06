@@ -17,6 +17,7 @@ mod target;
 mod util;
 #[macro_use]
 mod settings;
+mod anchors;
 mod deps;
 mod html;
 mod latex;
@@ -52,6 +53,7 @@ pub enum MFNFTargets {
     PDF(pdf::PDFTarget),
     Stats(stats::StatsTarget),
     HTML(html::HTMLTarget),
+    Anchors(anchors::AnchorsTarget),
 }
 
 impl MFNFTargets {
@@ -65,6 +67,7 @@ impl MFNFTargets {
             MFNFTargets::PDF(ref t) => t,
             MFNFTargets::Stats(ref t) => t,
             MFNFTargets::HTML(ref t) => t,
+            MFNFTargets::Anchors(ref t) => t,
         }
     }
 }

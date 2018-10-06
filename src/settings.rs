@@ -2,6 +2,7 @@ use mfnf_sitemap::Markers;
 use std::collections::HashMap;
 use std::path::PathBuf;
 
+use anchors;
 use deps;
 use html;
 use latex;
@@ -131,6 +132,10 @@ impl Default for GeneralSettings {
                 tmap.insert(
                     "stats".to_string(),
                     MFNFTargets::Stats(stats::StatsTarget::default()),
+                );
+                tmap.insert(
+                    "anchors".to_string(),
+                    MFNFTargets::Anchors(anchors::AnchorsTarget::default()),
                 );
                 tmap
             },

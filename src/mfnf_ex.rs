@@ -120,7 +120,9 @@ fn main() -> Result<(), std::io::Error> {
     }
 
     if args.list_targets {
-        let targets = settings.general.targets
+        let targets = settings
+            .general
+            .targets
             .iter()
             .map(|t| t.0.to_string())
             .collect::<Vec<String>>();

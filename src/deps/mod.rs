@@ -82,7 +82,10 @@ fn run_deps_printer(
     }
 
     if !target_list.is_empty() {
-        eprintln!("The following targets are not defined: {}", &target_list.join(", "));
+        eprintln!(
+            "The following targets are not defined: {}",
+            &target_list.join(", ")
+        );
         process::exit(2);
     }
     Ok(())
