@@ -7,7 +7,6 @@
 //! this target is executed.
 
 use preamble::*;
-use serde_yaml;
 use std::process;
 
 mod printers;
@@ -47,19 +46,8 @@ fn run_deps_printer(
             let mut new_settings = Settings::default();
             new_settings.runtime.markers = settings.runtime.markers.clone();
             new_settings.runtime.target_name = target_name.to_string();
-            let root = root.clone();
-            let result = transformations::remove_exclusions(root, &new_settings);
-            match result {
-                Err(err) => {
-                    eprintln!("{}", &err);
-                    println!(
-                        "{}",
-                        serde_yaml::to_string(&err).expect("Could not serialize error!")
-                    );
-                    process::exit(1);
-                }
-                Ok(tree) => tree,
-            }
+            transformations::remove_exclusions(root.clone(), &new_settings)
+                .expect("error applying exclusions!")
         };
 
         let target_ext = target.target_extension();

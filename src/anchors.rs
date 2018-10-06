@@ -5,7 +5,6 @@
 //! is available in the export or not.
 
 use preamble::*;
-use serde_yaml;
 use std::process;
 
 use mfnf_template_spec::{parse_template, KnownTemplate};
@@ -47,25 +46,40 @@ impl Target for AnchorsTarget {
         args: &[String],
         out: &mut io::Write,
     ) -> io::Result<()> {
-        // apply exclusions
-        let root = {
-            let result = transformations::remove_exclusions(root.clone(), &settings);
-            match result {
-                Err(err) => {
-                    eprintln!("{}", &err);
-                    println!(
-                        "{}",
-                        serde_yaml::to_string(&err).expect("Could not serialize error!")
-                    );
-                    process::exit(1);
-                }
-                Ok(tree) => tree,
+        // check of supplied targets, throw an error if target is not found.
+        let mut target_list = args.to_vec();
+
+        for (target_name, target) in &settings.general.targets {
+            if !args.contains(&target_name) {
+                continue;
             }
-        };
+            target_list = target_list
+                .iter()
+                .filter(|s| s != &target_name)
+                .map(|s| s.clone())
+                .collect();
+            // apply exclusions
+            let root = {
+                let mut new_settings = Settings::default();
+                new_settings.runtime.markers = settings.runtime.markers.clone();
+                new_settings.runtime.target_name = target_name.to_string();
+                transformations::remove_exclusions(root.clone(), &settings)
+                    .expect("error applying exclusions!")
+            };
 
-        let mut printer = AnchorPrinter::new(self);
-        printer.run(&root, settings, out)?;
+            let mut printer = AnchorPrinter::new(self);
+            printer.run(&root, settings, out)?;
 
+            writeln!(out)?;
+        }
+
+        if !target_list.is_empty() {
+            eprintln!(
+                "The following targets are not defined: {}",
+                &target_list.join(", ")
+            );
+            process::exit(2);
+        }
         Ok(())
     }
 }
