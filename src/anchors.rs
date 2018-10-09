@@ -49,7 +49,7 @@ impl Target for AnchorsTarget {
         // check of supplied targets, throw an error if target is not found.
         let mut target_list = args.to_vec();
 
-        for (target_name, target) in &settings.general.targets {
+        for (target_name, _target) in &settings.general.targets {
             if !args.contains(&target_name) {
                 continue;
             }
@@ -101,20 +101,21 @@ impl<'a, 'b: 'a, 't> Traversion<'a, &'b Settings> for AnchorPrinter<'a, 't> {
     ) -> io::Result<bool> {
         match root {
             Element::Document(_) => {
-                writeln!(out, "{}", &settings.runtime.document_title)?;
+                writeln!(out, "{}", &mw_enc(&settings.runtime.document_title))?;
             }
             Element::Heading(ref heading) => {
-                let text = extract_plain_text(&heading.caption);
-                writeln!(out, "{}#{}", &settings.runtime.document_title, &text)?;
+                let text = mw_enc(&extract_plain_text(&heading.caption));
+                let title = mw_enc(&settings.runtime.document_title);
+                writeln!(out, "{}#{}", &title, &text)?;
             }
             Element::Template(ref template) => {
                 if let Some(KnownTemplate::Anchor(ref anchor)) = parse_template(template) {
                     writeln!(
                         out,
                         "{}#{}:{}",
-                        &settings.runtime.document_title,
-                        &self.target.anchor_caption,
-                        &extract_plain_text(&anchor.ref1),
+                        &mw_enc(&settings.runtime.document_title),
+                        &mw_enc(&self.target.anchor_caption),
+                        &mw_enc(&extract_plain_text(&anchor.ref1)),
                     )?;
                 }
             }

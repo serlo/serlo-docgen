@@ -80,6 +80,11 @@ pub fn urlencode(data: &str) -> String {
     return escaped;
 }
 
+/// encode a url for mediawiki (underscore, urlencode)
+pub fn mw_enc(input: &str) -> String {
+    urlencode(&input.trim().replace(" ", "_"))
+}
+
 /// Returns a unicode character for a smiley description.
 ///
 /// see also: https://www.mediawiki.org/wiki/Template:Smiley
