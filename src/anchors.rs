@@ -63,7 +63,7 @@ impl Target for AnchorsTarget {
                 let mut new_settings = Settings::default();
                 new_settings.runtime.markers = settings.runtime.markers.clone();
                 new_settings.runtime.target_name = target_name.to_string();
-                transformations::remove_exclusions(root.clone(), &settings)
+                transformations::remove_exclusions(root.clone(), &new_settings)
                     .expect("error applying exclusions!")
             };
 
