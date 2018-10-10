@@ -327,7 +327,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         target.push_str(&caption);
 
         self.internal_link(&target, &caption, settings, out)?;
-        writeln!(out, "\\\\");
+        writeln!(out, "\n");
         Ok(())
     }
 
