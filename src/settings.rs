@@ -1,5 +1,5 @@
 use mfnf_sitemap::Markers;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 
 use anchors;
@@ -49,6 +49,12 @@ pub struct RuntimeSettings {
 
     /// The current target name (index into defined targets).
     pub target_name: String,
+
+    /// A list of internal reference URLs available in this export.
+    ///
+    /// If an internal reference is not in this list, it shall be included
+    /// as a hyperlink to the external source.
+    pub available_anchors: HashSet<String>,
 }
 
 /// General MFNF transformation settings for all targets.
@@ -86,6 +92,10 @@ pub struct GeneralSettings {
 
     /// Mapping of interwiki link prefix to url (e.g. w: -> de.wikipedia.org)
     pub interwiki_link_mapping: HashMap<String, String>,
+
+    /// Caption text used in a reference to an anchor. (usually localized)
+    /// This is important for matching internal references to link targets (anchors).
+    pub anchor_caption: String,
 }
 
 impl Default for RuntimeSettings {
@@ -96,6 +106,7 @@ impl Default for RuntimeSettings {
             tex_checker: None,
             markers: Markers::default(),
             target_name: "".into(),
+            available_anchors: HashSet::new(),
         }
     }
 }
@@ -146,14 +157,6 @@ impl Default for GeneralSettings {
                 ("n:", "https://de.wikinews.org/wiki/"),
                 ("v:", "https://de.wikiversity.org/wiki/"),
                 ("wikt:", "https://de.wiktionary.org/wiki/"),
-                (
-                    "mathe_für_nicht-freaks:",
-                    "https://de.wikibooks.org/wiki/Mathe_für_Nicht-Freaks:",
-                ),
-                (
-                    "mathe für nicht-freaks:",
-                    "https://de.wikibooks.org/wiki/Mathe_für_Nicht-Freaks:",
-                ),
             ]
                 .iter()
                 .map(|e| (e.0.to_string(), e.1.to_string()))
@@ -166,6 +169,7 @@ impl Default for GeneralSettings {
             section_rev: "latest".into(),
             section_ext: "yml".into(),
             section_inclusion_prefix: "#lst:".into(),
+            anchor_caption: "Anker".into(),
         }
     }
 }

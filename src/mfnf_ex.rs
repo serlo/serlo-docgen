@@ -12,10 +12,12 @@ extern crate mwparser_utils;
 
 use std::fs;
 use std::io;
+use std::io::Read;
 use std::path::PathBuf;
 use std::process;
 use std::str;
 use structopt::StructOpt;
+use std::collections::HashSet;
 
 use mediawiki_parser::transformations::TResult;
 use mfnf_export::*;
@@ -55,6 +57,9 @@ struct Args {
     /// Path to article markers (includes / excludes).
     #[structopt(parse(from_os_str), short = "m", long = "markers")]
     marker_path: Option<PathBuf>,
+    /// Path to a list of link targets (anchors) available in the export.
+    #[structopt(parse(from_os_str), short = "a", long = "available-anchors")]
+    available_anchors: Option<PathBuf>,
 
     /// Title of the document.
     #[structopt(short = "t", long = "title")]
@@ -133,7 +138,19 @@ fn main() -> Result<(), std::io::Error> {
 
     if let Some(path) = args.marker_path {
         let file = fs::File::open(&path)?;
-        settings.runtime.markers = serde_yaml::from_reader(&file).expect("Error reading markers:")
+        settings.runtime.markers = serde_yaml::from_reader(&file)
+            .expect("Error reading markers:")
+    }
+
+    if let Some(path) = args.available_anchors {
+        let mut file = fs::File::open(&path)?;
+        let mut content = String::new();
+        file.read_to_string(&mut content)?;
+        settings.runtime.available_anchors = content
+            .split("\n")
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty())
+            .collect::<HashSet<String>>();
     }
 
     if let Some(path) = args.texvccheck_path {
