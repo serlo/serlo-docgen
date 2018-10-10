@@ -3,6 +3,7 @@
 use super::LatexRenderer;
 use mediawiki_parser::MarkupType;
 use preamble::*;
+use base64;
 
 impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
     pub fn paragraph(
@@ -35,9 +36,22 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         let content = indent_and_trim(&content, indent, line_width);
         let depth_string = "sub".repeat(root.depth - 1);
 
+        let anchor = extract_heading_anchor(root, settings);
+
         writeln!(out, SECTION!(), depth_string, caption.trim())?;
+        writeln!(out, LABEL!(), base64::encode(&anchor))?;
         writeln!(out, "{}", &content)?;
         Ok(false)
+    }
+
+    pub fn document(
+        &mut self,
+        _root: &'e Document,
+        settings: &'s Settings,
+        out: &mut io::Write,
+    ) -> io::Result<bool> {
+        writeln!(out, LABEL!(), base64::encode(&extract_document_anchor(settings)))?;
+        Ok(true)
     }
 
     pub fn comment(

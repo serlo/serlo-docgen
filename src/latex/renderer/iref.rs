@@ -2,6 +2,7 @@
 
 use super::LatexRenderer;
 use preamble::*;
+use base64;
 use std::path;
 
 impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
@@ -42,7 +43,6 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         out: &mut io::Write,
     ) -> io::Result<bool> {
         let target_str = extract_plain_text(&root.target);
-        let target_path = path::Path::new(&target_str);
 
         let doctitle = &settings.runtime.document_title;
 
@@ -102,37 +102,23 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
             return Ok(false);
         }
 
-        // export links to other articles as url to the article
-        if target_str
-            .trim()
-            .trim_left_matches(":")
-            .to_lowercase()
-            .starts_with("mathe für nicht-freaks:")
-        {
-            let cap_content = root.caption.render(self, settings)?;
+        let target = target_str.trim().trim_left_matches(":").to_string();
 
-            let mut url = settings.general.article_url_base.to_owned();
-            url.push_str(&target_str);
-            url = escape_latex(&urlencode(&url));
+        let cap_content = root.caption.render(self, settings)?;
 
-            writeln!(out, INTERNAL_HREF!(), &url, &cap_content)?;
+        // internal references contained in the book.
+        let anchor = matching_anchor(&target, &settings.runtime.available_anchors);
+        if let Some(anchor) = anchor {
+            write!(out, LABEL_REF!(), &base64::encode(&anchor), &cap_content)?;
             return Ok(false);
         }
 
-        // anchor references
-        let anchor_prefixes = ["#Anchor:", "#anchor:", "#Anker:", "#anker:"];
-        let anchor_prefix = anchor_prefixes
-            .iter()
-            .filter(|p| target_str.starts_with(*p))
-            .next();
-        if let Some(prefix) = anchor_prefix {
-            let target = target_str.trim_left_matches(prefix);
-            write!(out, LABEL_REF!(), target.trim())?;
-            return Ok(false);
-        }
+        // other internal references to mediawiki
+        let mut url = settings.general.article_url_base.clone();
+        url.push_str(&target);
+        url = escape_latex(&urlencode(&url));
 
-        let msg = format!("No export function defined for ref {:?}", target_path);
-        self.write_error(&msg, out)?;
-        Ok(false)
+        writeln!(out, INTERNAL_HREF!(), &url, &cap_content)?;
+        return Ok(false);
     }
 }

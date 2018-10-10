@@ -32,7 +32,7 @@ impl<'e, 's: 'e, 't: 'e> Traversion<'e, &'s Settings> for LatexRenderer<'e, 't> 
     ) -> io::Result<bool> {
         Ok(match *root {
             // Node elements
-            Element::Document(_) => true,
+            Element::Document(ref root) => self.document(root, settings, out)?,
             Element::Heading(ref root) => self.heading(root, settings, out)?,
             Element::Formatted(ref root) => self.formatted(root, settings, out)?,
             Element::Paragraph(ref root) => self.paragraph(root, settings, out)?,

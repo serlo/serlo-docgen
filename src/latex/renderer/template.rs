@@ -4,6 +4,7 @@ use super::LatexRenderer;
 use mfnf_template_spec::*;
 use mwparser_utils::*;
 use preamble::*;
+use base64;
 
 impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
     pub fn template(
@@ -46,7 +47,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
             }
             KnownTemplate::GroupExercise(group) => self.group_exercise(&group, settings, out)?,
             KnownTemplate::ProofStep(step) => self.proofstep(&step, settings, out)?,
-            KnownTemplate::Anchor(anchor) => self.anchor(&anchor, out)?,
+            KnownTemplate::Anchor(_) => self.anchor(&parsed, settings, out)?,
             KnownTemplate::Mainarticle(article) => self.mainarticle(settings, &article, out)?,
             KnownTemplate::Navigation(_) => (),
             KnownTemplate::Question(question) => self.question(&question, settings, out)?,
@@ -300,9 +301,17 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         self.environment(IMPORTANT_ENV!(), &[], content.trim(), out)
     }
 
-    fn anchor(&self, template: &Anchor, out: &mut io::Write) -> io::Result<()> {
-        for reference in &template.present {
-            write!(out, LABEL!(), extract_plain_text(&reference.value).trim())?;
+    fn anchor(
+        &self,
+        root: &'e KnownTemplate,
+        settings: &'s Settings,
+        out: &mut io::Write
+    ) -> io::Result<()> {
+
+        if let Some(anchor) = extract_template_anchor(root, settings) {
+            write!(out, LABEL!(), base64::encode(&anchor))?;
+        } else {
+            self.write_error("anchor export could not extract and anchor?", out)?;
         }
         Ok(())
     }
@@ -339,6 +348,11 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
     ) -> io::Result<()> {
         let title = template.find("title").map(|a| a.value).unwrap_or(&[]);
         let title_text = title.render(self, settings)?;
+
+        if let Some(anchor) = extract_template_anchor(template, settings) {
+            writeln!(out, LABEL!(), base64::encode(&anchor))?
+        }
+
         for attribute in template.present() {
             if attribute.name == "title" {
                 continue;
