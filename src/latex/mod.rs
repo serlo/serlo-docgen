@@ -38,6 +38,10 @@ pub struct LatexTarget {
     /// Any additional template attributes will be exported as
     /// subsequent environments, if listed here.
     environments: HashMap<String, Vec<String>>,
+
+    /// Environments which are not affected by the `environment_numbers` option.
+    /// Entries always in their plain (whithout `*`) form.
+    environment_numbers_exceptions: Vec<String>,
 }
 
 impl Default for LatexTarget {
@@ -73,6 +77,7 @@ impl Default for LatexTarget {
                                           "proof"],
                 "explanation" => string_vec!["explanation"]
             ],
+            environment_numbers_exceptions: string_vec!["displayquote", "figure"],
         }
     }
 }

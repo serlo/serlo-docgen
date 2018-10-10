@@ -114,7 +114,12 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
 
         let arg_string: String = args.iter().map(|a| format!("[{}]", a)).collect();
         let content = indent_and_trim(content, indent, line_width);
-        let name = if self.latex.environment_numbers {
+        let is_exception = self
+            .latex
+            .environment_numbers_exceptions
+            .contains(&name.trim_right_matches("*").trim().to_string());
+
+        let name = if self.latex.environment_numbers || is_exception {
             name.to_string()
         } else {
             format!("{}*", name)
