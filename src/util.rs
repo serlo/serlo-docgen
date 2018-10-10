@@ -6,14 +6,14 @@ use meta::MediaMeta;
 pub use mwparser_utils::*;
 use serde_yaml;
 use settings::Settings;
+use std::collections::HashSet;
 use std::fs::File;
 use std::io;
 use std::path::PathBuf;
 use std::process;
-use std::collections::HashSet;
 
-use target::Target;
 use mfnf_template_spec::{parse_template, KnownTemplate};
+use target::Target;
 
 /// Escape LaTeX-Specific symbols
 pub fn escape_latex(input: &str) -> String {
@@ -107,9 +107,10 @@ pub fn build_anchor_url(title: &str, settings: &Settings) -> String {
 /// extract the anchor url from a template anchor
 pub fn extract_template_anchor(template: &KnownTemplate, settings: &Settings) -> Option<String> {
     match template {
-        KnownTemplate::Anchor(ref anchor) => {
-            Some(build_anchor_url(&extract_plain_text(&anchor.ref1), &settings))
-        },
+        KnownTemplate::Anchor(ref anchor) => Some(build_anchor_url(
+            &extract_plain_text(&anchor.ref1),
+            &settings,
+        )),
         template => {
             if let Some(title) = template.find("title") {
                 let text = extract_plain_text(&title.value);
@@ -117,7 +118,7 @@ pub fn extract_template_anchor(template: &KnownTemplate, settings: &Settings) ->
             } else {
                 None
             }
-        },
+        }
     }
 }
 
@@ -136,12 +137,8 @@ pub fn extract_document_anchor(settings: &Settings) -> String {
 /// extract the anchor url from an element if present.
 pub fn extract_anchor(root: &Element, settings: &Settings) -> Option<String> {
     match root {
-        Element::Document(_) => {
-            Some(extract_document_anchor(settings))
-        }
-        Element::Heading(ref heading) => {
-            Some(extract_heading_anchor(heading, settings))
-        }
+        Element::Document(_) => Some(extract_document_anchor(settings)),
+        Element::Heading(ref heading) => Some(extract_heading_anchor(heading, settings)),
         Element::Template(ref template) => {
             if let Some(ref template) = parse_template(template) {
                 extract_template_anchor(template, settings)

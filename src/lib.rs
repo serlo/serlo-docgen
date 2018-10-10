@@ -5,9 +5,9 @@ extern crate mwparser_utils;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
+extern crate base64;
 extern crate serde_json;
 extern crate serde_yaml;
-extern crate base64;
 
 use mediawiki_parser::transformations::TResult;
 use mediawiki_parser::Element;

@@ -93,4 +93,3 @@ impl<'a, 'b: 'a> Traversion<'a, &'b Settings> for AnchorPrinter<'a> {
         Ok(true)
     }
 }
-

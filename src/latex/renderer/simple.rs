@@ -1,9 +1,9 @@
 //! LaTeX renderer implemenation for simple node types.
 
 use super::LatexRenderer;
+use base64;
 use mediawiki_parser::MarkupType;
 use preamble::*;
-use base64;
 
 impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
     pub fn paragraph(
@@ -50,7 +50,11 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         settings: &'s Settings,
         out: &mut io::Write,
     ) -> io::Result<bool> {
-        writeln!(out, LABEL!(), base64::encode(&extract_document_anchor(settings)))?;
+        writeln!(
+            out,
+            LABEL!(),
+            base64::encode(&extract_document_anchor(settings))
+        )?;
         Ok(true)
     }
 

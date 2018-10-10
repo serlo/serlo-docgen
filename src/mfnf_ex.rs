@@ -10,6 +10,7 @@ extern crate structopt;
 extern crate mfnf_export;
 extern crate mwparser_utils;
 
+use std::collections::HashSet;
 use std::fs;
 use std::io;
 use std::io::Read;
@@ -17,7 +18,6 @@ use std::path::PathBuf;
 use std::process;
 use std::str;
 use structopt::StructOpt;
-use std::collections::HashSet;
 
 use mediawiki_parser::transformations::TResult;
 use mfnf_export::*;
@@ -138,8 +138,7 @@ fn main() -> Result<(), std::io::Error> {
 
     if let Some(path) = args.marker_path {
         let file = fs::File::open(&path)?;
-        settings.runtime.markers = serde_yaml::from_reader(&file)
-            .expect("Error reading markers:")
+        settings.runtime.markers = serde_yaml::from_reader(&file).expect("Error reading markers:")
     }
 
     if let Some(path) = args.available_anchors {
