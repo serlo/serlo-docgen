@@ -1,14 +1,20 @@
 use preamble::*;
 
 use std::io;
+use transformations;
 mod renderer;
 
 /// serialize to html
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Default)]
 #[serde(default)]
 pub struct HTMLTarget {
+    /// Configures location-dependent strings.
     strings: HTMLStrings,
+    /// Export todo notes.
     with_todo: bool,
+    /// Hoist thumbnail images to the closest heading and make a gallery
+    /// instead of displaying them in-place.
+    hoist_thumbnails: bool,
 }
 
 /// all user-facing static strings.
@@ -93,7 +99,14 @@ impl Target for HTMLTarget {
         _: &[String],
         out: &mut io::Write,
     ) -> io::Result<()> {
+        let mut root = root.clone();
         let mut renderer = renderer::HtmlRenderer::new(self);
-        renderer.run(root, settings, out)
+
+        if self.hoist_thumbnails {
+            root = transformations::hoist_thumbnails(root, settings)
+                .expect("could not hoist thumbnails!");
+        }
+
+        renderer.run(&root, settings, out)
     }
 }
