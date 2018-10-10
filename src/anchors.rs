@@ -7,24 +7,12 @@
 use preamble::*;
 use std::process;
 
-use mfnf_template_spec::{parse_template, KnownTemplate};
 use transformations;
 
 /// Writes a list of valid anchors to the output.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
-pub struct AnchorsTarget {
-    /// caption text used in a reference to an anchor.
-    anchor_caption: String,
-}
-
-impl Default for AnchorsTarget {
-    fn default() -> AnchorsTarget {
-        AnchorsTarget {
-            anchor_caption: "Anker".into(),
-        }
-    }
-}
+pub struct AnchorsTarget {}
 
 impl Target for AnchorsTarget {
     fn target_extension(&self) -> &str {
@@ -67,7 +55,7 @@ impl Target for AnchorsTarget {
                     .expect("error applying exclusions!")
             };
 
-            let mut printer = AnchorPrinter::new(self);
+            let mut printer = AnchorPrinter::default();
             printer.run(&root, settings, out)?;
 
             writeln!(out)?;
@@ -85,12 +73,12 @@ impl Target for AnchorsTarget {
 }
 
 /// prints all possible link targets (anchors) within this article.
-pub struct AnchorPrinter<'b, 't> {
+#[derive(Default)]
+pub struct AnchorPrinter<'b> {
     pub path: Vec<&'b Element>,
-    pub target: &'t AnchorsTarget,
 }
 
-impl<'a, 'b: 'a, 't> Traversion<'a, &'b Settings> for AnchorPrinter<'a, 't> {
+impl<'a, 'b: 'a> Traversion<'a, &'b Settings> for AnchorPrinter<'a> {
     path_methods!('a);
 
     fn work(
@@ -99,37 +87,10 @@ impl<'a, 'b: 'a, 't> Traversion<'a, &'b Settings> for AnchorPrinter<'a, 't> {
         settings: &'b Settings,
         out: &mut io::Write,
     ) -> io::Result<bool> {
-        match root {
-            Element::Document(_) => {
-                writeln!(out, "{}", &mw_enc(&settings.runtime.document_title))?;
-            }
-            Element::Heading(ref heading) => {
-                let text = mw_enc(&extract_plain_text(&heading.caption));
-                let title = mw_enc(&settings.runtime.document_title);
-                writeln!(out, "{}#{}", &title, &text)?;
-            }
-            Element::Template(ref template) => {
-                if let Some(KnownTemplate::Anchor(ref anchor)) = parse_template(template) {
-                    writeln!(
-                        out,
-                        "{}#{}:{}",
-                        &mw_enc(&settings.runtime.document_title),
-                        &mw_enc(&self.target.anchor_caption),
-                        &mw_enc(&extract_plain_text(&anchor.ref1)),
-                    )?;
-                }
-            }
-            _ => (),
+        if let Some(anchor) = extract_anchor(root, settings) {
+            writeln!(out, "{}", anchor)?;
         }
         Ok(true)
     }
 }
 
-impl<'e, 't> AnchorPrinter<'e, 't> {
-    pub fn new(target: &'t AnchorsTarget) -> AnchorPrinter<'e, 't> {
-        AnchorPrinter {
-            path: vec![],
-            target,
-        }
-    }
-}
