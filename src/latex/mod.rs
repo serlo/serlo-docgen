@@ -5,9 +5,9 @@
 
 use preamble::*;
 use std::collections::HashMap;
+use transformations;
 
 mod renderer;
-mod trans;
 
 use self::renderer::LatexRenderer;
 
@@ -112,8 +112,8 @@ impl Target for LatexTarget {
     ) -> io::Result<()> {
         // apply latex-specific transformations
         let mut latex_tree = root.clone();
-        latex_tree =
-            trans::hoist_thumbnails(latex_tree, settings).expect("Error in thumbnail hoisting!");
+        latex_tree = transformations::hoist_thumbnails(latex_tree, settings)
+            .expect("Error in thumbnail hoisting!");
 
         let mut renderer = LatexRenderer::new(self);
         renderer.run(&latex_tree, settings, out)
