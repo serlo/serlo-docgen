@@ -1,10 +1,10 @@
 //! Implements template rendering for latex.
 
 use super::LatexRenderer;
+use base64;
 use mfnf_template_spec::*;
 use mwparser_utils::*;
 use preamble::*;
-use base64;
 
 impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
     pub fn template(
@@ -305,13 +305,12 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         &self,
         root: &'e KnownTemplate,
         settings: &'s Settings,
-        out: &mut io::Write
+        out: &mut io::Write,
     ) -> io::Result<()> {
-
         if let Some(anchor) = extract_template_anchor(root, settings) {
             write!(out, LABEL!(), base64::encode(&anchor))?;
         } else {
-            self.write_error("anchor export could not extract and anchor?", out)?;
+            self.write_error("anchor export could not extract an anchor?", out)?;
         }
         Ok(())
     }
@@ -322,12 +321,14 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         template: &Mainarticle<'e>,
         out: &mut io::Write,
     ) -> io::Result<()> {
-        let name = extract_plain_text(template.article).trim().to_owned();
-        let mut url = settings.general.article_url_base.to_owned();
-        url.push_str(&name);
-        url = url.replace(' ', "_");
+        write!(out, MAINARTICLE!())?;
+        let caption = extract_plain_text(&template.article);
+        let mut target = "Mathe für Nicht-Freaks: ".to_string();
+        target.push_str(&caption);
 
-        write!(out, MAINARTICLE!(), &url, &name)
+        self.internal_link(&target, &caption, settings, out)?;
+        writeln!(out, "\\\\");
+        Ok(())
     }
 
     pub fn template_arg(

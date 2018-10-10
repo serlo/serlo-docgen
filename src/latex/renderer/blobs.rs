@@ -169,7 +169,7 @@ alias!(LABEL, "\\label{{{}}}");
 alias!(LABEL_REF, "\\hyperref[{}]{{\\emph{{{}}}}}");
 
 // --- Main Article ---
-alias!(MAINARTICLE, "$\\rightarrow$ \\href{{{}}}{{\\emph{{{}}}}}");
+alias!(MAINARTICLE, "$\\rightarrow$ Hauptartikel: ");
 
 // --- Comments ---
 alias!(

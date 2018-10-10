@@ -1,8 +1,8 @@
 //! Render internal references (embedded files, links, ...)
 
 use super::LatexRenderer;
-use preamble::*;
 use base64;
+use preamble::*;
 use std::path;
 
 impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
@@ -102,14 +102,25 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
             return Ok(false);
         }
 
-        let target = target_str.trim().trim_left_matches(":").to_string();
-
         let cap_content = root.caption.render(self, settings)?;
+        self.internal_link(&target_str, &cap_content, settings, out)
+    }
+
+    /// only internal links, no embedded files. Does not require the root
+    /// lifetime, thus can be called on temporary elements.
+    pub fn internal_link(
+        &mut self,
+        target: &str,
+        caption: &str,
+        settings: &'s Settings,
+        out: &mut io::Write,
+    ) -> io::Result<bool> {
+        let target = target.trim().trim_left_matches(":").to_string();
 
         // internal references contained in the book.
         let anchor = matching_anchor(&target, &settings.runtime.available_anchors);
         if let Some(anchor) = anchor {
-            write!(out, LABEL_REF!(), &base64::encode(&anchor), &cap_content)?;
+            write!(out, LABEL_REF!(), &base64::encode(&anchor), &caption)?;
             return Ok(false);
         }
 
@@ -118,7 +129,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         url.push_str(&target);
         url = escape_latex(&urlencode(&url));
 
-        writeln!(out, INTERNAL_HREF!(), &url, &cap_content)?;
+        writeln!(out, INTERNAL_HREF!(), &url, &caption)?;
         return Ok(false);
     }
 }
