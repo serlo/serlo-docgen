@@ -39,6 +39,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         let anchor = extract_heading_anchor(root, settings);
 
         writeln!(out, SECTION!(), depth_string, caption.trim())?;
+        write!(out, "{}", " ".repeat(indent))?;
         writeln!(out, LABEL!(), base64::encode(&anchor))?;
         writeln!(out, "{}", &content)?;
         Ok(false)
