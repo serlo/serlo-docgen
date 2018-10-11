@@ -1,7 +1,7 @@
 //! Implements the `stats` target which extracts various statistical
 //! information from the document tree.
 use preamble::*;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use serde_yaml;
 use std::io;
@@ -24,6 +24,12 @@ struct Stats<'e> {
 
     /// Number of templates used of a kind
     pub template_count: HashMap<String, usize>,
+
+    /// List of internal reference targets
+    pub reference_targets: HashSet<String>,
+
+    /// List of reference targets with no corresponding anchors in the export
+    pub unresolved_references: HashSet<String>,
 }
 
 impl<'e, 's: 'e> Traversion<'e, &'s Settings> for Stats<'e> {
@@ -39,6 +45,26 @@ impl<'e, 's: 'e> Traversion<'e, &'s Settings> for Stats<'e> {
             Element::InternalReference(ref iref) => {
                 if is_file(iref, settings) {
                     self.image_count += 1
+                } else {
+                    let target = extract_plain_text(&iref.target);
+                    let target = target.trim().trim_left_matches(":").to_string();
+
+                    self.reference_targets.insert(target.clone());
+                    let anchor = matching_anchor(
+                        &target,
+                        &settings.runtime.available_anchors
+                    );
+                    if !anchor.is_some() {
+                        let enc_target = mw_enc(&target);
+                        // if a prefix exists, the target should exist as well,
+                        // otherwise this reference is unresolved
+                        let article_exists = settings.runtime.available_anchors
+                            .iter()
+                            .any(|anchor| enc_target.starts_with(anchor));
+                        if article_exists {
+                            self.unresolved_references.insert(target);
+                        }
+                    }
                 }
             }
             Element::Template(ref template) => {
