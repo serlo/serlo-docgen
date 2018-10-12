@@ -60,7 +60,9 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                     .unwrap_or('\u{01f603}')
             )?,
             // TODO: replace noprint with a sematic version, ignore for now.
-            KnownTemplate::NoPrint(noprint) => self.run_vec(&noprint.content, settings, out)?,
+            KnownTemplate::NoPrint(noprint) => if self.latex.with_todo {
+                self.run_vec(&noprint.content, settings, out)?
+            },
             KnownTemplate::Todo(todo) => self.todo(&todo, settings, out)?,
         };
         Ok(false)

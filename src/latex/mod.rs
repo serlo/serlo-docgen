@@ -31,6 +31,8 @@ pub struct LatexTarget {
     with_todo: bool,
     /// Number environments?
     environment_numbers: bool,
+    /// Render `noprint`?
+    with_noprint: bool,
 
     /// Templates which can be exported as an environment.
     /// The template may have a `title` attribute and a content
@@ -54,6 +56,7 @@ impl Default for LatexTarget {
             gallery_images_per_row: 2,
             centered_image_captions: true,
             with_todo: false,
+            with_noprint: true,
             environment_numbers: false,
             environments: string_value_map![
                 "definition" => string_vec!["definition"],
