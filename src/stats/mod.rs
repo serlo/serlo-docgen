@@ -50,15 +50,14 @@ impl<'e, 's: 'e> Traversion<'e, &'s Settings> for Stats<'e> {
                     let target = target.trim().trim_left_matches(":").to_string();
 
                     self.reference_targets.insert(target.clone());
-                    let anchor = matching_anchor(
-                        &target,
-                        &settings.runtime.available_anchors
-                    );
+                    let anchor = matching_anchor(&target, &settings.runtime.available_anchors);
                     if !anchor.is_some() {
                         let enc_target = mw_enc(&target);
                         // if a prefix exists, the target should exist as well,
                         // otherwise this reference is unresolved
-                        let article_exists = settings.runtime.available_anchors
+                        let article_exists = settings
+                            .runtime
+                            .available_anchors
                             .iter()
                             .any(|anchor| enc_target.starts_with(anchor));
                         if article_exists {
