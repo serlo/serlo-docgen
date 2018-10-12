@@ -82,6 +82,7 @@ pub fn normalize(mut root: Element, settings: &settings::Settings) -> TResult {
         root = mwparser_utils::transformations::normalize_math_formulas(root, checker)?;
     }
     root = transformations::remove_whitespace_trailers(root, settings)?;
+    root = transformations::remove_empty_arguments(root, settings)?;
     Ok(root)
 }
 

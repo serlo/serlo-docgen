@@ -452,3 +452,29 @@ fn hoist_thumbnails_vec<'a>(
     }
     Ok(result)
 }
+
+/// Delete empty template arguments.
+pub fn remove_empty_arguments(mut root: Element, settings: &Settings) -> TResult {
+    // check if every specified heading exists
+    if let Element::Template(ref mut template) = root {
+        let new_content = template
+            .content
+            .drain(..)
+            .filter(|arg| {
+                if let Element::TemplateArgument(arg) = arg {
+                    // value must not contain any non-whitespace elements
+                    arg.value.iter().any(|ref elem| {
+                        tree_contains(&elem, &|ref elem| match elem {
+                            Element::Paragraph(_) => false,
+                            Element::Text(text) => !text.text.trim().is_empty(),
+                            _ => true,
+                        })
+                    })
+                } else {
+                    true
+                }
+            }).collect();
+        template.content = new_content;
+    }
+    recurse_inplace(&remove_empty_arguments, root, settings)
+}
