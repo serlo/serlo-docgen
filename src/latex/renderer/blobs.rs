@@ -113,28 +113,23 @@ alias!(EXERCISE_EXPLANATION, "{}\n\n{}");
 
 alias!(
     GALLERY,
-    "\
-\\begin{{tabularx}}{{\\linewidth}}{{{}}}
+    "\\begin{{figure}}
+    \\centering
 {}
-\\end{{tabularx}}
-"
+\\end{{figure}}"
 );
 
 alias!(
     GALLERY_CONTENT,
     "\
 % image options: {:?}
-\\stepcounter{{imagelabel}}
-\\addxcontentsline{{lof}}{{section}}[]{{{}}}
-\\begin{{minipage}}[t]{{\\linewidth}}
-    \\begin{{figure}}[H]
-        \\begin{{minipage}}[t][{}\\textheight][c]{{\\linewidth}}
-            \\centering
-            \\adjincludegraphics[max width=1.\\linewidth,
-                max height={}\\textheight]{{{}}}
-        \\end{{minipage}}
-        \\caption*{{{} (\\arabic{{imagelabel}})}}
-    \\end{{figure}}
+\\begin{{minipage}}[t]{{{}\\textwidth}}
+    \\centering
+    \\stepcounter{{imagelabel}}
+    \\addxcontentsline{{lof}}{{section}}[]{{{}}}
+    \\adjincludegraphics[max width=1.\\textwidth,
+        max height={}\\textheight]{{{}}}
+    \\captionof{{figure}}{{{} (\\arabic{{imagelabel}})}}
 \\end{{minipage}}
 "
 );

@@ -10,7 +10,6 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         settings: &'s Settings,
         out: &mut io::Write,
     ) -> io::Result<bool> {
-        let columns = "X".repeat(self.latex.gallery_images_per_row);
         let doctitle = &settings.runtime.document_title;
 
         let mut rendered_images = vec![];
@@ -35,16 +34,15 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                 let mut inner = format!(
                     GALLERY_CONTENT!(),
                     &image_options,
+                    0.9 / (self.latex.gallery_images_per_row as f64),
                     &license_text,
                     self.latex.image_height,
-                    self.latex.image_height,
                     &path.to_string_lossy(),
-                    &caption,
+                    &caption
                 );
 
                 let indent = self.latex.indentation_depth;
                 let line_width = self.latex.max_line_width;
-                inner = indent_and_trim(&inner, indent, line_width);
                 rendered_images.push(inner);
             }
         }
