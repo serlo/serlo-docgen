@@ -17,11 +17,9 @@ macro_rules! alias {
 
 alias!(
     GENERIC_ENV,
-    "\
-\\begin{{{}}}{}
+    "\\begin{{{}}}{}
 {}
-\\end{{{}}}\
-"
+\\end{{{}}}%"
 );
 
 // --- Internal References ---
@@ -67,20 +65,14 @@ alias!(ITEM, "\\item {}");
 alias!(ITEM_DEFINITION, "\\item[{}:] {}");
 alias!(
     LIST,
-    "\
-\\begin{{{}}}
+    "\\begin{{{}}}
 {}
-\\end{{{}}}\
-"
+\\end{{{}}}"
 );
 
 // --- Headings ---
 
-alias!(
-    SECTION,
-    "\\{}section{{{}}}
-"
-);
+alias!(SECTION, "\\{}section{{{}}}");
 
 // --- Formatting ---
 
@@ -111,8 +103,7 @@ alias!(
 \\item \\textbf{{Induktionsbehauptung:}} {}
 \\item \\textbf{{Beweis des Induktionsschritts:}} {}
 \\end{{enumerate}}
-\\end{{enumerate}}
-"
+\\end{{enumerate}}"
 );
 alias!(INDUCTION_SET_DEFAULT, "$n\\in\\mathcal{{N}}$");
 alias!(EXERCISE_TASKLIST, "{}\n\n{}");
@@ -151,15 +142,13 @@ alias!(
 // --- Table ---
 alias!(
     TABLE,
-    "\
-\\renewcommand{{\\arraystretch}}{{1.5}}
+    "\\renewcommand{{\\arraystretch}}{{1.5}}
 \\begin{{longtabu}} to \\linewidth {{{}}}
 \\caption{{{}}}\\\\ \\toprule
 {}
 \\bottomrule
 \\end{{longtabu}}
-\\renewcommand{{\\arraystretch}}{{1.0}}
-"
+\\renewcommand{{\\arraystretch}}{{1.0}}"
 );
 
 alias!(TABLE_WITH_HEADER, "{}\\midrule\n{}");
@@ -174,10 +163,7 @@ alias!(MAINARTICLE, "$\\rightarrow$ Hauptartikel: ");
 // --- Comments ---
 alias!(
     COMMENT,
-    "
-\\begin{{comment}}
+    "\\begin{{comment}}
 {}
-\\end{{comment}}
-
-"
+\\end{{comment}}"
 );

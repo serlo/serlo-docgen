@@ -140,7 +140,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
     ) -> io::Result<()> {
         writeln!(
             out,
-            "\n% defined in {} at {}:{} to {}:{}",
+            "% defined in {} at {}:{} to {}:{}",
             doctitle, pos.start.line, pos.start.col, pos.end.line, pos.end.col
         )
     }

@@ -95,9 +95,6 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
 
         let mut trimmed = trim_enclosing(&content, "\\begin{align}", "\\end{align}");
         trimmed = trim_enclosing(trimmed, "\\begin{align*}", "\\end{align*}").trim();
-
-        // align environments need to be separated from surrounding text
-        writeln!(out, "\n")?;
         self.environment(MATH_ENV!(), &[], trimmed, out)
     }
 
