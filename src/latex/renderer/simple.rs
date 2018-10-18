@@ -16,7 +16,6 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         if self.flatten_paragraphs {
             write!(out, "{}", content.trim())?;
         } else {
-            let sep = &self.latex.paragraph_separator;
             writeln!(out, "{}", content.trim())?;
         }
         Ok(false)
