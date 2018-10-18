@@ -9,7 +9,7 @@ path = "src/mfnf_ex.rs"
 doc = true
 
 [dependencies]
-mediawiki_parser = "0.3"
+mediawiki_parser = "0.4"
 mwparser_utils = { git = "https://github.com/vroland/mediawiki-parser-utils" }
 mfnf_template_spec = { git = "https://github.com/vroland/mfnf-template-spec" }
 mfnf-sitemap-parser = { git = "https://github.com/vroland/mfnf-sitemap-parser" }
