@@ -63,6 +63,43 @@ impl<'e, 's: 'e, 't: 'e> Traversion<'e, &'s Settings> for LatexRenderer<'e, 't> 
             }
         })
     }
+
+    /// Handle paragraph line breaks correctly.
+    fn work_vec(
+        &mut self,
+        vec: &'e [Element],
+        settings: &'s Settings,
+        out: &mut io::Write,
+    ) -> io::Result<bool> {
+        let mut iter = vec.iter();
+        let mut current = iter.next();
+        while current.is_some() {
+            let next = iter.next();
+            let inner = current.unwrap();
+
+            let next_is_text = match next {
+                Some(Element::Paragraph(_))
+                | Some(Element::Text(_))
+                | Some(Element::Formatted(_)) => true,
+                _ => false
+            };
+            let current_is_par = match inner {
+                Element::Paragraph(_) => true,
+                _ => false
+            };
+
+            // separate paragraphs only when a paragraph (or text) follows a paragraph
+            if current_is_par && next_is_text {
+                let content = inner.render(self, settings)?;
+                let sep = &self.latex.paragraph_separator;
+                writeln!(out, "{}{}\n", &content.trim_right(), sep)?;
+            } else {
+                self.run(inner, settings, out)?;
+            }
+            current = next;
+        }
+        Ok(false)
+    }
 }
 
 impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {

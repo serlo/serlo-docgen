@@ -16,7 +16,8 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         if self.flatten_paragraphs {
             write!(out, "{}", content.trim())?;
         } else {
-            writeln!(out, "{}\n", content.trim())?;
+            let sep = &self.latex.paragraph_separator;
+            writeln!(out, "{}", content.trim())?;
         }
         Ok(false)
     }
@@ -40,8 +41,9 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
 
         writeln!(out, SECTION!(), depth_string, caption.trim())?;
         write!(out, "{}", " ".repeat(indent))?;
-        writeln!(out, LABEL!(), base64::encode(&anchor))?;
-        writeln!(out, "{}", &content)?;
+        write!(out, LABEL!(), base64::encode(&anchor))?;
+        writeln!(out, "%\n")?;
+        writeln!(out, "{}", &content.trim_right())?;
         Ok(false)
     }
 

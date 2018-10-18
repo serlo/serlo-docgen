@@ -50,14 +50,18 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         // partition gallery rows
         let mut table_rows = vec![];
         for chunk in rendered_images.chunks(self.latex.gallery_images_per_row) {
-            let mut row = chunk.join("&\n");
+            let mut row = chunk.join("\\hfill\n");
             let missing = self.latex.gallery_images_per_row - chunk.len();
-            row.push_str(&"&\n".repeat(missing));
+            if missing > 0 {
+                row.push_str("\\hfill\\\\\n");
+            }
             table_rows.push(row);
         }
 
+        writeln!(out, "")?;
         self.write_def_location(&root.position, doctitle, out)?;
-        writeln!(out, GALLERY!(), columns, table_rows.join("\\\\\n"))?;
+        let sep = &self.latex.paragraph_separator;
+        writeln!(out, "{}{}", table_rows.join("\\\\\n"), sep)?;
         Ok(false)
     }
 }

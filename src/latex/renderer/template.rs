@@ -109,8 +109,10 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
             None => "Beweisschritt".into(),
         };
         let goal = step.goal.render(self, settings)?;
-        writeln!(out, PROOF_STEP_CAPTION!(), name.trim(), goal.trim())?;
-        self.run_vec(&step.step, settings, out)
+        let step = step.step.render(self, settings)?;
+        let sep = &self.latex.paragraph_separator;
+        let body = format!("{}{}\n{}", goal.trim(), sep, step);
+        self.environment(PROOF_STEP_ENV!(), &[name.trim()], body.trim(), out)
     }
 
     fn todo(
@@ -173,10 +175,11 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         };
         let question_text = question.question.render(self, settings)?;
         let answer = question.answer.render(self, settings)?;
+        let sep = &self.latex.paragraph_separator;
         self.environment(
             "question",
             &[title.trim()],
-            &format!("{}\n\n{}", question_text.trim(), answer.trim()),
+            &format!("{}{}\n{}", question_text.trim(), sep, answer.trim()),
             out,
         )
     }
@@ -198,8 +201,11 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         for (index, tuple) in attrs.iter().enumerate() {
             if let (Some(case), Some(proof)) = tuple {
                 let goal = case.render(self, settings)?;
-                writeln!(out, PROOF_CASE_CAPTION!(), "Fall", index + 1, goal.trim())?;
-                self.run_vec(&proof, settings, out)?;
+                let proof = proof.render(self, settings)?;
+                let name = format!("Fall {}", index + 1);
+                let sep = &self.latex.paragraph_separator;
+                let content = format!("{}{}\n{}", goal.trim(), sep, proof.trim());
+                self.environment(PROOF_CASE_ENV!(), &[&name], &content, out)?;
             }
         }
         Ok(())
@@ -350,7 +356,8 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         let title_text = title.render(self, settings)?;
 
         if let Some(anchor) = extract_template_anchor(template, settings) {
-            writeln!(out, LABEL!(), base64::encode(&anchor))?
+            write!(out, LABEL!(), base64::encode(&anchor))?;
+            writeln!(out, "%")?
         }
 
         for attribute in template.present() {

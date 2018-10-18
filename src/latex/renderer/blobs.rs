@@ -87,8 +87,8 @@ alias!(QUOTE_ENV, "displayquote");
 
 alias!(MATH_ENV, "align");
 alias!(IMPORTANT_ENV, "important");
-alias!(PROOF_STEP_CAPTION, "\\textbf{{{}}}: {}:\n");
-alias!(PROOF_CASE_CAPTION, "\\textbf{{{} {}}}: {}:\n");
+alias!(PROOF_STEP_ENV, "proofstep");
+alias!(PROOF_CASE_ENV, "proofcase");
 alias!(
     INDUCTION,
     "\\textbf{{Aussageform, deren Allgemeingültigkeit für {} bewiesen werden soll:}}
