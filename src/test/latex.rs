@@ -131,7 +131,7 @@ content:
       position: {}
       text: some text",
     "\\section{heading caption}
-    \\label{JTNDbm9fZG9jdW1lbnRfbmFtZV9zcGVjaWZpZWQlM0UjaGVhZGluZ19jYXB0aW9u}%
+    \\label{JTNDbm9fZG9jdW1lbnRfbmFtZV9zcGVjaWZpZWQlM0UjaGVhZGluZ19jYXB0aW9u}\\bigskip
 
     some text
 "
