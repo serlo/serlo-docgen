@@ -58,7 +58,7 @@ impl Default for LatexTarget {
             image_width: 0.5,
             image_height: 0.2,
             gallery_images_per_row: 2,
-            centered_image_captions: true,
+            centered_image_captions: false,
             with_todo: false,
             with_noprint: true,
             environment_numbers: false,
