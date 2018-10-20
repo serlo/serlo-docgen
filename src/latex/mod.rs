@@ -35,6 +35,8 @@ pub struct LatexTarget {
     with_noprint: bool,
     /// Latex Sequence which separate (text) Paragraphs
     paragraph_separator: String,
+    /// Space after headings
+    post_heading_space: String,
 
     /// Templates which can be exported as an environment.
     /// The template may have a `title` attribute and a content
@@ -61,6 +63,7 @@ impl Default for LatexTarget {
             with_noprint: true,
             environment_numbers: false,
             paragraph_separator: "\\par\\medskip".into(),
+            post_heading_space: "\\bigskip\n".into(),
             environments: string_value_map![
                 "definition" => string_vec!["definition"],
                 "example" => string_vec!["example"],

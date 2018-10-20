@@ -41,7 +41,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         writeln!(out, SECTION!(), depth_string, caption.trim())?;
         write!(out, "{}", " ".repeat(indent))?;
         write!(out, LABEL!(), base64::encode(&anchor))?;
-        writeln!(out, "%\n")?;
+        writeln!(out, "{}", &self.latex.post_heading_space)?;
         writeln!(out, "{}", &content.trim_right())?;
         Ok(false)
     }
