@@ -61,7 +61,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         writeln!(out, "")?;
         self.write_def_location(&root.position, doctitle, out)?;
         let sep = &self.latex.paragraph_separator;
-        writeln!(out, "{}{}", table_rows.join("\\\\\n"), sep)?;
+        writeln!(out, "{}{}\n", table_rows.join("\\\\\n"), sep)?;
         Ok(false)
     }
 }
