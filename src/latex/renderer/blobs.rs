@@ -41,7 +41,7 @@ alias!(
 "
 );
 
-alias!(FIGURE_CAPTION, "\\caption{{{} (\\arabic{{imagelabel}})}}");
+alias!(FIGURE_CAPTION, "\\caption*{{{} (\\arabic{{imagelabel}})}}");
 alias!(
     FIGURE_INLINE,
     "
@@ -129,7 +129,7 @@ alias!(
     \\addxcontentsline{{lof}}{{section}}[]{{{}}}
     \\adjincludegraphics[max width=1.\\textwidth,
         max height={}\\textheight]{{{}}}
-    \\captionof{{figure}}{{{} (\\arabic{{imagelabel}})}}
+    \\captionof*{{figure}}{{{} (\\arabic{{imagelabel}})}}
 \\end{{minipage}}
 "
 );
