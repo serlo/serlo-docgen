@@ -32,7 +32,7 @@ impl Default for PDFTarget {
             font_size: 9.0,
             baseline_height: 12.0,
             border: [20.5, 32.6, 22.0, 18.5],
-            document_options: "tocflat, listof=chapterentry".into(),
+            document_options: "tocflat, listof=chapterentry, parskip=half-".into(),
         }
     }
 }

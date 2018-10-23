@@ -62,7 +62,7 @@ impl Default for LatexTarget {
             with_todo: false,
             with_noprint: true,
             environment_numbers: false,
-            paragraph_separator: "\\par\\medskip".into(),
+            paragraph_separator: "".into(),
             post_heading_space: "\\bigskip\n".into(),
             environments: string_value_map![
                 "definition" => string_vec!["definition"],
