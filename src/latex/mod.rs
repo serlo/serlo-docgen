@@ -63,7 +63,7 @@ impl Default for LatexTarget {
             with_noprint: true,
             environment_numbers: false,
             paragraph_separator: "".into(),
-            post_heading_space: "\\bigskip\n".into(),
+            post_heading_space: "\n".into(),
             environments: string_value_map![
                 "definition" => string_vec!["definition"],
                 "example" => string_vec!["example"],
