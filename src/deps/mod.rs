@@ -56,12 +56,22 @@ fn run_deps_printer(
         writeln!(out, "# dependencies for {}", &target_name)?;
         match printer_kind {
             PrinterKind::Sections => {
-                write!(out, "{}.{} {}.sections: ", &docrev, target_ext, &docrev)?;
+                write!(
+                    out,
+                    "{0}{1}.sections: ",
+                    &settings.general.base_path.to_string_lossy(),
+                    &docrev
+                )?;
                 let mut printer = InclusionPrinter::default();
                 printer.run(&root, settings, out)?;
             }
             PrinterKind::Media => {
-                write!(out, "{}.{} {}.media: ", &docrev, target_ext, &docrev)?;
+                write!(
+                    out,
+                    "{0}{1}.media: ",
+                    &settings.general.base_path.to_string_lossy(),
+                    &docrev
+                )?;
                 let mut printer = FilesPrinter::new(target);
                 printer.run(&root, settings, out)?;
             }

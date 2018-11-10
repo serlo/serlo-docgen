@@ -45,7 +45,7 @@ struct Args {
     /// Path to the texvccheck binary (formula checking).
     #[structopt(parse(from_os_str), short = "p", long = "texvccheck-path")]
     texvccheck_path: Option<PathBuf>,
-    /// Base path for sections and media.
+    /// Base path for dependency extraction.
     #[structopt(parse(from_os_str), short = "b", long = "base-path")]
     base_path: Option<PathBuf>,
     /// Path to the article sections directory.

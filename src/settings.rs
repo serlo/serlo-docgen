@@ -72,13 +72,13 @@ pub struct GeneralSettings {
     /// Base path for web links to articles.
     pub article_url_base: String,
 
-    /// Path base for files accessed at run time.
+    /// Path base for dependency writing accessed at run time.
     pub base_path: PathBuf,
 
-    /// Path to embedded media files. (relative to `base_path`)
+    /// Path to embedded media files. (relative to `media_path`)
     pub media_path: PathBuf,
 
-    /// Path to the section file directory. (relative to `base_path`)
+    /// Path to the section file directory. (relative to `section_path`)
     pub section_path: PathBuf,
 
     /// Default revision number of included sections (always `latest`)

@@ -314,8 +314,7 @@ pub fn get_section_path(article: &str, section: &str, settings: &Settings) -> St
     let section = filename_to_make(&section);
     let section_ext = &settings.general.section_ext;
     let section_path = &settings.general.section_path;
-    let path = PathBuf::from(&settings.general.base_path)
-        .join(&section_path)
+    let path = PathBuf::from(&section_path)
         .join(&article)
         .join(&section)
         .join(&section_file)
@@ -403,7 +402,7 @@ pub enum MetaLoadResult<T> {
 }
 
 pub fn load_media_meta(name: &[Element], settings: &Settings) -> MetaLoadResult<MediaMeta> {
-    let mut file_path = build_media_path(name, settings, PathMode::ABSOLUTE);
+    let mut file_path = build_media_path(name, settings);
     let mut filename = match file_path.file_name() {
         Some(n) => n,
         None => {
@@ -426,21 +425,12 @@ pub fn load_media_meta(name: &[Element], settings: &Settings) -> MetaLoadResult<
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Copy, Clone)]
-pub enum PathMode {
-    /// Path is generated without base path.
-    RELATIVE,
-    /// Path is generated with base path.
-    ABSOLUTE,
-}
-
 pub fn mapped_media_path(
     target: &Target,
     name: &[Element],
     settings: &Settings,
-    mode: PathMode,
 ) -> PathBuf {
-    let file_path = build_media_path(name, settings, mode);
+    let file_path = build_media_path(name, settings);
     let ext = file_path.extension().unwrap_or_default();
 
     let ext_str = ext.to_string_lossy().to_string();
@@ -449,7 +439,7 @@ pub fn mapped_media_path(
     file_path.with_extension(&target_extension)
 }
 
-pub fn build_media_path(name: &[Element], settings: &Settings, mode: PathMode) -> PathBuf {
+pub fn build_media_path(name: &[Element], settings: &Settings) -> PathBuf {
     let name_str = extract_plain_text(name);
     let mut trimmed = name_str.trim();
 
@@ -458,11 +448,7 @@ pub fn build_media_path(name: &[Element], settings: &Settings, mode: PathMode) -
     }
 
     let name_path = filename_to_make(trimmed.trim());
-    let path = match mode {
-        PathMode::ABSOLUTE => settings.general.base_path.clone(),
-        PathMode::RELATIVE => PathBuf::new(),
-    };
-    path.join(&settings.general.media_path).join(&name_path)
+    PathBuf::from(&settings.general.media_path).join(&name_path)
 }
 
 pub fn is_file(iref: &InternalReference, settings: &Settings) -> bool {

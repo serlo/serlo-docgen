@@ -27,7 +27,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
 
             if is_centered(root) {
                 let image_path =
-                    mapped_media_path(self.html, &root.target, settings, PathMode::RELATIVE);
+                    mapped_media_path(self.html, &root.target, settings);
                 let caption_content = root.caption.render(self, settings)?;
                 let license_link = format!(
                     "<a class=\"serlo-fig-license-url\" href=\"{}\">{}: {}</a>",
