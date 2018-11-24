@@ -3,10 +3,10 @@
 use preamble::*;
 use std::collections::{HashMap, HashSet};
 
-use serde_yaml;
+use serde_json;
 use std::io;
 
-/// Dump stats to stdout as yaml.
+/// Dump stats to stdout as json.
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Default)]
 #[serde(default)]
 pub struct StatsTarget {}
@@ -102,7 +102,7 @@ impl Target for StatsTarget {
         writeln!(
             out,
             "{}",
-            serde_yaml::to_string(&stats).expect("could not serialize the stats struct")
+            serde_json::to_string(&stats).expect("could not serialize the stats struct")
         )
     }
 }

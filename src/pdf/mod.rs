@@ -1,9 +1,9 @@
 use preamble::*;
 
-use serde_yaml;
+use serde_json;
 use std::io;
 
-/// Dump pdf settings to stdout as yaml.
+/// Dump pdf settings to stdout as json.
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[serde(default)]
 pub struct PDFTarget {
@@ -42,7 +42,7 @@ impl Target for PDFTarget {
         false
     }
     fn target_extension(&self) -> &str {
-        "yml"
+        "json"
     }
     fn extension_for(&self, _ext: &str) -> &str {
         "%"
@@ -55,11 +55,11 @@ impl Target for PDFTarget {
         out: &mut io::Write,
     ) -> io::Result<()> {
         let mut data_table =
-            serde_yaml::to_value(self).expect("could not construct value from PDFTarget!");
+            serde_json::to_value(self).expect("could not construct value from PDFTarget!");
 
         let title = &settings.runtime.document_title;
         let revision = &settings.runtime.document_revision;
-        if let serde_yaml::Value::Mapping(ref mut m) = data_table {
+        if let serde_json::Value::Object(ref mut m) = data_table {
             m.insert("document_title".into(), title.clone().into());
             m.insert("document_revision".into(), revision.clone().into());
         }
@@ -67,7 +67,7 @@ impl Target for PDFTarget {
         writeln!(
             out,
             "{}",
-            serde_yaml::to_string(&data_table).expect("could not serialize the PDFTarget struct")
+            serde_json::to_string(&data_table).expect("could not serialize the PDFTarget struct")
         )
     }
 }

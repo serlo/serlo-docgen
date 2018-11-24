@@ -7,6 +7,7 @@ extern crate serde;
 extern crate serde_derive;
 extern crate base64;
 extern crate serde_json;
+#[cfg(test)]
 extern crate serde_yaml;
 
 use mediawiki_parser::transformations::TResult;

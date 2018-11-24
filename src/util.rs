@@ -4,7 +4,7 @@ use mediawiki_parser::*;
 // re-export common util
 use meta::MediaMeta;
 pub use mwparser_utils::*;
-use serde_yaml;
+use serde_json;
 use settings::Settings;
 use std::collections::HashSet;
 use std::fs::File;
@@ -397,7 +397,7 @@ pub fn extract_content(root: Element) -> Option<Vec<Element>> {
 #[derive(Debug)]
 pub enum MetaLoadResult<T> {
     IOError(PathBuf, io::Error),
-    ParseError(serde_yaml::Error),
+    ParseError(serde_json::Error),
     Meta(T),
 }
 
@@ -419,7 +419,7 @@ pub fn load_media_meta(name: &[Element], settings: &Settings) -> MetaLoadResult<
         Ok(f) => f,
         Err(e) => return MetaLoadResult::IOError(file_path, e),
     };
-    match serde_yaml::from_reader(&file) {
+    match serde_json::from_reader(&file) {
         Ok(m) => MetaLoadResult::Meta(m),
         Err(e) => MetaLoadResult::ParseError(e),
     }

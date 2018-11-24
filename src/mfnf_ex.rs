@@ -138,7 +138,7 @@ fn main() -> Result<(), std::io::Error> {
 
     if let Some(path) = args.marker_path {
         let file = fs::File::open(&path)?;
-        settings.runtime.markers = serde_yaml::from_reader(&file).expect("Error reading markers:")
+        settings.runtime.markers = serde_json::from_reader(&file).expect("Error reading markers:")
     }
 
     if let Some(path) = args.available_anchors {
@@ -160,10 +160,12 @@ fn main() -> Result<(), std::io::Error> {
 
     let root = if let Some(path) = args.input_file {
         let file = fs::File::open(&path)?;
-        serde_yaml::from_reader(&file)
+        serde_json::from_reader(&file)
+            .expect("error reading input!")
     } else {
-        serde_yaml::from_reader(io::stdin())
-    }.expect("Error reading input:");
+        serde_json::from_reader(io::stdin())
+            .expect("error reading input!")
+    };
 
     orig_root = normalize(root, &settings);
     let root_clone = handle_transformation_result(&orig_root).clone();
@@ -198,7 +200,7 @@ fn handle_transformation_result(result: &TResult) -> &mediawiki_parser::Element 
             eprintln!("{}", e);
             println!(
                 "{}",
-                serde_yaml::to_string(&e).expect("Could not serialize error!")
+                serde_json::to_string(&e).expect("Could not serialize error!")
             );
             process::exit(1);
         }

@@ -6,7 +6,7 @@
 
 use preamble::*;
 
-use serde_yaml;
+use serde_json;
 use std::fs::DirBuilder;
 use std::fs::File;
 use std::io;
@@ -26,7 +26,7 @@ impl Target for SectionsTarget {
         false
     }
     fn target_extension(&self) -> &str {
-        "yml"
+        "json"
     }
     fn extension_for(&self, _ext: &str) -> &str {
         "%"
@@ -61,7 +61,7 @@ impl Target for SectionsTarget {
 
             let mut file = File::create(&path)?;
             file.write_all(
-                serde_yaml::to_string(&inter)
+                serde_json::to_string(&inter)
                     .expect("could not serialize section!")
                     .as_bytes(),
             )?;

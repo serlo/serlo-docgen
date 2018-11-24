@@ -2,7 +2,7 @@ use mediawiki_parser::transformations::*;
 use mediawiki_parser::*;
 use mfnf_sitemap::Subtarget;
 use preamble::*;
-use serde_yaml;
+use serde_json;
 use std::fs::File;
 
 /// Convert template name paragraphs to lowercase text only.
@@ -116,7 +116,7 @@ pub fn include_sections_vec<'a>(
                 }
 
                 let mut section_tree: Vec<Element> =
-                    match serde_yaml::from_reader(&section_str.unwrap()) {
+                    match serde_json::from_reader(&section_str.unwrap()) {
                         Ok(root) => root,
                         Err(_) => {
                             result.push(file_error);

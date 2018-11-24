@@ -167,7 +167,7 @@ impl Default for GeneralSettings {
             article_url_base: "https://de.wikibooks.org/wiki/".into(),
             section_path: "sections".into(),
             section_rev: "latest".into(),
-            section_ext: "yml".into(),
+            section_ext: "json".into(),
             section_inclusion_prefix: "#lst:".into(),
             anchor_caption: "Anker".into(),
         }
