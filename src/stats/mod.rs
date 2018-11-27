@@ -82,7 +82,7 @@ impl Target for StatsTarget {
         true
     }
     fn target_extension(&self) -> &str {
-        "yml"
+        "json"
     }
     fn extension_for(&self, _ext: &str) -> &str {
         "dummy"

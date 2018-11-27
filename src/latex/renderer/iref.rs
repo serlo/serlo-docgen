@@ -12,14 +12,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         settings: &'s Settings,
         out: &mut io::Write,
     ) -> io::Result<Option<String>> {
-        let meta = match load_media_meta(&root.target, settings) {
-            MetaLoadResult::Meta(m) => m,
-            e @ _ => {
-                let error = escape_latex(&format!("{:#?}", e));
-                self.write_error(&error, out)?;
-                return Ok(None);
-            }
-        };
+        let meta = load_media_meta(&root.target, settings);
         let authors = meta.license.authors.join(", ");
         let license_text = format!(
             LICENSE_TEXT!(),

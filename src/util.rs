@@ -394,35 +394,20 @@ pub fn extract_content(root: Element) -> Option<Vec<Element>> {
     }
 }
 
-#[derive(Debug)]
-pub enum MetaLoadResult<T> {
-    IOError(PathBuf, io::Error),
-    ParseError(serde_json::Error),
-    Meta(T),
-}
-
-pub fn load_media_meta(name: &[Element], settings: &Settings) -> MetaLoadResult<MediaMeta> {
+/// loads media meta data from the corresponding .meta file,
+/// panics on error.
+pub fn load_media_meta(name: &[Element], settings: &Settings) -> MediaMeta {
     let mut file_path = build_media_path(name, settings);
-    let mut filename = match file_path.file_name() {
-        Some(n) => n,
-        None => {
-            return MetaLoadResult::IOError(
-                file_path.clone(),
-                io::Error::new(io::ErrorKind::NotFound, "File not found."),
-            )
-        }
-    }.to_os_string();
+    let mut filename = file_path.file_name()
+        .expect(&format!("no file component in {:?}!", &file_path))
+        .to_os_string();
     filename.push(".meta");
     file_path.set_file_name(filename);
 
-    let file = match File::open(&file_path) {
-        Ok(f) => f,
-        Err(e) => return MetaLoadResult::IOError(file_path, e),
-    };
-    match serde_json::from_reader(&file) {
-        Ok(m) => MetaLoadResult::Meta(m),
-        Err(e) => MetaLoadResult::ParseError(e),
-    }
+    let file = File::open(&file_path)
+        .expect(&format!("could not open {:?}!", &file_path));
+    serde_json::from_reader(&file)
+        .expect(&format!("could not deserialize {:?}!", &file_path))
 }
 
 pub fn mapped_media_path(

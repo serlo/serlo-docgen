@@ -15,14 +15,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
 
         // embedded (media) files
         if is_file(root, settings) {
-            let meta = match load_media_meta(&root.target, settings) {
-                MetaLoadResult::Meta(m) => m,
-                e @ _ => {
-                    let error = escape_html(&format!("{:#?}", e));
-                    self.write_error(&error, out)?;
-                    return Ok(false);
-                }
-            };
+            let meta = load_media_meta(&root.target, settings);
             let authors = meta.license.authors.join(", ");
 
             if is_centered(root) {
