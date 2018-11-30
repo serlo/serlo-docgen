@@ -82,12 +82,6 @@ impl Default for HTMLStrings {
 }
 
 impl Target for HTMLTarget {
-    fn include_sections(&self) -> bool {
-        true
-    }
-    fn target_extension(&self) -> &str {
-        "html"
-    }
     fn extension_for(&self, ext: &str) -> &str {
         "%"
     }

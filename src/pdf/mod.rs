@@ -38,12 +38,6 @@ impl Default for PDFTarget {
 }
 
 impl Target for PDFTarget {
-    fn include_sections(&self) -> bool {
-        false
-    }
-    fn target_extension(&self) -> &str {
-        "json"
-    }
     fn extension_for(&self, _ext: &str) -> &str {
         "%"
     }

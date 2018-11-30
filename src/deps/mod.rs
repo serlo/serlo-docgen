@@ -85,12 +85,6 @@ fn run_deps_printer(
 pub struct SectionDepsTarget {}
 
 impl Target for SectionDepsTarget {
-    fn target_extension(&self) -> &str {
-        "sections"
-    }
-    fn include_sections(&self) -> bool {
-        false
-    }
     fn extension_for(&self, _ext: &str) -> &str {
         "%"
     }
@@ -117,12 +111,6 @@ impl Target for SectionDepsTarget {
 pub struct MediaDepsTarget {}
 
 impl Target for MediaDepsTarget {
-    fn target_extension(&self) -> &str {
-        "media"
-    }
-    fn include_sections(&self) -> bool {
-        true
-    }
     fn extension_for(&self, _ext: &str) -> &str {
         "%"
     }

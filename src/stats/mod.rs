@@ -78,12 +78,6 @@ impl<'e, 's: 'e> Traversion<'e, &'s Settings> for Stats<'e> {
 }
 
 impl Target for StatsTarget {
-    fn include_sections(&self) -> bool {
-        true
-    }
-    fn target_extension(&self) -> &str {
-        "json"
-    }
     fn extension_for(&self, _ext: &str) -> &str {
         "dummy"
     }

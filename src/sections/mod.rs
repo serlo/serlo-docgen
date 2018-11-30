@@ -21,12 +21,6 @@ mod finder;
 pub struct SectionsTarget {}
 
 impl Target for SectionsTarget {
-    fn include_sections(&self) -> bool {
-        false
-    }
-    fn target_extension(&self) -> &str {
-        "json"
-    }
     fn extension_for(&self, _ext: &str) -> &str {
         "%"
     }

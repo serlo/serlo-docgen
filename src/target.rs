@@ -12,14 +12,7 @@ pub trait Target {
         args: &[String],
         out: &mut io::Write,
     ) -> io::Result<()>;
-    /// Include "transcluded" sections?
-    ///
-    /// {#lst:name} can include sections from other articles.
-    fn include_sections(&self) -> bool {
-        false
-    }
-    /// File extension for the target's output.
-    fn target_extension(&self) -> &str;
+
     /// Get the target-specific version of a file extension.
     ///
     /// The result of this function may contain "%", which will be

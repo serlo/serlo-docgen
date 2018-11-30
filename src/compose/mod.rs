@@ -23,12 +23,6 @@ pub fn compose(mut root: Element, settings: &Settings) -> TResult {
 }
 
 impl Target for ComposeTarget {
-    fn target_extension(&self) -> &str {
-        "json"
-    }
-    fn include_sections(&self) -> bool {
-        true
-    }
     fn extension_for(&self, _ext: &str) -> &str {
         "%"
     }

@@ -13,12 +13,6 @@ use std::process;
 pub struct AnchorsTarget {}
 
 impl Target for AnchorsTarget {
-    fn target_extension(&self) -> &str {
-        "anchors"
-    }
-    fn include_sections(&self) -> bool {
-        true
-    }
     fn extension_for(&self, _ext: &str) -> &str {
         "%"
     }

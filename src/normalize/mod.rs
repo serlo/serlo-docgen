@@ -30,12 +30,6 @@ pub fn normalize(mut root: Element, settings: &Settings) -> TResult {
 }
 
 impl Target for NormalizeTarget {
-    fn target_extension(&self) -> &str {
-        "json"
-    }
-    fn include_sections(&self) -> bool {
-        false
-    }
     fn extension_for(&self, _ext: &str) -> &str {
         "%"
     }

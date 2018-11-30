@@ -92,12 +92,6 @@ impl Default for LatexTarget {
 }
 
 impl Target for LatexTarget {
-    fn include_sections(&self) -> bool {
-        true
-    }
-    fn target_extension(&self) -> &str {
-        "tex"
-    }
     fn extension_for(&self, ext: &str) -> &str {
         match ext.trim().to_lowercase().as_str() {
             "png" => "%.pdf",
