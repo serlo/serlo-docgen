@@ -7,8 +7,6 @@
 use preamble::*;
 use std::process;
 
-use transformations;
-
 /// Writes a list of valid anchors to the output.
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
@@ -46,17 +44,9 @@ impl Target for AnchorsTarget {
                 .filter(|s| s != &target_name)
                 .map(|s| s.clone())
                 .collect();
-            // apply exclusions
-            let root = {
-                let mut new_settings = Settings::default();
-                new_settings.runtime.markers = settings.runtime.markers.clone();
-                new_settings.runtime.target_name = target_name.to_string();
-                transformations::remove_exclusions(root.clone(), &new_settings)
-                    .expect("error applying exclusions!")
-            };
 
             let mut printer = AnchorPrinter::default();
-            printer.run(&root, settings, out)?;
+            printer.run(root, settings, out)?;
 
             writeln!(out)?;
         }

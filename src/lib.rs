@@ -10,9 +10,6 @@ extern crate serde_json;
 #[cfg(test)]
 extern crate serde_yaml;
 
-use mediawiki_parser::transformations::TResult;
-use mediawiki_parser::Element;
-
 mod meta;
 mod target;
 #[macro_use]
@@ -20,9 +17,11 @@ mod util;
 #[macro_use]
 mod settings;
 mod anchors;
+mod compose;
 mod deps;
 mod html;
 mod latex;
+mod normalize;
 mod pdf;
 mod sections;
 mod stats;
@@ -56,6 +55,8 @@ pub enum MFNFTargets {
     Stats(stats::StatsTarget),
     HTML(html::HTMLTarget),
     Anchors(anchors::AnchorsTarget),
+    Normalize(normalize::NormalizeTarget),
+    Compose(compose::ComposeTarget),
 }
 
 impl MFNFTargets {
@@ -70,29 +71,8 @@ impl MFNFTargets {
             MFNFTargets::Stats(ref t) => t,
             MFNFTargets::HTML(ref t) => t,
             MFNFTargets::Anchors(ref t) => t,
+            MFNFTargets::Normalize(ref t) => t,
+            MFNFTargets::Compose(ref t) => t,
         }
     }
-}
-
-/// Applies all transformations which should happen before section transclusion.
-/// This is mostly tree normlization and is applied on all targets.
-pub fn normalize(mut root: Element, settings: &settings::Settings) -> TResult {
-    root = transformations::normalize_template_names(root, settings)?;
-    root = mwparser_utils::transformations::convert_template_list(root)?;
-    if let Some(ref checker) = settings.runtime.tex_checker {
-        root = mwparser_utils::transformations::normalize_math_formulas(root, checker)?;
-    }
-    root = transformations::remove_whitespace_trailers(root, settings)?;
-    root = transformations::remove_empty_arguments(root, settings)?;
-    Ok(root)
-}
-
-/// Applies transformations necessary for article output (e.g section transclusion).
-pub fn compose(mut root: Element, settings: &settings::Settings) -> TResult {
-    root = transformations::include_sections(root, settings)?;
-    root = transformations::normalize_heading_depths(root, settings)?;
-    root = transformations::remove_exclusions(root, settings)?;
-    root = transformations::resolve_interwiki_links(root, settings)?;
-    root = transformations::unpack_template_arguments(root, settings)?;
-    Ok(root)
 }

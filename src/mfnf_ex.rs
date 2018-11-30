@@ -3,12 +3,11 @@
 //! Applies some transformations to the input tree and exports it as defined by the given target.
 
 extern crate mediawiki_parser;
-extern crate serde_json;
-extern crate serde_yaml;
-#[macro_use]
-extern crate structopt;
 extern crate mfnf_export;
 extern crate mwparser_utils;
+extern crate serde_json;
+extern crate serde_yaml;
+extern crate structopt;
 
 use std::collections::HashSet;
 use std::fs;
@@ -19,7 +18,6 @@ use std::process;
 use std::str;
 use structopt::StructOpt;
 
-use mediawiki_parser::transformations::TResult;
 use mfnf_export::*;
 use mwparser_utils::CachedTexChecker;
 
@@ -91,10 +89,6 @@ fn main() -> Result<(), std::io::Error> {
     settings.general = general_settings;
     settings.runtime.target_name = args.target.clone();
 
-    let orig_root: TResult;
-    // section inclusion, etc. may fail, but deps shoud still be generated.
-    let transformed_root: TResult;
-
     if let Some(title) = args.doc_title {
         settings.runtime.document_title = title
     }
@@ -154,22 +148,14 @@ fn main() -> Result<(), std::io::Error> {
 
     if let Some(path) = args.texvccheck_path {
         settings.runtime.tex_checker = Some(CachedTexChecker::new(&path, 10_000));
-    } else {
-        eprintln!("Warning: no texvccheck path, won't perform checks!");
     }
 
     let root = if let Some(path) = args.input_file {
         let file = fs::File::open(&path)?;
-        serde_json::from_reader(&file)
-            .expect("error reading input!")
+        serde_json::from_reader(&file).expect("error reading input!")
     } else {
-        serde_json::from_reader(io::stdin())
-            .expect("error reading input!")
+        serde_json::from_reader(io::stdin()).expect("error reading input!")
     };
-
-    orig_root = normalize(root, &settings);
-    let root_clone = handle_transformation_result(&orig_root).clone();
-    transformed_root = compose(root_clone, &settings);
 
     // export target
     let mut export_result = vec![];
@@ -180,29 +166,9 @@ fn main() -> Result<(), std::io::Error> {
             process::exit(1);
         }
     };
-
-    let root = if target.include_sections() {
-        handle_transformation_result(&transformed_root)
-    } else {
-        handle_transformation_result(&orig_root)
-    };
     target
-        .export(root, &settings, &args.target_args, &mut export_result)
+        .export(&root, &settings, &args.target_args, &mut export_result)
         .expect("target export failed!");
     println!("{}", str::from_utf8(&export_result).unwrap());
     Ok(())
-}
-
-fn handle_transformation_result(result: &TResult) -> &mediawiki_parser::Element {
-    match *result {
-        Ok(ref e) => e,
-        Err(ref e) => {
-            eprintln!("{}", e);
-            println!(
-                "{}",
-                serde_json::to_string(&e).expect("Could not serialize error!")
-            );
-            process::exit(1);
-        }
-    }
 }

@@ -3,9 +3,11 @@ use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 
 use anchors;
+use compose;
 use deps;
 use html;
 use latex;
+use normalize;
 use pdf;
 use sections;
 use stats;
@@ -147,6 +149,14 @@ impl Default for GeneralSettings {
                 tmap.insert(
                     "anchors".to_string(),
                     MFNFTargets::Anchors(anchors::AnchorsTarget::default()),
+                );
+                tmap.insert(
+                    "normalize".to_string(),
+                    MFNFTargets::Normalize(normalize::NormalizeTarget::default()),
+                );
+                tmap.insert(
+                    "compose".to_string(),
+                    MFNFTargets::Compose(compose::ComposeTarget::default()),
                 );
                 tmap
             },

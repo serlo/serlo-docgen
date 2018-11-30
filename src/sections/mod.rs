@@ -11,7 +11,6 @@ use std::fs::DirBuilder;
 use std::fs::File;
 use std::io;
 use std::io::Write;
-use std::path;
 
 mod filter;
 mod finder;
@@ -53,7 +52,10 @@ impl Target for SectionsTarget {
             filename.push('.');
             filename.push_str(file_ext);
 
-            let mut path = settings.general.section_path.join(&filename_to_make(&section));
+            let mut path = settings
+                .general
+                .section_path
+                .join(&filename_to_make(&section));
 
             DirBuilder::new().recursive(true).create(&path)?;
 

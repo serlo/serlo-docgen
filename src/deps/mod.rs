@@ -41,16 +41,6 @@ fn run_deps_printer(
             .map(|s| s.clone())
             .collect();
 
-        // apply exclusions
-        let root = {
-            let mut new_settings = Settings::default();
-            new_settings.runtime.markers = settings.runtime.markers.clone();
-            new_settings.runtime.target_name = target_name.to_string();
-            transformations::remove_exclusions(root.clone(), &new_settings)
-                .expect("error applying exclusions!")
-        };
-
-        let target_ext = target.target_extension();
         let docrev = &settings.runtime.document_revision;
 
         writeln!(out, "# dependencies for {}", &target_name)?;
@@ -114,7 +104,10 @@ impl Target for SectionDepsTarget {
         args: &[String],
         out: &mut io::Write,
     ) -> io::Result<()> {
-        run_deps_printer(PrinterKind::Sections, root, settings, args, out)
+        // apply exclusions
+        let root = transformations::remove_exclusions(root.clone(), settings)
+            .expect("error applying exclusions!");
+        run_deps_printer(PrinterKind::Sections, &root, settings, args, out)
     }
 }
 
