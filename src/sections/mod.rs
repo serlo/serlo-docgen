@@ -7,11 +7,7 @@
 use preamble::*;
 
 use serde_json;
-use std::fs::DirBuilder;
-use std::fs::File;
 use std::io;
-use std::io::Write;
-use std::path::PathBuf;
 
 use structopt::StructOpt;
 
@@ -24,12 +20,8 @@ mod finder;
     about = "extract a section from a document."
 )]
 struct Args {
-    /// Title of the document.
-    title: String,
     /// Name of the section to extract.
     section: String,
-    /// Revision of the document.
-    revision: String,
 }
 
 /// Write document section to the filesystem.
@@ -57,15 +49,6 @@ impl Target for SectionsTarget {
                 &args.section
             ),
         };
-
-        let path = PathBuf::new()
-            .join(filename_to_make(&args.title))
-            .join(filename_to_make(&args.section))
-            .join(filename_to_make(&args.revision))
-            .with_extension("json");
-
-        DirBuilder::new().recursive(true).create(&path)?;
-
         Ok(serde_json::to_writer(out, &inter).expect("could not serialize section!"))
     }
 }
