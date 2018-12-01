@@ -3,7 +3,7 @@ use mediawiki_parser::*;
 use preamble::*;
 
 /// Convert template name paragraphs to lowercase text only.
-pub fn normalize_template_names(mut root: Element, settings: &Settings) -> TResult {
+pub fn normalize_template_names(mut root: Element, _: ()) -> TResult {
     if let Element::Template(ref mut template) = root {
         if template.name.is_empty() {
             return Ok(Element::Error(Error {
@@ -59,7 +59,7 @@ pub fn normalize_template_names(mut root: Element, settings: &Settings) -> TResu
             }));
         }
     };
-    recurse_inplace(&normalize_template_names, root, settings)
+    recurse_inplace(&normalize_template_names, root, ())
 }
 
 /// Resolve interwiki links.
@@ -90,7 +90,7 @@ pub fn resolve_interwiki_links(root: Element, settings: &Settings) -> TResult {
 }
 
 /// Strip trailing whitespace elements from containers.
-pub fn remove_whitespace_trailers(mut root: Element, settings: &Settings) -> TResult {
+pub fn remove_whitespace_trailers(mut root: Element, _: ()) -> TResult {
     fn rstrip<'a>(root_content: &mut Vec<Element>) {
         loop {
             let last = root_content.pop();
@@ -115,12 +115,12 @@ pub fn remove_whitespace_trailers(mut root: Element, settings: &Settings) -> TRe
         Element::TableCell(ref mut tc) => rstrip(&mut tc.content),
         _ => (),
     }
-    recurse_inplace(&remove_whitespace_trailers, root, settings)
+    recurse_inplace(&remove_whitespace_trailers, root, ())
 }
 
 /// Unpack the paragraph in template arguments if they contain one paragraph
 /// as their only content element. Usually, the user wanted no paragraph here.
-pub fn unpack_template_arguments(mut root: Element, settings: &Settings) -> TResult {
+pub fn unpack_template_arguments(mut root: Element, _: ()) -> TResult {
     if let Element::TemplateArgument(ref mut arg) = root {
         let mut new_content = None;
         if let [Element::Paragraph(ref mut par)] = arg.value[..] {
@@ -131,11 +131,11 @@ pub fn unpack_template_arguments(mut root: Element, settings: &Settings) -> TRes
             arg.value.append(&mut new);
         }
     }
-    recurse_inplace(&unpack_template_arguments, root, settings)
+    recurse_inplace(&unpack_template_arguments, root, ())
 }
 
 /// Delete empty template arguments.
-pub fn remove_empty_arguments(mut root: Element, settings: &Settings) -> TResult {
+pub fn remove_empty_arguments(mut root: Element, _: ()) -> TResult {
     // check if every specified heading exists
     if let Element::Template(ref mut template) = root {
         let new_content = template
@@ -157,5 +157,5 @@ pub fn remove_empty_arguments(mut root: Element, settings: &Settings) -> TResult
             }).collect();
         template.content = new_content;
     }
-    recurse_inplace(&remove_empty_arguments, root, settings)
+    recurse_inplace(&remove_empty_arguments, root, ())
 }

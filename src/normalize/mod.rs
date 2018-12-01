@@ -27,16 +27,14 @@ struct Args {
 pub struct NormalizeTarget {}
 
 /// Applies all transformations which should happen before section transclusion.
-pub fn normalize(mut root: Element, settings: &Settings) -> TResult {
-    root = transformations::normalize_template_names(root, settings)?;
+pub fn normalize(mut root: Element, settings: &Settings, checker: &dyn TexChecker) -> TResult {
+    root = transformations::normalize_template_names(root, ())?;
     root = mwparser_utils::transformations::convert_template_list(root)?;
-    if let Some(ref checker) = settings.runtime.tex_checker {
-        root = mwparser_utils::transformations::normalize_math_formulas(root, checker)?;
-    }
-    root = transformations::remove_whitespace_trailers(root, settings)?;
-    root = transformations::remove_empty_arguments(root, settings)?;
+    root = mwparser_utils::transformations::normalize_math_formulas(root, checker)?;
+    root = transformations::remove_whitespace_trailers(root, ())?;
+    root = transformations::remove_empty_arguments(root, ())?;
     root = transformations::resolve_interwiki_links(root, settings)?;
-    root = transformations::unpack_template_arguments(root, settings)?;
+    root = transformations::unpack_template_arguments(root, ())?;
     Ok(root)
 }
 
@@ -55,14 +53,12 @@ impl Target for NormalizeTarget {
         let args = Args::from_iter(args);
         let root = root.clone();
 
-        let mut settings = Settings::default();
-        if let Some(path) = args.texvccheck_path {
-            settings.runtime.tex_checker = Some(CachedTexChecker::new(&path, 10_000));
-        } else {
-            eprintln!("Warning: no texvccheck path, won't perform checks!");
-        }
+        let checker = match args.texvccheck_path {
+            Some(path) => CachedTexChecker::new(&path, 10_000),
+            _ => panic!("error: no texvccheck path given, cannot normalize math!"),
+        };
 
-        match normalize(root, &settings) {
+        match normalize(root, &settings, &checker) {
             Ok(root) => serde_json::to_writer(out, &root).expect("could not serialize result!"),
             Err(err) => {
                 eprintln!("{}", &err);
