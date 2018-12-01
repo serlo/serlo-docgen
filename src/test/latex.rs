@@ -1,4 +1,3 @@
-use super::{compose, normalize};
 use preamble::*;
 use serde_yaml;
 
@@ -6,10 +5,8 @@ macro_rules! test_case {
     ($target:expr, $name:ident, $ast:expr, $result:expr) => {
         #[test]
         fn $name() {
-            let mut root = serde_yaml::from_str($ast).expect("could not parse test input!");
+            let root = serde_yaml::from_str($ast).expect("could not parse test input!");
             let settings = Settings::default();
-            root = normalize(root, &settings).expect("normalization transformation error!");
-            root = compose(root, &settings).expect("compose transformation error!");
             let target = settings
                 .general
                 .targets
@@ -184,70 +181,6 @@ content:
     "\\begin{enumerate}
     \\item item content 1
     \\item item content 2
-\\end{enumerate}
-"
-);
-
-test_case!(
-    "latex",
-    complex_list,
-    "
-type: template
-position: {}
-name:
-    - type: text
-      position: {}
-      text: Liste
-content:
-    - type: templateargument
-      position: {}
-      name: item1
-      value:
-        - type: text
-          position: {}
-          text: item content 1",
-    "\\begin{itemize}
-    \\item item content 1
-\\end{itemize}
-"
-);
-
-test_case!(
-    "latex",
-    complex_olist,
-    "
-type: template
-position: {}
-name:
-    - type: text
-      position: {}
-      text: Liste
-content:
-    - type: templateargument
-      position: {}
-      name: type
-      value:
-        - type: text
-          position: {}
-          text: ol
-    - type: templateargument
-      position: {}
-      name: item1
-      value:
-        - type: text
-          position: {}
-          text: item content 1
-    - type: templateargument
-      position: {}
-      name: item3
-      value:
-        - type: text
-          position: {}
-          text: second item
-",
-    "\\begin{enumerate}
-    \\item item content 1
-    \\item second item
 \\end{enumerate}
 "
 );
