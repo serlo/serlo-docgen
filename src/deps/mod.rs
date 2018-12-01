@@ -48,7 +48,7 @@ impl Target for SectionDepsTarget {
     fn export<'a>(
         &self,
         root: &'a Element,
-        settings: &Settings,
+        _: &Settings,
         args: &[String],
         out: &mut io::Write,
     ) -> io::Result<()> {

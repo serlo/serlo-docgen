@@ -12,7 +12,6 @@ use std::io;
 use std::path::PathBuf;
 use std::process;
 
-use mfnf_template_spec::{parse_template, KnownTemplate};
 use target::Target;
 
 pub const SECTION_INCLUSION_PREFIX: &str = "#lst:";
@@ -94,62 +93,6 @@ pub fn mw_enc(input: &str) -> String {
 /// returns the anchor if found.
 pub fn matching_anchor<'o>(target: &str, anchors: &'o HashSet<String>) -> Option<&'o String> {
     anchors.get(&mw_enc(target.trim().trim_left_matches(":")))
-}
-
-/// build the anchor url from a given anchor title
-pub fn build_anchor_url(title: &str, settings: &Settings) -> String {
-    format!(
-        "{}#{}:{}",
-        &mw_enc(&settings.runtime.document_title),
-        &mw_enc(&settings.general.anchor_caption),
-        &mw_enc(title),
-    )
-}
-
-/// extract the anchor url from a template anchor
-pub fn extract_template_anchor(template: &KnownTemplate, settings: &Settings) -> Option<String> {
-    match template {
-        KnownTemplate::Anchor(ref anchor) => Some(build_anchor_url(
-            &extract_plain_text(&anchor.ref1),
-            &settings,
-        )),
-        template => {
-            if let Some(title) = template.find("title") {
-                let text = extract_plain_text(&title.value);
-                Some(build_anchor_url(&text, &settings))
-            } else {
-                None
-            }
-        }
-    }
-}
-
-/// extract the anchor url from a heading
-pub fn extract_heading_anchor(heading: &Heading, settings: &Settings) -> String {
-    let text = mw_enc(&extract_plain_text(&heading.caption));
-    let title = mw_enc(&settings.runtime.document_title);
-    format!("{}#{}", &title, &text)
-}
-
-/// extract the anchor url from a document
-pub fn extract_document_anchor(settings: &Settings) -> String {
-    mw_enc(&settings.runtime.document_title)
-}
-
-/// extract the anchor url from an element if present.
-pub fn extract_anchor(root: &Element, settings: &Settings) -> Option<String> {
-    match root {
-        Element::Document(_) => Some(extract_document_anchor(settings)),
-        Element::Heading(ref heading) => Some(extract_heading_anchor(heading, settings)),
-        Element::Template(ref template) => {
-            if let Some(ref template) = parse_template(template) {
-                extract_template_anchor(template, settings)
-            } else {
-                None
-            }
-        }
-        _ => None,
-    }
 }
 
 /// Returns a unicode character for a smiley description.

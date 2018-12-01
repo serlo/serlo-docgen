@@ -79,10 +79,6 @@ pub struct GeneralSettings {
 
     /// Mapping of interwiki link prefix to url (e.g. w: -> de.wikipedia.org)
     pub interwiki_link_mapping: HashMap<String, String>,
-
-    /// Caption text used in a reference to an anchor. (usually localized)
-    /// This is important for matching internal references to link targets (anchors).
-    pub anchor_caption: String,
 }
 
 impl Default for RuntimeSettings {
@@ -159,7 +155,6 @@ impl Default for GeneralSettings {
             file_prefixes: string_vec!["file:", "datei:", "bild:"],
             media_path: "media".into(),
             article_url_base: "https://de.wikibooks.org/wiki/".into(),
-            anchor_caption: "Anker".into(),
         }
     }
 }

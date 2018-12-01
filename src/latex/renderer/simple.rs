@@ -5,6 +5,8 @@ use base64;
 use mediawiki_parser::MarkupType;
 use preamble::*;
 
+use anchors::{extract_document_anchor, extract_heading_anchor};
+
 impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
     pub fn paragraph(
         &mut self,
@@ -36,7 +38,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         let content = indent_and_trim(&content, indent, line_width);
         let depth_string = "sub".repeat(root.depth - 1);
 
-        let anchor = extract_heading_anchor(root, settings);
+        let anchor = extract_heading_anchor(root, &settings.runtime.document_title);
 
         writeln!(out, SECTION!(), depth_string, caption.trim())?;
         write!(out, "{}", " ".repeat(indent))?;
@@ -55,7 +57,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         writeln!(
             out,
             LABEL!(),
-            base64::encode(&extract_document_anchor(settings))
+            base64::encode(&extract_document_anchor(&settings.runtime.document_title))
         )?;
         Ok(true)
     }

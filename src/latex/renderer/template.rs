@@ -6,6 +6,8 @@ use mfnf_template_spec::*;
 use mwparser_utils::*;
 use preamble::*;
 
+use anchors::extract_template_anchor;
+
 impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
     pub fn template(
         &mut self,
@@ -312,7 +314,8 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         settings: &'s Settings,
         out: &mut io::Write,
     ) -> io::Result<()> {
-        if let Some(anchor) = extract_template_anchor(root, settings) {
+        let doctitle = &settings.runtime.document_title;
+        if let Some(anchor) = extract_template_anchor(root, doctitle) {
             write!(out, LABEL!(), base64::encode(&anchor))?;
         } else {
             self.write_error("anchor export could not extract an anchor?", out)?;
@@ -354,8 +357,9 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
     ) -> io::Result<()> {
         let title = template.find("title").map(|a| a.value).unwrap_or(&[]);
         let title_text = title.render(self, settings)?;
+        let doctitle = &settings.runtime.document_title;
 
-        if let Some(anchor) = extract_template_anchor(template, settings) {
+        if let Some(anchor) = extract_template_anchor(template, doctitle) {
             write!(out, LABEL!(), base64::encode(&anchor))?;
             writeln!(out, "%")?
         }
