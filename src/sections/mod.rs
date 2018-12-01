@@ -11,11 +11,28 @@ use std::fs::DirBuilder;
 use std::fs::File;
 use std::io;
 use std::io::Write;
+use std::path::PathBuf;
+
+use structopt::StructOpt;
 
 mod filter;
 mod finder;
 
-/// Write marked document section to the filesystem.
+#[derive(Debug, StructOpt)]
+#[structopt(
+    name = "sections",
+    about = "extract a section from a document."
+)]
+struct Args {
+    /// Title of the document.
+    title: String,
+    /// Name of the section to extract.
+    section: String,
+    /// Revision of the document.
+    revision: String,
+}
+
+/// Write document section to the filesystem.
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
 #[serde(default)]
 pub struct SectionsTarget {}
@@ -27,41 +44,28 @@ impl Target for SectionsTarget {
     fn export<'a>(
         &self,
         root: &'a Element,
-        settings: &Settings,
-        _: &[String],
-        _: &mut io::Write,
+        _settings: &Settings,
+        args: &[String],
+        out: &mut io::Write,
     ) -> io::Result<()> {
-        let sections = finder::SectionNameCollector::collect_from(root);
+        let args = Args::from_iter(args);
 
-        for section in sections {
-            if section.is_empty() {
-                continue;
-            }
+        let inter = match filter::SectionFilter::extract(&args.section, root) {
+            Some(inter) => inter,
+            None => panic!(
+                "could not find section \"{}\" in this document!",
+                &args.section
+            ),
+        };
 
-            let inter = filter::SectionFilter::extract(&section, root);
+        let path = PathBuf::new()
+            .join(filename_to_make(&args.title))
+            .join(filename_to_make(&args.section))
+            .join(filename_to_make(&args.revision))
+            .with_extension("json");
 
-            let mut filename = settings.runtime.document_revision.clone();
-            let file_ext = &settings.general.section_ext;
+        DirBuilder::new().recursive(true).create(&path)?;
 
-            filename.push('.');
-            filename.push_str(file_ext);
-
-            let mut path = settings
-                .general
-                .section_path
-                .join(&filename_to_make(&section));
-
-            DirBuilder::new().recursive(true).create(&path)?;
-
-            path = path.join(&filename);
-
-            let mut file = File::create(&path)?;
-            file.write_all(
-                serde_json::to_string(&inter)
-                    .expect("could not serialize section!")
-                    .as_bytes(),
-            )?;
-        }
-        Ok(())
+        Ok(serde_json::to_writer(out, &inter).expect("could not serialize section!"))
     }
 }

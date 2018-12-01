@@ -16,13 +16,13 @@ pub struct SectionFilter<'b, 'e: 'b> {
 
 impl<'a, 'b: 'a> SectionFilter<'a, 'b> {
     /// Extract a list of nodes forming a section from an input ast.
-    pub fn extract(label: &str, root: &Element) -> Vec<Element> {
+    pub fn extract(label: &str, root: &Element) -> Option<Vec<Element>> {
         let start = SectionFinder::get_start(root, label);
         let end = SectionFinder::get_end(root, label);
-
-        if start.is_empty() || end.is_empty() {
-            return vec![];
-        }
+        let (start, end) = match (start, end) {
+            (Some(start), Some(end)) => (start, end),
+            _ => return None,
+        };
 
         // lowest common node
         let mut common = None;
@@ -39,7 +39,7 @@ impl<'a, 'b: 'a> SectionFilter<'a, 'b> {
         }
         let common = match common {
             Some(c) => c,
-            None => return vec![],
+            None => return None,
         };
 
         let filter = SectionFilter {
@@ -51,7 +51,7 @@ impl<'a, 'b: 'a> SectionFilter<'a, 'b> {
         let result =
             filter_section_element(common, &[], &filter).expect("section extraction failed!");
 
-        extract_content(result).unwrap_or_default()
+        extract_content(result)
     }
 }
 

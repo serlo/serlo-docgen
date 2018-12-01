@@ -2,6 +2,8 @@
 //! them to a given output in `make` dependency format.
 
 use preamble::*;
+use std::path::PathBuf;
+use util::SECTION_INCLUSION_PREFIX;
 
 /// Prints paths of the sections included in a document.
 #[derive(Default)]
@@ -9,17 +11,17 @@ pub struct InclusionPrinter<'b> {
     pub path: Vec<&'b Element>,
 }
 
-impl<'a, 'b: 'a> Traversion<'a, &'b Settings> for InclusionPrinter<'a> {
+impl<'a, 'b: 'a> Traversion<'a, &'b PathBuf> for InclusionPrinter<'a> {
     path_methods!('a);
 
     fn work(
         &mut self,
         root: &Element,
-        settings: &'b Settings,
+        section_path: &'b PathBuf,
         out: &mut io::Write,
     ) -> io::Result<bool> {
         if let Element::Template(ref template) = *root {
-            let prefix: &str = &settings.general.section_inclusion_prefix;
+            let prefix = SECTION_INCLUSION_PREFIX;
             let template_name = extract_plain_text(&template.name);
 
             // section transclusion
@@ -32,7 +34,7 @@ impl<'a, 'b: 'a> Traversion<'a, &'b Settings> for InclusionPrinter<'a> {
                     .trim_matches('"')
                     .trim_matches('\'')
                     .to_string();
-                let path = get_section_path(&article, &section_name, settings);
+                let path = get_section_path(&article, &section_name, section_path);
                 write!(out, "\\\n\t{}", &path)?;
             }
         };
@@ -62,8 +64,7 @@ impl<'e, 's: 'e, 't> Traversion<'e, &'s Settings> for FilesPrinter<'e, 't> {
             }
 
             let file_path = build_media_path(&iref.target, settings);
-            let image_path =
-                mapped_media_path(self.target, &iref.target, settings);
+            let image_path = mapped_media_path(self.target, &iref.target, settings);
             write!(out, "\\\n\t{}", &image_path.to_string_lossy())?;
             write!(out, "\\\n\t{}.meta", &file_path.to_string_lossy())?;
         };

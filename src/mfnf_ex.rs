@@ -19,7 +19,6 @@ use std::str;
 use structopt::StructOpt;
 
 use mfnf_export::*;
-use mwparser_utils::CachedTexChecker;
 
 #[derive(Debug, StructOpt)]
 #[structopt(
@@ -40,21 +39,9 @@ struct Args {
     /// Path to the config file.
     #[structopt(parse(from_os_str), short = "c", long = "config")]
     config: Option<PathBuf>,
-    /// Path to the texvccheck binary (formula checking).
-    #[structopt(parse(from_os_str), short = "p", long = "texvccheck-path")]
-    texvccheck_path: Option<PathBuf>,
-    /// Base path for dependency extraction.
-    #[structopt(parse(from_os_str), short = "b", long = "base-path")]
-    base_path: Option<PathBuf>,
-    /// Path to the article sections directory.
-    #[structopt(parse(from_os_str), short = "s", long = "section-path")]
-    section_path: Option<PathBuf>,
     /// Path to the media file directory.
     #[structopt(parse(from_os_str), short = "e", long = "media-path")]
     media_path: Option<PathBuf>,
-    /// Path to article markers (includes / excludes).
-    #[structopt(parse(from_os_str), short = "m", long = "markers")]
-    marker_path: Option<PathBuf>,
     /// Path to a list of link targets (anchors) available in the export.
     #[structopt(parse(from_os_str), short = "a", long = "available-anchors")]
     available_anchors: Option<PathBuf>,
@@ -70,13 +57,13 @@ struct Args {
     #[structopt()]
     target: String,
 
-    /// Target-specific arguments.
+    /// Target-specific arguments. (Use `target` --help for more info)
     #[structopt()]
     target_args: Vec<String>,
 }
 
 fn main() -> Result<(), std::io::Error> {
-    let args = Args::from_args();
+    let mut args = Args::from_args();
 
     let general_settings = if let Some(path) = args.config {
         let file = fs::File::open(&path)?;
@@ -95,14 +82,6 @@ fn main() -> Result<(), std::io::Error> {
 
     if let Some(revision) = args.doc_revision {
         settings.runtime.document_revision = revision
-    }
-
-    if let Some(base_path) = args.base_path {
-        settings.general.base_path = base_path
-    }
-
-    if let Some(section_path) = args.section_path {
-        settings.general.section_path = section_path
     }
 
     if let Some(media_path) = args.media_path {
@@ -130,11 +109,6 @@ fn main() -> Result<(), std::io::Error> {
         process::exit(0);
     }
 
-    if let Some(path) = args.marker_path {
-        let file = fs::File::open(&path)?;
-        settings.runtime.markers = serde_json::from_reader(&file).expect("Error reading markers:")
-    }
-
     if let Some(path) = args.available_anchors {
         let mut file = fs::File::open(&path)?;
         let mut content = String::new();
@@ -144,10 +118,6 @@ fn main() -> Result<(), std::io::Error> {
             .map(|s| s.trim().to_string())
             .filter(|s| !s.is_empty())
             .collect::<HashSet<String>>();
-    }
-
-    if let Some(path) = args.texvccheck_path {
-        settings.runtime.tex_checker = Some(CachedTexChecker::new(&path, 10_000));
     }
 
     let root = if let Some(path) = args.input_file {
@@ -166,6 +136,7 @@ fn main() -> Result<(), std::io::Error> {
             process::exit(1);
         }
     };
+    args.target_args.insert(0, args.target.clone());
     target
         .export(&root, &settings, &args.target_args, &mut export_result)
         .expect("target export failed!");

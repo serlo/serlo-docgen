@@ -15,6 +15,8 @@ use std::process;
 use mfnf_template_spec::{parse_template, KnownTemplate};
 use target::Target;
 
+pub const SECTION_INCLUSION_PREFIX: &str = "#lst:";
+
 /// Escape LaTeX-Specific symbols
 pub fn escape_latex(input: &str) -> String {
     let mut res = String::new();
@@ -290,7 +292,7 @@ pub fn is_centered(image: &InternalReference) -> bool {
 }
 
 /// Path of a section file.
-pub fn get_section_path(article: &str, section: &str, settings: &Settings) -> String {
+pub fn get_section_path(article: &str, section: &str, section_path: &PathBuf) -> String {
     if !is_plain_file(&PathBuf::from(article)) {
         eprintln!(
             "article name \"{}\" contains path elements. \
@@ -309,16 +311,13 @@ pub fn get_section_path(article: &str, section: &str, settings: &Settings) -> St
         process::exit(1);
     }
 
-    let section_file = filename_to_make(&settings.general.section_rev);
     let article = filename_to_make(&article);
     let section = filename_to_make(&section);
-    let section_ext = &settings.general.section_ext;
-    let section_path = &settings.general.section_path;
-    let path = PathBuf::from(&section_path)
+    let path = section_path
         .join(&article)
         .join(&section)
-        .join(&section_file)
-        .with_extension(&section_ext);
+        .join("latest")
+        .with_extension("json");
     path.to_string_lossy().to_string()
 }
 
@@ -398,23 +397,18 @@ pub fn extract_content(root: Element) -> Option<Vec<Element>> {
 /// panics on error.
 pub fn load_media_meta(name: &[Element], settings: &Settings) -> MediaMeta {
     let mut file_path = build_media_path(name, settings);
-    let mut filename = file_path.file_name()
+    let mut filename = file_path
+        .file_name()
         .expect(&format!("no file component in {:?}!", &file_path))
         .to_os_string();
     filename.push(".meta");
     file_path.set_file_name(filename);
 
-    let file = File::open(&file_path)
-        .expect(&format!("could not open {:?}!", &file_path));
-    serde_json::from_reader(&file)
-        .expect(&format!("could not deserialize {:?}!", &file_path))
+    let file = File::open(&file_path).expect(&format!("could not open {:?}!", &file_path));
+    serde_json::from_reader(&file).expect(&format!("could not deserialize {:?}!", &file_path))
 }
 
-pub fn mapped_media_path(
-    target: &Target,
-    name: &[Element],
-    settings: &Settings,
-) -> PathBuf {
+pub fn mapped_media_path(target: &Target, name: &[Element], settings: &Settings) -> PathBuf {
     let file_path = build_media_path(name, settings);
     let ext = file_path.extension().unwrap_or_default();
 

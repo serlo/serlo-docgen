@@ -74,23 +74,8 @@ pub struct GeneralSettings {
     /// Base path for web links to articles.
     pub article_url_base: String,
 
-    /// Path base for dependency writing accessed at run time.
-    pub base_path: PathBuf,
-
     /// Path to embedded media files. (relative to `media_path`)
     pub media_path: PathBuf,
-
-    /// Path to the section file directory. (relative to `section_path`)
-    pub section_path: PathBuf,
-
-    /// Default revision number of included sections (always `latest`)
-    pub section_rev: String,
-
-    /// File extensions for section files
-    pub section_ext: String,
-
-    /// Template name prefix indication section inclusion
-    pub section_inclusion_prefix: String,
 
     /// Mapping of interwiki link prefix to url (e.g. w: -> de.wikipedia.org)
     pub interwiki_link_mapping: HashMap<String, String>,
@@ -172,13 +157,8 @@ impl Default for GeneralSettings {
                 .map(|e| (e.0.to_string(), e.1.to_string()))
                 .collect(),
             file_prefixes: string_vec!["file:", "datei:", "bild:"],
-            base_path: ".".into(),
             media_path: "media".into(),
             article_url_base: "https://de.wikibooks.org/wiki/".into(),
-            section_path: "sections".into(),
-            section_rev: "latest".into(),
-            section_ext: "json".into(),
-            section_inclusion_prefix: "#lst:".into(),
             anchor_caption: "Anker".into(),
         }
     }

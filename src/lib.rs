@@ -9,6 +9,7 @@ extern crate base64;
 extern crate serde_json;
 #[cfg(test)]
 extern crate serde_yaml;
+extern crate structopt;
 
 mod meta;
 mod target;

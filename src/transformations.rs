@@ -1,25 +1,21 @@
 use mediawiki_parser::transformations::*;
 use mediawiki_parser::*;
-use mfnf_sitemap::Subtarget;
+use mfnf_sitemap::{Markers, Subtarget};
 use preamble::*;
 
 fn remove_exclusions_vec<'a>(
-    trans: &TFuncInplace<&'a Settings>,
+    trans: &TFuncInplace<&'a Markers>,
     root_content: &mut Vec<Element>,
-    settings: &'a Settings,
+    markers: &'a Markers,
 ) -> TListResult {
     let mut result = vec![];
     let (subtarget, include) = {
-        let include_subtarget = settings
-            .runtime
-            .markers
+        let include_subtarget = markers
             .include
             .subtargets
             .iter()
             .find(|s| &s.name == "current");
-        let exclude_subtarget = settings
-            .runtime
-            .markers
+        let exclude_subtarget = markers
             .exclude
             .subtargets
             .iter()
@@ -59,7 +55,7 @@ fn remove_exclusions_vec<'a>(
 
             // if heading is not in list, inclusion depends on children
             if !in_params {
-                let new_heading = trans(new_heading, settings)?;
+                let new_heading = trans(new_heading, markers)?;
                 let contains_headings = if let Element::Heading(ref h) = new_heading {
                     h.content.iter().any(|e| tree_contains(e, &is_heading))
                 } else {
@@ -73,7 +69,7 @@ fn remove_exclusions_vec<'a>(
                 result.push(new_heading);
             }
         } else {
-            result.push(trans(elem, settings)?);
+            result.push(trans(elem, markers)?);
         }
     }
 
@@ -113,17 +109,17 @@ fn check_heading_existence(
 }
 
 /// Strip excluded headings.
-pub fn remove_exclusions(root: Element, settings: &Settings) -> TResult {
+pub fn remove_exclusions(root: Element, markers: &Markers) -> TResult {
     // check if every specified heading exists
     if let Element::Document(_) = root {
-        for subtarget in &settings.runtime.markers.include.subtargets {
+        for subtarget in &markers.include.subtargets {
             check_heading_existence(&root, &subtarget)?;
         }
-        for subtarget in &settings.runtime.markers.exclude.subtargets {
+        for subtarget in &markers.exclude.subtargets {
             check_heading_existence(&root, &subtarget)?;
         }
     }
-    recurse_inplace_template(&remove_exclusions, root, settings, &remove_exclusions_vec)
+    recurse_inplace_template(&remove_exclusions, root, markers, &remove_exclusions_vec)
 }
 
 /// Collects all thumbnail images on the current hierarchy layer.

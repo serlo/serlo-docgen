@@ -2,21 +2,23 @@ use mediawiki_parser::transformations::*;
 use mediawiki_parser::*;
 use preamble::*;
 use std::fs::File;
+use std::path::PathBuf;
+use util::SECTION_INCLUSION_PREFIX;
 
-pub fn include_sections(root: Element, settings: &Settings) -> TResult {
-    recurse_inplace_template(&include_sections, root, settings, &include_sections_vec)
+pub fn include_sections(root: Element, section_path: &PathBuf) -> TResult {
+    recurse_inplace_template(&include_sections, root, section_path, &include_sections_vec)
 }
 
 pub fn include_sections_vec<'a>(
-    trans: &TFuncInplace<&'a Settings>,
+    trans: &TFuncInplace<&'a PathBuf>,
     root_content: &mut Vec<Element>,
-    settings: &'a Settings,
+    section_path: &'a PathBuf,
 ) -> TListResult {
     // search for section inclusion in children
     let mut result = vec![];
     for mut child in root_content.drain(..) {
         if let Element::Template(ref template) = child {
-            let prefix = &settings.general.section_inclusion_prefix;
+            let prefix = SECTION_INCLUSION_PREFIX;
             let template_name = extract_plain_text(&template.name);
 
             // section transclusion
@@ -34,7 +36,7 @@ pub fn include_sections_vec<'a>(
                 }
 
                 let section_name = extract_plain_text(&template.content);
-                let path = get_section_path(article, &section_name, settings);
+                let path = get_section_path(article, &section_name, section_path);
 
                 // error returned when the section file is faulty
                 let file_error = Element::Error(Error {
@@ -70,19 +72,19 @@ pub fn include_sections_vec<'a>(
                 // recursively include sections
                 // heading depths are normalized in a later transformation
                 section_tree =
-                    include_sections_vec(&include_sections, &mut section_tree, settings)?;
+                    include_sections_vec(&include_sections, &mut section_tree, section_path)?;
                 result.append(&mut section_tree);
                 continue;
             }
         }
-        result.push(trans(child, settings)?);
+        result.push(trans(child, section_path)?);
     }
     Ok(result)
 }
 
 /// Normalize heading depths by making subheadings one level deeper than their parent.
 /// The highest level of headings is assigned depth 1.
-pub fn normalize_heading_depths(root: Element, _settings: &Settings) -> TResult {
+pub fn normalize_heading_depths(root: Element, _: &()) -> TResult {
     normalize_heading_depths_traverse(root, 1)
 }
 

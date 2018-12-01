@@ -7,76 +7,30 @@
 //! this target is executed.
 
 use preamble::*;
-use std::process;
+use std::fs;
+use std::path::PathBuf;
 
 mod printers;
 
 use self::printers::*;
+use structopt::StructOpt;
 use transformations;
 
-#[derive(Debug, Copy, Clone)]
-enum PrinterKind {
-    Sections,
-    Media,
-}
-
-fn run_deps_printer(
-    printer_kind: PrinterKind,
-    root: &Element,
-    settings: &Settings,
-    args: &[String],
-    out: &mut io::Write,
-) -> io::Result<()> {
-    // check of supplied targets, throw an error if target is not found.
-    let mut target_list = args.to_vec();
-
-    for (target_name, target) in &settings.general.targets {
-        let target = target.get_target();
-        if !args.contains(&target_name) {
-            continue;
-        }
-        target_list = target_list
-            .iter()
-            .filter(|s| s != &target_name)
-            .map(|s| s.clone())
-            .collect();
-
-        let docrev = &settings.runtime.document_revision;
-
-        writeln!(out, "# dependencies for {}", &target_name)?;
-        match printer_kind {
-            PrinterKind::Sections => {
-                write!(
-                    out,
-                    "{0}{1}.sections: ",
-                    &settings.general.base_path.to_string_lossy(),
-                    &docrev
-                )?;
-                let mut printer = InclusionPrinter::default();
-                printer.run(&root, settings, out)?;
-            }
-            PrinterKind::Media => {
-                write!(
-                    out,
-                    "{0}{1}.media: ",
-                    &settings.general.base_path.to_string_lossy(),
-                    &docrev
-                )?;
-                let mut printer = FilesPrinter::new(target);
-                printer.run(&root, settings, out)?;
-            }
-        };
-        writeln!(out)?;
-    }
-
-    if !target_list.is_empty() {
-        eprintln!(
-            "The following targets are not defined: {}",
-            &target_list.join(", ")
-        );
-        process::exit(2);
-    }
-    Ok(())
+#[derive(Debug, StructOpt)]
+#[structopt(
+    name = "section-deps",
+    about = "generate a makefile declaring included sections as prerequisites of `base_file`."
+)]
+struct SectionDepArgs {
+    /// Path to article markers (includes / excludes).
+    #[structopt(parse(from_os_str), short = "m", long = "markers")]
+    marker_path: PathBuf,
+    /// Path to the article sections directory.
+    #[structopt(parse(from_os_str), short = "s", long = "section-path")]
+    section_path: PathBuf,
+    /// The target file to generate prerequisites for.
+    #[structopt(short = "b", long = "base-file")]
+    base_file: String,
 }
 
 /// Writes a list of included sections in `make` format.
@@ -98,11 +52,36 @@ impl Target for SectionDepsTarget {
         args: &[String],
         out: &mut io::Write,
     ) -> io::Result<()> {
+        let args = SectionDepArgs::from_iter(args);
+
+        let markers = {
+            let file = fs::File::open(&args.marker_path)?;
+            serde_json::from_reader(&file).expect("Error reading markers:")
+        };
         // apply exclusions
-        let root = transformations::remove_exclusions(root.clone(), settings)
+        let root = transformations::remove_exclusions(root.clone(), &markers)
             .expect("error applying exclusions!");
-        run_deps_printer(PrinterKind::Sections, &root, settings, args, out)
+
+        write!(out, "{}: ", &args.base_file)?;
+        let mut printer = InclusionPrinter::default();
+        printer.run(&root, &args.section_path, out)?;
+        writeln!(out)
     }
+}
+
+#[derive(Debug, StructOpt)]
+#[structopt(
+    name = "media-deps",
+    about = "generate a makefile declaring included media as prerequisites of `base_file`."
+)]
+struct MediaDepArgs {
+    /// The target file to generate prerequisites for.
+    #[structopt(short = "b", long = "base-file")]
+    base_file: String,
+
+    /// The target to generate dependencies for.
+    /// This determines media file extensions.
+    target: String,
 }
 
 /// Writes a list of included media files in `make` format.
@@ -124,6 +103,16 @@ impl Target for MediaDepsTarget {
         args: &[String],
         out: &mut io::Write,
     ) -> io::Result<()> {
-        run_deps_printer(PrinterKind::Media, root, settings, args, out)
+        let args = MediaDepArgs::from_iter(args);
+        let target = match settings.general.targets.get(&args.target) {
+            Some(t) => t.get_target(),
+            None => panic!("no target \"{}\" found / configured!", &args.target),
+        };
+
+        writeln!(out, "# dependencies for {}", &args.target)?;
+        write!(out, "{}: ", &args.base_file)?;
+        let mut printer = FilesPrinter::new(target);
+        printer.run(&root, settings, out)?;
+        writeln!(out)
     }
 }

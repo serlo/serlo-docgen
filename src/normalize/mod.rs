@@ -7,7 +7,18 @@ mod transformations;
 
 use mediawiki_parser::transformations::TResult;
 use preamble::*;
+use std::path::PathBuf;
 use std::process;
+
+use structopt::StructOpt;
+
+#[derive(Debug, StructOpt)]
+#[structopt(name = "normalize", about = "normalize the input article.")]
+struct Args {
+    /// Path to the texvccheck binary (formula checking).
+    #[structopt(parse(from_os_str), short = "p", long = "texvccheck-path")]
+    texvccheck_path: Option<PathBuf>,
+}
 
 /// Applies some normalization transformations to an article
 /// and outputs its AST as JSON.
@@ -38,16 +49,20 @@ impl Target for NormalizeTarget {
         &self,
         root: &'a Element,
         settings: &Settings,
-        _args: &[String],
+        args: &[String],
         out: &mut io::Write,
     ) -> io::Result<()> {
+        let args = Args::from_iter(args);
         let root = root.clone();
 
-        if !settings.runtime.tex_checker.is_none() {
+        let mut settings = Settings::default();
+        if let Some(path) = args.texvccheck_path {
+            settings.runtime.tex_checker = Some(CachedTexChecker::new(&path, 10_000));
+        } else {
             eprintln!("Warning: no texvccheck path, won't perform checks!");
         }
 
-        match normalize(root, settings) {
+        match normalize(root, &settings) {
             Ok(root) => serde_json::to_writer(out, &root).expect("could not serialize result!"),
             Err(err) => {
                 eprintln!("{}", &err);

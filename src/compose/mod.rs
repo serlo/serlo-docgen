@@ -6,19 +6,36 @@
 mod transformations;
 
 use mediawiki_parser::transformations::TResult;
+use mfnf_sitemap::Markers;
 use preamble::*;
+use std::fs;
+use std::path::PathBuf;
 use std::process;
 use transformations::remove_exclusions;
+
+use structopt::StructOpt;
+
+#[derive(Debug, StructOpt)]
+#[structopt(name = "compose", about = "compose the input article.")]
+struct Args {
+    /// Path to article markers (includes / excludes).
+    #[structopt(parse(from_os_str), short = "m", long = "markers")]
+    marker_path: PathBuf,
+
+    /// Path to the article sections directory.
+    #[structopt(parse(from_os_str), short = "s", long = "section-path")]
+    section_path: PathBuf,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(default)]
 pub struct ComposeTarget {}
 
 /// Prepare the article for rendering.
-pub fn compose(mut root: Element, settings: &Settings) -> TResult {
-    root = transformations::include_sections(root, settings)?;
-    root = transformations::normalize_heading_depths(root, settings)?;
-    root = remove_exclusions(root, settings)?;
+pub fn compose(mut root: Element, section_path: &PathBuf, markers: &Markers) -> TResult {
+    root = transformations::include_sections(root, section_path)?;
+    root = transformations::normalize_heading_depths(root, &())?;
+    root = remove_exclusions(root, &markers)?;
     Ok(root)
 }
 
@@ -30,11 +47,18 @@ impl Target for ComposeTarget {
     fn export<'a>(
         &self,
         root: &'a Element,
-        settings: &Settings,
-        _args: &[String],
+        _settings: &Settings,
+        args: &[String],
         out: &mut io::Write,
     ) -> io::Result<()> {
-        match compose(root.clone(), settings) {
+        let args = Args::from_iter(args);
+
+        let markers = {
+            let file = fs::File::open(&args.marker_path)?;
+            serde_json::from_reader(&file).expect("Error reading markers:")
+        };
+
+        match compose(root.clone(), &args.section_path, &markers) {
             Ok(result) => serde_json::to_writer(out, &result).expect("could not serialize result!"),
             Err(err) => {
                 eprintln!("{}", &err);
