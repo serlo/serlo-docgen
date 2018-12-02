@@ -39,41 +39,68 @@ mod preamble {
     pub use std::io;
     pub use target::Target;
     pub use util::*;
+    pub use TargetType;
 }
 
 // public exports
 pub use settings::{GeneralSettings, RuntimeSettings, Settings};
+use std::fmt;
 pub use target::Target;
 
+pub use anchors::{AnchorsArgs, AnchorsTarget};
+pub use compose::{ComposeArgs, ComposeTarget};
+pub use deps::{MediaDepArgs, MediaDepTarget, SectionDepArgs, SectionDepTarget};
+pub use html::{HTMLArgs, HTMLTarget};
+pub use latex::{LatexArgs, LatexTarget};
+pub use normalize::{NormalizeArgs, NormalizeTarget};
+pub use pdf::{PDFArgs, PDFTarget};
+pub use sections::{SectionsArgs, SectionsTarget};
+pub use stats::{StatsArgs, StatsTarget};
+
 /// Available targets for mfnf-export.
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum MFNFTargets {
-    SectionDeps(deps::SectionDepsTarget),
-    MediaDeps(deps::MediaDepsTarget),
-    Latex(latex::LatexTarget),
-    Sections(sections::SectionsTarget),
-    PDF(pdf::PDFTarget),
-    Stats(stats::StatsTarget),
-    HTML(html::HTMLTarget),
-    Anchors(anchors::AnchorsTarget),
-    Normalize(normalize::NormalizeTarget),
-    Compose(compose::ComposeTarget),
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+pub enum TargetType {
+    Sections,
+    SectionDeps,
+    MediaDeps,
+    Normalize,
+    Compose,
+    Anchors,
+    Latex,
+    PDF,
+    Stats,
+    HTML,
 }
 
-impl MFNFTargets {
-    /// Get the inner struct implementing the target trait.
-    pub fn get_target(&self) -> &target::Target {
-        match *self {
-            MFNFTargets::SectionDeps(ref t) => t,
-            MFNFTargets::MediaDeps(ref t) => t,
-            MFNFTargets::Latex(ref t) => t,
-            MFNFTargets::Sections(ref t) => t,
-            MFNFTargets::PDF(ref t) => t,
-            MFNFTargets::Stats(ref t) => t,
-            MFNFTargets::HTML(ref t) => t,
-            MFNFTargets::Anchors(ref t) => t,
-            MFNFTargets::Normalize(ref t) => t,
-            MFNFTargets::Compose(ref t) => t,
-        }
+/// Possible target configuration structs.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum Targets {
+    Sections(SectionsTarget),
+    SectionDeps(SectionDepTarget),
+    MediaDeps(MediaDepTarget),
+    Normalize(NormalizeTarget),
+    Compose(ComposeTarget),
+    Anchors(AnchorsTarget),
+    Latex(LatexTarget),
+    PDF(PDFTarget),
+    Stats(StatsTarget),
+    HTML(HTMLTarget),
+}
+
+impl std::str::FromStr for TargetType {
+    type Err = serde_json::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        serde_json::from_str(s)
+    }
+}
+
+impl fmt::Display for TargetType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            &serde_json::to_string(self).expect("could not serialize TargetType!")
+        )
     }
 }

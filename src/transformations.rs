@@ -128,10 +128,10 @@ pub struct ThumbCollector<'e> {
     pub thumbs: Vec<Element>,
 }
 
-impl<'e, 's: 'e> Traversion<'e, &'s Settings> for ThumbCollector<'e> {
+impl<'e, 's: 'e> Traversion<'e, &'s ()> for ThumbCollector<'e> {
     path_methods!('e);
 
-    fn work(&mut self, root: &'e Element, _: &'s Settings, _: &mut io::Write) -> io::Result<bool> {
+    fn work(&mut self, root: &'e Element, _: &'s (), _: &mut io::Write) -> io::Result<bool> {
         match *root {
             Element::InternalReference(ref iref) => {
                 if is_thumb(iref) {
@@ -146,7 +146,7 @@ impl<'e, 's: 'e> Traversion<'e, &'s Settings> for ThumbCollector<'e> {
 }
 
 /// Move thumbnail images to a gallery under the current heading.
-pub fn hoist_thumbnails(mut root: Element, settings: &Settings) -> TResult {
+pub fn hoist_thumbnails(mut root: Element, _: ()) -> TResult {
     if let Element::Heading(ref mut heading) = root {
         let mut thumbs = {
             let mut collector = ThumbCollector {
@@ -154,7 +154,7 @@ pub fn hoist_thumbnails(mut root: Element, settings: &Settings) -> TResult {
                 thumbs: vec![],
             };
             collector
-                .run_vec(&heading.content, settings, &mut vec![])
+                .run_vec(&heading.content, &(), &mut vec![])
                 .expect("error collecting thumbnails. HOW?");
             collector.thumbs
         };
@@ -194,24 +194,24 @@ pub fn hoist_thumbnails(mut root: Element, settings: &Settings) -> TResult {
     if let Element::Gallery(_) = root {
         Ok(root)
     } else {
-        recurse_inplace_template(&hoist_thumbnails, root, settings, &hoist_thumbnails_vec)
+        recurse_inplace_template(&hoist_thumbnails, root, (), &hoist_thumbnails_vec)
     }
 }
 
 /// Delete thumnail thumnail images.
-fn hoist_thumbnails_vec<'a>(
-    trans: &TFuncInplace<&'a Settings>,
+fn hoist_thumbnails_vec(
+    trans: &TFuncInplace<()>,
     root_content: &mut Vec<Element>,
-    settings: &'a Settings,
+    _: (),
 ) -> TListResult {
     let mut result = vec![];
     for mut child in root_content.drain(..) {
         if let Element::InternalReference(iref) = child {
             if !is_thumb(&iref) {
-                result.push(trans(Element::InternalReference(iref), settings)?);
+                result.push(trans(Element::InternalReference(iref), ())?);
             }
         } else {
-            result.push(trans(child, settings)?);
+            result.push(trans(child, ())?);
         }
     }
     Ok(result)

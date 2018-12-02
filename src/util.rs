@@ -12,7 +12,7 @@ use std::io;
 use std::path::PathBuf;
 use std::process;
 
-use target::Target;
+use TargetType;
 
 pub const SECTION_INCLUSION_PREFIX: &str = "#lst:";
 
@@ -351,12 +351,43 @@ pub fn load_media_meta(name: &[Element], settings: &Settings) -> MediaMeta {
     serde_json::from_reader(&file).expect(&format!("could not deserialize {:?}!", &file_path))
 }
 
-pub fn mapped_media_path(target: &Target, name: &[Element], settings: &Settings) -> PathBuf {
-    let file_path = build_media_path(name, settings);
-    let ext = file_path.extension().unwrap_or_default();
+/// Get the target-specific version of a file extension.
+pub fn map_extension(target: TargetType, extension: &str) -> Option<String> {
+    match target {
+        TargetType::SectionDeps => None,
+        TargetType::MediaDeps => None,
+        TargetType::Sections => None,
+        TargetType::Normalize => None,
+        TargetType::Compose => None,
+        TargetType::Anchors => None,
+        TargetType::Latex => Some(
+            match extension.trim().to_lowercase().as_str() {
+                "png" => "%.pdf",
+                "svg" => "%.pdf",
+                "eps" => "%.pdf",
+                "jpg" => "%.pdf",
+                "jpeg" => "%.pdf",
+                "gif" => "%.qr.pdf",
+                "webm" => "%.qr.pdf",
+                "mp4" => "%.qr.pdf",
+                "pdf" => "plain.%",
+                _ => return None,
+            }.replace("%", &extension),
+        ),
+        TargetType::PDF => None,
+        TargetType::Stats => Some("dummy".to_string()),
+        TargetType::HTML => Some(extension.to_string()),
+    }
+}
 
-    let ext_str = ext.to_string_lossy().to_string();
-    let target_extension = target.extension_for(&ext_str).replace("%", &ext_str);
+pub fn mapped_media_path(target: TargetType, name: &[Element], settings: &Settings) -> PathBuf {
+    let file_path = build_media_path(name, settings);
+    let ext = file_path
+        .extension()
+        .expect("media file has no file extension!");
+
+    let target_extension = map_extension(target, &ext.to_string_lossy())
+        .expect("target {:?} does define media extensions!");
 
     file_path.with_extension(&target_extension)
 }

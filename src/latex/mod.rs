@@ -5,11 +5,24 @@
 
 use preamble::*;
 use std::collections::HashMap;
+use std::path::PathBuf;
 use transformations;
 
 mod renderer;
 
 use self::renderer::LatexRenderer;
+
+use structopt::StructOpt;
+
+#[derive(Debug, StructOpt)]
+pub struct LatexArgs {
+    /// Title of the document beeing processed.
+    document_title: String,
+
+    /// Path to a list of link targets (anchors) available in the export.
+    #[structopt(parse(from_os_str))]
+    available_anchors: PathBuf,
+}
 
 /// Data for LaTeX export.
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -91,31 +104,21 @@ impl Default for LatexTarget {
     }
 }
 
-impl Target for LatexTarget {
-    fn extension_for(&self, ext: &str) -> &str {
-        match ext.trim().to_lowercase().as_str() {
-            "png" => "%.pdf",
-            "svg" => "%.pdf",
-            "eps" => "%.pdf",
-            "jpg" => "%.pdf",
-            "jpeg" => "%.pdf",
-            "gif" => "%.qr.pdf",
-            "webm" => "%.qr.pdf",
-            "mp4" => "%.qr.pdf",
-            "pdf" => "plain.%",
-            _ => "%",
-        }
+impl<'a, 's> Target<&'a LatexArgs, &'s Settings> for LatexTarget {
+    fn target_type(&self) -> TargetType {
+        TargetType::Latex
     }
-    fn export<'a>(
+
+    fn export(
         &self,
-        root: &'a Element,
-        settings: &Settings,
-        _: &[String],
+        root: &Element,
+        settings: &'s Settings,
+        args: &'a LatexArgs,
         out: &mut io::Write,
     ) -> io::Result<()> {
         // apply latex-specific transformations
         let mut latex_tree = root.clone();
-        latex_tree = transformations::hoist_thumbnails(latex_tree, settings)
+        latex_tree = transformations::hoist_thumbnails(latex_tree, ())
             .expect("Error in thumbnail hoisting!");
 
         let mut renderer = LatexRenderer::new(self);

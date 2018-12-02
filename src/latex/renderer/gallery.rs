@@ -16,8 +16,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
 
         for image in &root.content {
             if let Element::InternalReference(ref iref) = *image {
-                let path =
-                    mapped_media_path(self.latex, &iref.target, settings);
+                let path = mapped_media_path(self.latex.target_type(), &iref.target, settings);
                 let caption = iref.caption.render(self, settings)?;
 
                 // collect image options

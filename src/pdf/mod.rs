@@ -2,6 +2,18 @@ use preamble::*;
 
 use serde_json;
 use std::io;
+use std::path::PathBuf;
+use structopt::StructOpt;
+
+#[derive(Debug, StructOpt)]
+pub struct PDFArgs {
+    /// Title of the document beeing processed.
+    document_title: String,
+
+    /// Path to a list of link targets (anchors) available in the export.
+    #[structopt(parse(from_os_str))]
+    available_anchors: PathBuf,
+}
 
 /// Dump pdf settings to stdout as json.
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -37,15 +49,15 @@ impl Default for PDFTarget {
     }
 }
 
-impl Target for PDFTarget {
-    fn extension_for(&self, _ext: &str) -> &str {
-        "%"
+impl<'a, 's> Target<&'a PDFArgs, &'s Settings> for PDFTarget {
+    fn target_type(&self) -> TargetType {
+        TargetType::PDF
     }
-    fn export<'a>(
+    fn export(
         &self,
-        _: &'a Element,
-        settings: &Settings,
-        _: &[String],
+        _: &Element,
+        settings: &'s Settings,
+        args: &'a PDFArgs,
         out: &mut io::Write,
     ) -> io::Result<()> {
         let mut data_table =

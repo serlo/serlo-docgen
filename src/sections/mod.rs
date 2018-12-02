@@ -15,11 +15,7 @@ mod filter;
 mod finder;
 
 #[derive(Debug, StructOpt)]
-#[structopt(
-    name = "sections",
-    about = "extract a section from a document."
-)]
-struct Args {
+pub struct SectionsArgs {
     /// Name of the section to extract.
     section: String,
 }
@@ -29,19 +25,18 @@ struct Args {
 #[serde(default)]
 pub struct SectionsTarget {}
 
-impl Target for SectionsTarget {
-    fn extension_for(&self, _ext: &str) -> &str {
-        "%"
+impl<'a> Target<&'a SectionsArgs, ()> for SectionsTarget {
+    fn target_type(&self) -> TargetType {
+        TargetType::Sections
     }
-    fn export<'a>(
+
+    fn export(
         &self,
-        root: &'a Element,
-        _settings: &Settings,
-        args: &[String],
+        root: &Element,
+        _: (),
+        args: &'a SectionsArgs,
         out: &mut io::Write,
     ) -> io::Result<()> {
-        let args = Args::from_iter(args);
-
         let inter = match filter::SectionFilter::extract(&args.section, root) {
             Some(inter) => inter,
             None => panic!(

@@ -16,12 +16,10 @@ use transformations::remove_exclusions;
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
-#[structopt(name = "compose", about = "compose the input article.")]
-struct Args {
+pub struct ComposeArgs {
     /// Path to article markers (includes / excludes).
     #[structopt(parse(from_os_str), short = "m", long = "markers")]
     marker_path: PathBuf,
-
     /// Path to the article sections directory.
     #[structopt(parse(from_os_str), short = "s", long = "section-path")]
     section_path: PathBuf,
@@ -39,20 +37,18 @@ pub fn compose(mut root: Element, section_path: &PathBuf, markers: &Markers) -> 
     Ok(root)
 }
 
-impl Target for ComposeTarget {
-    fn extension_for(&self, _ext: &str) -> &str {
-        "%"
+impl<'a> Target<&'a ComposeArgs, ()> for ComposeTarget {
+    fn target_type(&self) -> TargetType {
+        TargetType::Compose
     }
 
-    fn export<'a>(
+    fn export(
         &self,
-        root: &'a Element,
-        _settings: &Settings,
-        args: &[String],
+        root: &Element,
+        _: (),
+        args: &'a ComposeArgs,
         out: &mut io::Write,
     ) -> io::Result<()> {
-        let args = Args::from_iter(args);
-
         let markers = {
             let file = fs::File::open(&args.marker_path)?;
             serde_json::from_reader(&file).expect("Error reading markers:")

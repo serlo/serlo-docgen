@@ -5,6 +5,18 @@ use std::collections::{HashMap, HashSet};
 
 use serde_json;
 use std::io;
+use std::path::PathBuf;
+use structopt::StructOpt;
+
+#[derive(Debug, StructOpt)]
+pub struct StatsArgs {
+    /// Title of the document beeing processed.
+    document_title: String,
+
+    /// Path to a list of link targets (anchors) available in the export.
+    #[structopt(parse(from_os_str))]
+    available_anchors: PathBuf,
+}
 
 /// Dump stats to stdout as json.
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Default)]
@@ -77,15 +89,15 @@ impl<'e, 's: 'e> Traversion<'e, &'s Settings> for Stats<'e> {
     }
 }
 
-impl Target for StatsTarget {
-    fn extension_for(&self, _ext: &str) -> &str {
-        "dummy"
+impl<'a, 's> Target<&'a StatsArgs, &'s Settings> for StatsTarget {
+    fn target_type(&self) -> TargetType {
+        TargetType::Stats
     }
-    fn export<'a>(
+    fn export(
         &self,
-        root: &'a Element,
-        settings: &Settings,
-        _args: &[String],
+        root: &Element,
+        settings: &'s Settings,
+        args: &'a StatsArgs,
         out: &mut io::Write,
     ) -> io::Result<()> {
         let mut stats = Stats::default();

@@ -43,13 +43,13 @@ impl<'a, 'b: 'a> Traversion<'a, &'b PathBuf> for InclusionPrinter<'a> {
 }
 
 /// Print paths of file dependencies of an article.
-pub struct FilesPrinter<'e, 't> {
+pub struct FilesPrinter<'e> {
     pub path: Vec<&'e Element>,
     /// map of original to target file extension of a dependency.
-    pub target: &'t Target,
+    pub target_type: TargetType,
 }
 
-impl<'e, 's: 'e, 't> Traversion<'e, &'s Settings> for FilesPrinter<'e, 't> {
+impl<'e, 's: 'e> Traversion<'e, &'s Settings> for FilesPrinter<'e> {
     path_methods!('e);
 
     fn work(
@@ -64,7 +64,7 @@ impl<'e, 's: 'e, 't> Traversion<'e, &'s Settings> for FilesPrinter<'e, 't> {
             }
 
             let file_path = build_media_path(&iref.target, settings);
-            let image_path = mapped_media_path(self.target, &iref.target, settings);
+            let image_path = mapped_media_path(self.target_type, &iref.target, settings);
             write!(out, "\\\n\t{}", &image_path.to_string_lossy())?;
             write!(out, "\\\n\t{}.meta", &file_path.to_string_lossy())?;
         };
@@ -72,11 +72,11 @@ impl<'e, 's: 'e, 't> Traversion<'e, &'s Settings> for FilesPrinter<'e, 't> {
     }
 }
 
-impl<'e, 't> FilesPrinter<'e, 't> {
-    pub fn new(target: &'t Target) -> FilesPrinter {
+impl<'e> FilesPrinter<'e> {
+    pub fn new(target_type: TargetType) -> FilesPrinter<'e> {
         FilesPrinter {
             path: vec![],
-            target,
+            target_type,
         }
     }
 }

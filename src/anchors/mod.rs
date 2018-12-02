@@ -11,11 +11,7 @@ use structopt::StructOpt;
 const ANCHOR_CAPTION: &str = "Anker";
 
 #[derive(Debug, StructOpt)]
-#[structopt(
-    name = "anchors",
-    about = "export a list of anchor targets for this document."
-)]
-struct Args {
+pub struct AnchorsArgs {
     /// Title of the document beeing processed.
     doc_title: String,
 }
@@ -25,21 +21,19 @@ struct Args {
 #[serde(default)]
 pub struct AnchorsTarget {}
 
-impl Target for AnchorsTarget {
-    fn extension_for(&self, _ext: &str) -> &str {
-        "%"
+impl<'a> Target<&'a AnchorsArgs, ()> for AnchorsTarget {
+    fn target_type(&self) -> TargetType {
+        TargetType::Anchors
     }
-
     /// Extract dependencies from a raw source AST. Sections are
     /// not included at this point.
-    fn export<'a>(
+    fn export<'e>(
         &self,
-        root: &'a Element,
-        _: &Settings,
-        args: &[String],
+        root: &'e Element,
+        _: (),
+        args: &'a AnchorsArgs,
         out: &mut io::Write,
     ) -> io::Result<()> {
-        let args = Args::from_iter(args);
         let mut printer = AnchorPrinter::default();
         printer.run(root, &args.doc_title, out)?;
         writeln!(out)

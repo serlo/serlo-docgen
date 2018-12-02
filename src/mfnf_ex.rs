@@ -9,12 +9,10 @@ extern crate serde_json;
 extern crate serde_yaml;
 extern crate structopt;
 
-use std::collections::HashSet;
+use mediawiki_parser::Element;
 use std::fs;
 use std::io;
-use std::io::Read;
 use std::path::PathBuf;
-use std::process;
 use std::str;
 use structopt::StructOpt;
 
@@ -26,89 +24,102 @@ use mfnf_export::*;
     about = "This program renders an article syntax tree to a serial format (like LaTeX, HTML, ...)."
 )]
 struct Args {
-    /// Dump the default settings to stdout.
-    #[structopt(long = "dump-config")]
-    dump_config: bool,
-    /// List the available targets.
-    #[structopt(long = "list-targets")]
-    list_targets: bool,
-
     /// Path to the input file.
     #[structopt(parse(from_os_str), short = "i", long = "input")]
     input_file: Option<PathBuf>,
     /// Path to the config file.
-    #[structopt(parse(from_os_str), short = "c", long = "config")]
-    config: Option<PathBuf>,
+    #[structopt(parse(from_os_str), short = "c", long = "config-file")]
+    config_file: Option<PathBuf>,
     /// Path to the media file directory.
     #[structopt(parse(from_os_str), short = "e", long = "media-path")]
     media_path: Option<PathBuf>,
-    /// Path to a list of link targets (anchors) available in the export.
-    #[structopt(parse(from_os_str), short = "a", long = "available-anchors")]
-    available_anchors: Option<PathBuf>,
 
-    /// Title of the document.
-    #[structopt(short = "t", long = "title")]
-    doc_title: Option<String>,
-    /// Revision of the document.
-    #[structopt(short = "r", long = "revision")]
-    doc_revision: Option<String>,
+    /// The target configuration (subtarget) to use. e.g. `default` or `print`.
+    configuration: String,
 
-    /// The export target. (e.g. `latex` or `html.print`)
-    #[structopt()]
-    target: String,
+    #[structopt(subcommand)]
+    cmd: Commands,
+}
 
-    /// Target-specific arguments. (Use `target` --help for more info)
-    #[structopt()]
-    target_args: Vec<String>,
+/// Target subcommands
+#[derive(Debug, StructOpt)]
+enum Commands {
+    #[structopt(name = "normalize", about = "normalize the input article.")]
+    Normalize(NormalizeArgs),
+    #[structopt(name = "compose", about = "compose the input article.")]
+    Compose(ComposeArgs),
+    #[structopt(
+        name = "section-deps",
+        about = "generate a makefile declaring included sections as prerequisites of `base_file`."
+    )]
+    SectionDeps(SectionDepArgs),
+    #[structopt(
+        name = "media-deps",
+        about = "generate a makefile declaring included media as prerequisites of `base_file`."
+    )]
+    MediaDeps(MediaDepArgs),
+    #[structopt(
+        name = "sections",
+        about = "extract a section from a document."
+    )]
+    Sections(SectionsArgs),
+    #[structopt(
+        name = "anchors",
+        about = "export a list of anchor targets for this document."
+    )]
+    Anchors(AnchorsArgs),
+    #[structopt(name = "html", about = "export the document as html.")]
+    HTML(HTMLArgs),
+    #[structopt(name = "latex", about = "export the document as latex.")]
+    Latex(LatexArgs),
+    #[structopt(name = "pdf", about = "export pdf options for the document.")]
+    PDF(PDFArgs),
+    #[structopt(name = "stats", about = "export document statistics.")]
+    Stats(StatsArgs),
+    #[structopt(
+        name = "dump-config",
+        about = "dump the current configuration to stdout."
+    )]
+    DumpConfig,
+}
+
+macro_rules! find_target {
+    ($var:path, $settings:ident, $args:ident) => {{
+        if let Some(Some(t)) = $settings
+            .general
+            .targets
+            .get(&$args.configuration)
+            .map(|targets| {
+                targets
+                    .iter()
+                    .find_map(|c| if let $var(t) = c { Some(t) } else { None })
+            }) {
+            t
+        } else {
+            panic!(
+                "target not found in configuration \"{}\"!",
+                &$args.configuration
+            );
+        }
+    }};
 }
 
 fn main() -> Result<(), std::io::Error> {
-    let mut args = Args::from_args();
+    let args = Args::from_args();
 
-    let general_settings = if let Some(path) = args.config {
+    let mut settings = Settings::default();
+    settings.general = if let Some(path) = args.config_file {
         let file = fs::File::open(&path)?;
         serde_yaml::from_reader(&file).expect("Error reading settings:")
     } else {
         GeneralSettings::default()
     };
 
-    let mut settings = Settings::default();
-    settings.general = general_settings;
-    settings.runtime.target_name = args.target.clone();
-
-    if let Some(title) = args.doc_title {
-        settings.runtime.document_title = title
-    }
-
-    if let Some(revision) = args.doc_revision {
-        settings.runtime.document_revision = revision
-    }
-
     if let Some(media_path) = args.media_path {
         settings.general.media_path = media_path
     }
 
-    if args.dump_config {
-        println!(
-            "{}",
-            serde_yaml::to_string(&settings.general)
-                .expect("could not serialize default settings!")
-        );
-        process::exit(0);
-    }
-
-    if args.list_targets {
-        let targets = settings
-            .general
-            .targets
-            .iter()
-            .map(|t| t.0.to_string())
-            .collect::<Vec<String>>();
-
-        println!("{}", targets.join(", "));
-        process::exit(0);
-    }
-
+    /*
     if let Some(path) = args.available_anchors {
         let mut file = fs::File::open(&path)?;
         let mut content = String::new();
@@ -118,28 +129,60 @@ fn main() -> Result<(), std::io::Error> {
             .map(|s| s.trim().to_string())
             .filter(|s| !s.is_empty())
             .collect::<HashSet<String>>();
-    }
+    }*/
 
-    let root = if let Some(path) = args.input_file {
+    let root: Element = if let Some(path) = args.input_file {
         let file = fs::File::open(&path)?;
         serde_json::from_reader(&file).expect("error reading input!")
     } else {
         serde_json::from_reader(io::stdin()).expect("error reading input!")
     };
 
-    // export target
-    let mut export_result = vec![];
-    let target = match settings.general.targets.get(&args.target) {
-        Some(t) => t.get_target(),
-        None => {
-            eprintln!("target not configured: {:?}", args.target);
-            process::exit(1);
-        }
-    };
-    args.target_args.insert(0, args.target.clone());
-    target
-        .export(&root, &settings, &args.target_args, &mut export_result)
-        .expect("target export failed!");
-    println!("{}", str::from_utf8(&export_result).unwrap());
+    match &args.cmd {
+        Commands::DumpConfig => println!(
+            "{}",
+            serde_yaml::to_string(&settings.general)
+                .expect("could not serialize default settings!")
+        ),
+        Commands::Anchors(ref target_args) => find_target!(Targets::Anchors, settings, args)
+            .export(&root, (), target_args, &mut io::stdout())?,
+        Commands::Sections(ref target_args) => find_target!(Targets::Sections, settings, args)
+            .export(&root, (), target_args, &mut io::stdout())?,
+        Commands::SectionDeps(ref target_args) => find_target!(
+            Targets::SectionDeps,
+            settings,
+            args
+        ).export(&root, (), target_args, &mut io::stdout())?,
+        Commands::MediaDeps(ref target_args) => find_target!(Targets::MediaDeps, settings, args)
+            .export(&root, &settings, target_args, &mut io::stdout())?,
+        Commands::Normalize(ref target_args) => find_target!(Targets::Normalize, settings, args)
+            .export(&root, &settings, target_args, &mut io::stdout())?,
+        Commands::Compose(ref target_args) => find_target!(Targets::Compose, settings, args)
+            .export(&root, (), target_args, &mut io::stdout())?,
+        Commands::Latex(ref target_args) => find_target!(Targets::Latex, settings, args).export(
+            &root,
+            &settings,
+            target_args,
+            &mut io::stdout(),
+        )?,
+        Commands::PDF(ref target_args) => find_target!(Targets::PDF, settings, args).export(
+            &root,
+            &settings,
+            target_args,
+            &mut io::stdout(),
+        )?,
+        Commands::Stats(ref target_args) => find_target!(Targets::Stats, settings, args).export(
+            &root,
+            &settings,
+            target_args,
+            &mut io::stdout(),
+        )?,
+        Commands::HTML(ref target_args) => find_target!(Targets::HTML, settings, args).export(
+            &root,
+            &settings,
+            target_args,
+            &mut io::stdout(),
+        )?,
+    }
     Ok(())
 }

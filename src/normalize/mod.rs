@@ -13,8 +13,7 @@ use std::process;
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
-#[structopt(name = "normalize", about = "normalize the input article.")]
-struct Args {
+pub struct NormalizeArgs {
     /// Path to the texvccheck binary (formula checking).
     #[structopt(parse(from_os_str), short = "p", long = "texvccheck-path")]
     texvccheck_path: Option<PathBuf>,
@@ -38,23 +37,21 @@ pub fn normalize(mut root: Element, settings: &Settings, checker: &dyn TexChecke
     Ok(root)
 }
 
-impl Target for NormalizeTarget {
-    fn extension_for(&self, _ext: &str) -> &str {
-        "%"
+impl<'a, 's> Target<&'a NormalizeArgs, &'s Settings> for NormalizeTarget {
+    fn target_type(&self) -> TargetType {
+        TargetType::Normalize
     }
-
-    fn export<'a>(
+    fn export(
         &self,
-        root: &'a Element,
-        settings: &Settings,
-        args: &[String],
+        root: &Element,
+        settings: &'s Settings,
+        args: &'a NormalizeArgs,
         out: &mut io::Write,
     ) -> io::Result<()> {
-        let args = Args::from_iter(args);
         let root = root.clone();
 
         let checker = match args.texvccheck_path {
-            Some(path) => CachedTexChecker::new(&path, 10_000),
+            Some(ref path) => CachedTexChecker::new(&path, 10_000),
             _ => panic!("error: no texvccheck path given, cannot normalize math!"),
         };
 

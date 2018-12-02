@@ -17,11 +17,7 @@ use structopt::StructOpt;
 use transformations;
 
 #[derive(Debug, StructOpt)]
-#[structopt(
-    name = "section-deps",
-    about = "generate a makefile declaring included sections as prerequisites of `base_file`."
-)]
-struct SectionDepArgs {
+pub struct SectionDepArgs {
     /// Path to article markers (includes / excludes).
     #[structopt(parse(from_os_str), short = "m", long = "markers")]
     marker_path: PathBuf,
@@ -36,24 +32,21 @@ struct SectionDepArgs {
 /// Writes a list of included sections in `make` format.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(default)]
-pub struct SectionDepsTarget {}
+pub struct SectionDepTarget {}
 
-impl Target for SectionDepsTarget {
-    fn extension_for(&self, _ext: &str) -> &str {
-        "%"
+impl<'a> Target<&'a SectionDepArgs, ()> for SectionDepTarget {
+    fn target_type(&self) -> TargetType {
+        TargetType::SectionDeps
     }
-
     /// Extract dependencies from a raw source AST. Sections are
     /// not included at this point.
-    fn export<'a>(
+    fn export(
         &self,
-        root: &'a Element,
-        _: &Settings,
-        args: &[String],
+        root: &Element,
+        _: (),
+        args: &'a SectionDepArgs,
         out: &mut io::Write,
     ) -> io::Result<()> {
-        let args = SectionDepArgs::from_iter(args);
-
         let markers = {
             let file = fs::File::open(&args.marker_path)?;
             serde_json::from_reader(&file).expect("Error reading markers:")
@@ -70,48 +63,37 @@ impl Target for SectionDepsTarget {
 }
 
 #[derive(Debug, StructOpt)]
-#[structopt(
-    name = "media-deps",
-    about = "generate a makefile declaring included media as prerequisites of `base_file`."
-)]
-struct MediaDepArgs {
+pub struct MediaDepArgs {
     /// The target file to generate prerequisites for.
     #[structopt(short = "b", long = "base-file")]
     base_file: String,
 
     /// The target to generate dependencies for.
     /// This determines media file extensions.
-    target: String,
+    target_type: TargetType,
 }
 
 /// Writes a list of included media files in `make` format.
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(default)]
-pub struct MediaDepsTarget {}
+pub struct MediaDepTarget {}
 
-impl Target for MediaDepsTarget {
-    fn extension_for(&self, _ext: &str) -> &str {
-        "%"
+impl<'a, 's> Target<&'a MediaDepArgs, &'s Settings> for MediaDepTarget {
+    fn target_type(&self) -> TargetType {
+        TargetType::MediaDeps
     }
-
     /// Extract dependencies from a raw source AST. Sections are
     /// not included at this point.
-    fn export<'a>(
+    fn export(
         &self,
-        root: &'a Element,
-        settings: &Settings,
-        args: &[String],
+        root: &Element,
+        settings: &'s Settings,
+        args: &'a MediaDepArgs,
         out: &mut io::Write,
     ) -> io::Result<()> {
-        let args = MediaDepArgs::from_iter(args);
-        let target = match settings.general.targets.get(&args.target) {
-            Some(t) => t.get_target(),
-            None => panic!("no target \"{}\" found / configured!", &args.target),
-        };
-
-        writeln!(out, "# dependencies for {}", &args.target)?;
+        writeln!(out, "# dependencies for {}", &args.target_type)?;
         write!(out, "{}: ", &args.base_file)?;
-        let mut printer = FilesPrinter::new(target);
+        let mut printer = FilesPrinter::new(args.target_type);
         printer.run(&root, settings, out)?;
         writeln!(out)
     }

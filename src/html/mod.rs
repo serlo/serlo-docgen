@@ -1,8 +1,21 @@
 use preamble::*;
 
 use std::io;
+use std::path::PathBuf;
 use transformations;
 mod renderer;
+
+use structopt::StructOpt;
+
+#[derive(Debug, StructOpt)]
+pub struct HTMLArgs {
+    /// Title of the document beeing processed.
+    document_title: String,
+
+    /// Path to a list of link targets (anchors) available in the export.
+    #[structopt(parse(from_os_str))]
+    available_anchors: PathBuf,
+}
 
 /// serialize to html
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Default)]
@@ -81,24 +94,24 @@ impl Default for HTMLStrings {
     }
 }
 
-impl Target for HTMLTarget {
-    fn extension_for(&self, ext: &str) -> &str {
-        "%"
+impl<'a, 's> Target<&'a HTMLArgs, &'s Settings> for HTMLTarget {
+    fn target_type(&self) -> TargetType {
+        TargetType::HTML
     }
 
-    fn export<'a>(
+    fn export(
         &self,
-        root: &'a Element,
-        settings: &Settings,
-        _: &[String],
+        root: &Element,
+        settings: &'s Settings,
+        args: &'a HTMLArgs,
         out: &mut io::Write,
     ) -> io::Result<()> {
         let mut root = root.clone();
         let mut renderer = renderer::HtmlRenderer::new(self);
 
         if self.hoist_thumbnails {
-            root = transformations::hoist_thumbnails(root, settings)
-                .expect("could not hoist thumbnails!");
+            root =
+                transformations::hoist_thumbnails(root, ()).expect("could not hoist thumbnails!");
         }
 
         renderer.run(&root, settings, out)

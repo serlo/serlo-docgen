@@ -2,16 +2,10 @@ use mfnf_sitemap::Markers;
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 
-use anchors;
-use compose;
-use deps;
-use html;
-use latex;
-use normalize;
-use pdf;
-use sections;
-use stats;
-use MFNFTargets;
+use crate::{
+    AnchorsTarget, ComposeTarget, HTMLTarget, LatexTarget, MediaDepTarget, NormalizeTarget,
+    PDFTarget, SectionDepTarget, SectionsTarget, StatsTarget, Targets,
+};
 
 use mwparser_utils::CachedTexChecker;
 
@@ -63,10 +57,9 @@ pub struct RuntimeSettings {
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(default)]
 pub struct GeneralSettings {
-    /// The targets defined on the settings.
-    /// Maps a target name to a target definition.
-    /// This allows for multiple targets of the same type with different parameters.
-    pub targets: HashMap<String, MFNFTargets>,
+    /// Mapping of a target configuration name to a list of configured targets
+    /// belonging to the semantic target configuration class.
+    pub targets: HashMap<String, Vec<Targets>>,
 
     /// A list of file prefixes which indicate references to files.
     pub file_prefixes: Vec<String>,
@@ -100,44 +93,19 @@ impl Default for GeneralSettings {
             targets: {
                 let mut tmap = HashMap::new();
                 tmap.insert(
-                    "section-deps".to_string(),
-                    MFNFTargets::SectionDeps(deps::SectionDepsTarget::default()),
-                );
-                tmap.insert(
-                    "media-deps".to_string(),
-                    MFNFTargets::MediaDeps(deps::MediaDepsTarget::default()),
-                );
-                tmap.insert(
-                    "html".to_string(),
-                    MFNFTargets::HTML(html::HTMLTarget::default()),
-                );
-                tmap.insert(
-                    "latex".to_string(),
-                    MFNFTargets::Latex(latex::LatexTarget::default()),
-                );
-                tmap.insert(
-                    "sections".to_string(),
-                    MFNFTargets::Sections(sections::SectionsTarget::default()),
-                );
-                tmap.insert(
-                    "pdf".to_string(),
-                    MFNFTargets::PDF(pdf::PDFTarget::default()),
-                );
-                tmap.insert(
-                    "stats".to_string(),
-                    MFNFTargets::Stats(stats::StatsTarget::default()),
-                );
-                tmap.insert(
-                    "anchors".to_string(),
-                    MFNFTargets::Anchors(anchors::AnchorsTarget::default()),
-                );
-                tmap.insert(
-                    "normalize".to_string(),
-                    MFNFTargets::Normalize(normalize::NormalizeTarget::default()),
-                );
-                tmap.insert(
-                    "compose".to_string(),
-                    MFNFTargets::Compose(compose::ComposeTarget::default()),
+                    "default".to_string(),
+                    vec![
+                        Targets::Sections(SectionsTarget::default()),
+                        Targets::SectionDeps(SectionDepTarget::default()),
+                        Targets::MediaDeps(MediaDepTarget::default()),
+                        Targets::Normalize(NormalizeTarget::default()),
+                        Targets::Compose(ComposeTarget::default()),
+                        Targets::Anchors(AnchorsTarget::default()),
+                        Targets::Latex(LatexTarget::default()),
+                        Targets::PDF(PDFTarget::default()),
+                        Targets::Stats(StatsTarget::default()),
+                        Targets::HTML(HTMLTarget::default()),
+                    ],
                 );
                 tmap
             },
