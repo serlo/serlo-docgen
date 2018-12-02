@@ -12,7 +12,6 @@ extern crate serde_yaml;
 extern crate structopt;
 
 mod meta;
-mod target;
 #[macro_use]
 mod util;
 #[macro_use]
@@ -37,15 +36,15 @@ mod preamble {
     pub use mediawiki_parser::*;
     pub use settings::Settings;
     pub use std::io;
-    pub use target::Target;
     pub use util::*;
+    pub use Target;
     pub use TargetType;
 }
 
 // public exports
 pub use settings::{GeneralSettings, RuntimeSettings, Settings};
 use std::fmt;
-pub use target::Target;
+use std::io;
 
 pub use anchors::{AnchorsArgs, AnchorsTarget};
 pub use compose::{ComposeArgs, ComposeTarget};
@@ -56,6 +55,19 @@ pub use normalize::{NormalizeArgs, NormalizeTarget};
 pub use pdf::{PDFArgs, PDFTarget};
 pub use sections::{SectionsArgs, SectionsTarget};
 pub use stats::{StatsArgs, StatsTarget};
+
+/// Marks an exportable target type.
+pub trait Target<A, S> {
+    fn target_type(&self) -> TargetType;
+    /// export the the ast to `out`.
+    fn export(
+        &self,
+        root: &mediawiki_parser::Element,
+        settings: S,
+        args: A,
+        out: &mut io::Write,
+    ) -> io::Result<()>;
+}
 
 /// Available targets for mfnf-export.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
