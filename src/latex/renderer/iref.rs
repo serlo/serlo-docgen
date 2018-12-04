@@ -11,15 +11,15 @@ impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
         let authors = meta.license.authors.join(", ");
         let license_text = format!(
             LICENSE_TEXT!(),
-            &escape_latex(&meta.license.url),
-            &escape_latex(
+            &Self::escape_latex(&meta.license.url),
+            &Self::escape_latex(
                 &path::PathBuf::from(&meta.license.url)
                     .file_name()
                     .map(|f| f.to_string_lossy())
                     .unwrap_or_default(),
             ),
-            &escape_latex(&authors),
-            &escape_latex(&meta.license.shortname),
+            &Self::escape_latex(&authors),
+            &Self::escape_latex(&meta.license.shortname),
         );
         Ok(Some(license_text))
     }
@@ -113,7 +113,7 @@ impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
         // other internal references to mediawiki
         let mut url = self.settings.article_url_base.clone();
         url.push_str(&target);
-        url = escape_latex(&urlencode(&url));
+        url = Self::escape_latex(&urlencode(&url));
 
         writeln!(out, INTERNAL_HREF!(), &url, &caption)?;
         Ok(false)

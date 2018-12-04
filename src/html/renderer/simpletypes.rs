@@ -18,7 +18,7 @@ impl<'e, 's: 'e, 't: 'e, 'a> HtmlRenderer<'e, 't, 's, 'a> {
     }
 
     pub fn text(&mut self, root: &'e Text, out: &mut io::Write) -> io::Result<bool> {
-        write!(out, "{}", escape_html(&root.text))?;
+        write!(out, "{}", Self::escape_html(&root.text))?;
         Ok(false)
     }
 
@@ -30,7 +30,7 @@ impl<'e, 's: 'e, 't: 'e, 'a> HtmlRenderer<'e, 't, 's, 'a> {
     }
 
     pub fn comment(&mut self, root: &'e Comment, out: &mut io::Write) -> io::Result<bool> {
-        writeln!(out, "<!-- {} -->", escape_html(&root.text))?;
+        writeln!(out, "<!-- {} -->", Self::escape_html(&root.text))?;
         Ok(false)
     }
 

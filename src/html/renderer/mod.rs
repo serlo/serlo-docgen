@@ -60,9 +60,28 @@ impl<'e, 's: 'e, 't: 'e, 'a> HtmlRenderer<'e, 't, 's, 'a> {
         }
     }
 
+    pub fn escape_html(input: &str) -> String {
+        let mut res = String::new();
+        for c in input.chars() {
+            let s = match c {
+                '<' => "&lt;",
+                '>' => "&gt;",
+                '&' => "&amp;",
+                '"' => "&quot;",
+                '\'' => "&#39;",
+                _ => {
+                    res.push(c);
+                    continue;
+                }
+            };
+            res.push_str(s);
+        }
+        res
+    }
+
     //error-handling
     fn write_error(&self, message: &str, out: &mut io::Write) -> io::Result<bool> {
-        let message = escape_html(&(message.to_string()));
+        let message = Self::escape_html(&(message.to_string()));
         writeln!(out, "error: {}", message)?;
         Ok(true)
     }

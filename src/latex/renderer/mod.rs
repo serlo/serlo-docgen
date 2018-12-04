@@ -113,6 +113,39 @@ impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
         }
     }
 
+    /// Escape LaTeX-Specific symbols
+    pub fn escape_latex(input: &str) -> String {
+        let mut res = String::new();
+        for c in input.chars() {
+            let s = match c {
+                '$' => "\\$",
+                '%' => "\\%",
+                '&' => "\\&",
+                '#' => "\\#",
+                '_' => "\\_",
+                '{' => "\\{",
+                '}' => "\\}",
+                '[' => "{[}",
+                ']' => "{]}",
+                '\"' => "{''}",
+                '\\' => "\\textbackslash{}",
+                '~' => "\\textasciitilde{}",
+                '<' => "\\textless{}",
+                '>' => "\\textgreater{}",
+                '^' => "\\textasciicircum{}",
+                '`' => "{}`", // avoid ?` and !`
+                '\n' => "\\\\",
+                '↯' => "\\Lightning{}",
+                _ => {
+                    res.push(c);
+                    continue;
+                }
+            };
+            res.push_str(s);
+        }
+        res
+    }
+
     /// Render elements with flat paragraphs.
     fn run_vec_nopar(&mut self, root: &'e [Element], out: &mut io::Write) -> io::Result<()> {
         let old_par_state = self.flatten_paragraphs;
@@ -148,7 +181,7 @@ impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
     }
 
     fn write_error(&self, message: &str, out: &mut io::Write) -> io::Result<()> {
-        let message = escape_latex(message);
+        let message = Self::escape_latex(message);
         self.environment("error", &[], &message, out)
     }
 

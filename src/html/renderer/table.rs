@@ -10,8 +10,8 @@ impl<'e, 's: 'e, 't: 'e, 'a> HtmlRenderer<'e, 't, 's, 'a> {
                 write!(
                     out,
                     " {}=\"{}\"",
-                    &escape_html(&attribute.key),
-                    &escape_html(&attribute.value)
+                    &Self::escape_html(&attribute.key),
+                    &Self::escape_html(&attribute.value)
                 )?;
             }
             writeln!(out, ">")?;
@@ -23,8 +23,8 @@ impl<'e, 's: 'e, 't: 'e, 'a> HtmlRenderer<'e, 't, 's, 'a> {
                 write!(
                     out,
                     " {}=\"{}\"",
-                    &escape_html(&attribute.key),
-                    &escape_html(&attribute.value)
+                    &Self::escape_html(&attribute.key),
+                    &Self::escape_html(&attribute.value)
                 )?;
             }
             writeln!(out, ">")?;
@@ -40,8 +40,8 @@ impl<'e, 's: 'e, 't: 'e, 'a> HtmlRenderer<'e, 't, 's, 'a> {
             write!(
                 out,
                 " {}=\"{}\"",
-                &escape_html(&attribute.key),
-                &escape_html(&attribute.value)
+                &Self::escape_html(&attribute.key),
+                &Self::escape_html(&attribute.value)
             )?;
         }
         writeln!(out, ">")?;
@@ -68,8 +68,8 @@ impl<'e, 's: 'e, 't: 'e, 'a> HtmlRenderer<'e, 't, 's, 'a> {
             write!(
                 out,
                 " {}=\"{}\"",
-                &escape_html(&attribute.key),
-                &escape_html(&attribute.value)
+                &Self::escape_html(&attribute.key),
+                &Self::escape_html(&attribute.value)
             )?;
         }
         write!(out, ">")?;

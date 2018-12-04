@@ -51,13 +51,13 @@ impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
         // TODO: Comments can currently cause errors with flattened paragraphs,
         // eating up following LaTeX.
         if !self.flatten_paragraphs {
-            writeln!(out, "% {}", &escape_latex(&root.text).trim())?;
+            writeln!(out, "% {}", &Self::escape_latex(&root.text).trim())?;
         }
         Ok(false)
     }
 
     pub fn text(&mut self, root: &'e Text, out: &mut io::Write) -> io::Result<bool> {
-        write!(out, "{}", &escape_latex(&root.text))?;
+        write!(out, "{}", &Self::escape_latex(&root.text))?;
         Ok(false)
     }
 
@@ -98,9 +98,9 @@ impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
     pub fn href(&mut self, root: &'e ExternalReference, out: &mut io::Write) -> io::Result<bool> {
         let mut caption = root.caption.render(self)?;
         if caption.is_empty() {
-            caption = escape_latex(&root.target);
+            caption = Self::escape_latex(&root.target);
         }
-        let url = escape_latex(&urlencode(&root.target));
+        let url = Self::escape_latex(&urlencode(&root.target));
         writeln!(out, INTERNAL_HREF!(), &url, &caption)?;
         Ok(false)
     }

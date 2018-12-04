@@ -28,57 +28,6 @@ pub fn load_anchor_set(path: &str) -> io::Result<HashSet<String>> {
         .collect::<HashSet<String>>())
 }
 
-/// Escape LaTeX-Specific symbols
-pub fn escape_latex(input: &str) -> String {
-    let mut res = String::new();
-    for c in input.chars() {
-        let s = match c {
-            '$' => "\\$",
-            '%' => "\\%",
-            '&' => "\\&",
-            '#' => "\\#",
-            '_' => "\\_",
-            '{' => "\\{",
-            '}' => "\\}",
-            '[' => "{[}",
-            ']' => "{]}",
-            '\"' => "{''}",
-            '\\' => "\\textbackslash{}",
-            '~' => "\\textasciitilde{}",
-            '<' => "\\textless{}",
-            '>' => "\\textgreater{}",
-            '^' => "\\textasciicircum{}",
-            '`' => "{}`", // avoid ?` and !`
-            '\n' => "\\\\",
-            '↯' => "\\Lightning{}",
-            _ => {
-                res.push(c);
-                continue;
-            }
-        };
-        res.push_str(s);
-    }
-    res
-}
-pub fn escape_html(input: &str) -> String {
-    let mut res = String::new();
-    for c in input.chars() {
-        let s = match c {
-            '<' => "&lt;",
-            '>' => "&gt;",
-            '&' => "&amp;",
-            '"' => "&quot;",
-            '\'' => "&#39;",
-            _ => {
-                res.push(c);
-                continue;
-            }
-        };
-        res.push_str(s);
-    }
-    res
-}
-
 /// based on  https://github.com/bt/rust_urlencoding
 pub fn urlencode(data: &str) -> String {
     let mut escaped = String::new();
