@@ -62,6 +62,10 @@ impl<'a> Target<&'a SectionDepArgs, ()> for SectionDepTarget {
     }
 }
 
+fn parse_target_type(input: &str) -> serde_json::Result<TargetType> {
+    serde_json::from_str(&format!("\"{}\"", input))
+}
+
 #[derive(Debug, StructOpt)]
 pub struct MediaDepArgs {
     /// The target file to generate prerequisites for.
@@ -70,6 +74,7 @@ pub struct MediaDepArgs {
 
     /// The target to generate dependencies for.
     /// This determines media file extensions.
+    #[structopt(parse(try_from_str = "parse_target_type"))]
     target_type: TargetType,
 }
 

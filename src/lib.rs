@@ -80,8 +80,10 @@ pub enum TargetType {
     Compose,
     Anchors,
     Latex,
+    #[serde(rename = "pdf")]
     PDF,
     Stats,
+    #[serde(rename = "html")]
     HTML,
 }
 
