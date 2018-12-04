@@ -71,6 +71,7 @@ pub trait Target<A, S> {
 
 /// Available targets for mfnf-export.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum TargetType {
     Sections,
     SectionDeps,
