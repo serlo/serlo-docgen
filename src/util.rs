@@ -28,7 +28,7 @@ pub fn load_anchor_set(path: &str) -> io::Result<HashSet<String>> {
         .collect::<HashSet<String>>())
 }
 
-/// based on  https://github.com/bt/rust_urlencoding
+/// based on <https://github.com/bt/rust_urlencoding>
 pub fn urlencode(data: &str) -> String {
     let mut escaped = String::new();
     for b in data.as_bytes().iter() {
@@ -58,7 +58,7 @@ pub fn matching_anchor<'o>(target: &str, anchors: &'o HashSet<String>) -> Option
 
 /// Returns a unicode character for a smiley description.
 ///
-/// see also: https://www.mediawiki.org/wiki/Template:Smiley
+/// see also: <https://www.mediawiki.org/wiki/Template:Smiley>
 pub fn smiley_to_unicode(input: &str) -> Option<char> {
     match input {
         ":)" | "smile" | ":-)" | ":-]" | "#default" => Some('\u{01F60A}'),

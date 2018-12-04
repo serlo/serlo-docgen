@@ -22,7 +22,7 @@ pub struct HTMLArgs {
 #[serde(default)]
 pub struct HTMLTarget {
     /// Configures location-dependent strings.
-    strings: HTMLStrings,
+    strings: Box<HTMLStrings>,
     /// Export todo notes.
     with_todo: bool,
     /// Hoist thumbnail images to the closest heading and make a gallery

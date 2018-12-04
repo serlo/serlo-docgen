@@ -95,8 +95,8 @@ impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
         };
         let goal = step.goal.render(self)?;
         let step = step.step.render(self)?;
-        let sep = &self.latex.paragraph_separator;
-        let body = format!("{}{}\n{}", goal.trim(), sep, step);
+        let separator = &self.latex.paragraph_separator;
+        let body = format!("{}{}\n{}", goal.trim(), separator, step);
         self.environment(PROOF_STEP_ENV!(), &[name.trim()], body.trim(), out)
     }
 
