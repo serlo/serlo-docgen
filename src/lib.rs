@@ -42,7 +42,7 @@ mod preamble {
 }
 
 // public exports
-pub use settings::{GeneralSettings, RuntimeSettings, Settings};
+pub use settings::Settings;
 use std::fmt;
 use std::io;
 

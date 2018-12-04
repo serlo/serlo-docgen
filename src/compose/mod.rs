@@ -32,7 +32,7 @@ pub struct ComposeTarget {}
 /// Prepare the article for rendering.
 pub fn compose(mut root: Element, section_path: &PathBuf, markers: &Markers) -> TResult {
     root = transformations::include_sections(root, section_path)?;
-    root = transformations::normalize_heading_depths(root, &())?;
+    root = transformations::normalize_heading_depths(root, ())?;
     root = remove_exclusions(root, &markers)?;
     Ok(root)
 }

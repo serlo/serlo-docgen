@@ -10,29 +10,19 @@ struct TableInfo<'e> {
     body: &'e [Element],
 }
 
-impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
-    pub fn table_cell(
-        &mut self,
-        root: &'e TableCell,
-        settings: &'s Settings,
-        out: &mut io::Write,
-    ) -> io::Result<bool> {
+impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
+    pub fn table_cell(&mut self, root: &'e TableCell, out: &mut io::Write) -> io::Result<bool> {
         // paragraphs in tables do not translate well for latex
-        self.run_vec_nopar(&root.content, settings, out)?;
+        self.run_vec_nopar(&root.content, out)?;
         Ok(false)
     }
 
-    pub fn table_row(
-        &mut self,
-        root: &'e TableRow,
-        settings: &'s Settings,
-        out: &mut io::Write,
-    ) -> io::Result<bool> {
+    pub fn table_row(&mut self, root: &'e TableRow, out: &mut io::Write) -> io::Result<bool> {
         for (index, cell) in root.cells.iter().enumerate() {
             if index > 0 {
                 write!(out, " & ")?;
             }
-            self.run(cell, settings, out)?;
+            self.run(cell, (), out)?;
         }
         writeln!(out, "\\\\")?;
         Ok(false)
@@ -89,13 +79,8 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         }))
     }
 
-    pub fn table(
-        &mut self,
-        root: &'e Table,
-        settings: &'s Settings,
-        out: &mut io::Write,
-    ) -> io::Result<bool> {
-        self.write_def_location(&root.position, &settings.runtime.document_title, out)?;
+    pub fn table(&mut self, root: &'e Table, out: &mut io::Write) -> io::Result<bool> {
+        self.write_def_location(&root.position, &self.args.document_title, out)?;
         let table_info = if let Some(info) = self.get_table_params(&root.rows, out)? {
             info
         } else {
@@ -107,11 +92,11 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         let content = if let Some(header) = table_info.header {
             format!(
                 TABLE_WITH_HEADER!(),
-                header.render(self, settings)?,
-                table_info.body.render(self, settings)?,
+                header.render(self)?,
+                table_info.body.render(self)?,
             )
         } else {
-            table_info.body.render(self, settings)?
+            table_info.body.render(self)?
         };
 
         let line_width = self.latex.max_line_width;
@@ -121,7 +106,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
             out,
             TABLE!(),
             columns,
-            root.caption.render(self, settings)?.trim(),
+            root.caption.render(self)?.trim(),
             &indent_and_trim(content.trim(), indent, line_width),
         )?;
 

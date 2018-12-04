@@ -4,13 +4,8 @@ use super::LatexRenderer;
 use mediawiki_parser::*;
 use preamble::*;
 
-impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
-    pub fn list(
-        &mut self,
-        root: &'e List,
-        settings: &'s Settings,
-        out: &mut io::Write,
-    ) -> io::Result<bool> {
+impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
+    pub fn list(&mut self, root: &'e List, out: &mut io::Write) -> io::Result<bool> {
         let kind = if let Some(&Element::ListItem(ref li)) = root.content.first() {
             li.kind
         } else {
@@ -34,7 +29,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
 
             for child in &root.content {
                 if let Element::ListItem(ref li) = *child {
-                    let child_content = li.content.render(self, settings)?;
+                    let child_content = li.content.render(self)?;
 
                     // definition term
                     if let ListItemKind::DefinitionTerm = li.kind {

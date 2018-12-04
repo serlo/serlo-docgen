@@ -20,7 +20,7 @@ impl<'e, 'a> Traversion<'e, ()> for SectionFinder<'e, 'a> {
 
     fn work(&mut self, root: &'e Element, _: (), _: &mut io::Write) -> io::Result<bool> {
         // end recursion if result is found
-        if !self.result.is_none() {
+        if self.result.is_some() {
             return Ok(false);
         }
 

@@ -84,7 +84,7 @@ pub fn include_sections_vec<'a>(
 
 /// Normalize heading depths by making subheadings one level deeper than their parent.
 /// The highest level of headings is assigned depth 1.
-pub fn normalize_heading_depths(root: Element, _: &()) -> TResult {
+pub fn normalize_heading_depths(root: Element, _: ()) -> TResult {
     normalize_heading_depths_traverse(root, 1)
 }
 

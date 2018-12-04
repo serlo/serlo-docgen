@@ -9,12 +9,24 @@ use settings::Settings;
 use std::collections::HashSet;
 use std::fs::File;
 use std::io;
+use std::io::Read;
 use std::path::PathBuf;
 use std::process;
 
 use TargetType;
 
 pub const SECTION_INCLUSION_PREFIX: &str = "#lst:";
+
+pub fn load_anchor_set(path: &str) -> io::Result<HashSet<String>> {
+    let mut file = File::open(&path)?;
+    let mut content = String::new();
+    file.read_to_string(&mut content)?;
+    Ok(content
+        .split('\n')
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
+        .collect::<HashSet<String>>())
+}
 
 /// Escape LaTeX-Specific symbols
 pub fn escape_latex(input: &str) -> String {
@@ -81,7 +93,7 @@ pub fn urlencode(data: &str) -> String {
             b => escaped.push_str(format!("%{:02X}", b as u32).as_str()),
         };
     }
-    return escaped;
+    escaped
 }
 
 /// encode a url for mediawiki (underscore, urlencode)
@@ -92,7 +104,7 @@ pub fn mw_enc(input: &str) -> String {
 /// Checks if a internal reference target is available,
 /// returns the anchor if found.
 pub fn matching_anchor<'o>(target: &str, anchors: &'o HashSet<String>) -> Option<&'o String> {
-    anchors.get(&mw_enc(target.trim().trim_left_matches(":")))
+    anchors.get(&mw_enc(target.trim().trim_left_matches(':')))
 }
 
 /// Returns a unicode character for a smiley description.
@@ -264,35 +276,23 @@ pub fn get_section_path(article: &str, section: &str, section_path: &PathBuf) ->
     path.to_string_lossy().to_string()
 }
 
-/// This object can be rendered by a traversion.
-pub trait Renderable<S> {
-    fn render<'e, 's>(
-        &'e self,
-        renderer: &mut Traversion<'e, &'s S>,
-        settings: &'s S,
-    ) -> io::Result<String>;
+/// This object can be rendered by a traversion with the unit type as settings.
+pub trait Renderable {
+    fn render<'e>(&'e self, renderer: &mut Traversion<'e, ()>) -> io::Result<String>;
 }
 
-impl<S> Renderable<S> for Element {
-    fn render<'e, 's>(
-        &'e self,
-        renderer: &mut Traversion<'e, &'s S>,
-        settings: &'s S,
-    ) -> io::Result<String> {
+impl Renderable for Element {
+    fn render<'e>(&'e self, renderer: &mut Traversion<'e, ()>) -> io::Result<String> {
         let mut temp = vec![];
-        renderer.run(self, settings, &mut temp)?;
+        renderer.run(self, (), &mut temp)?;
         Ok(String::from_utf8(temp).unwrap())
     }
 }
 
-impl<S> Renderable<S> for [Element] {
-    fn render<'e, 's>(
-        &'e self,
-        renderer: &mut Traversion<'e, &'s S>,
-        settings: &'s S,
-    ) -> io::Result<String> {
+impl Renderable for [Element] {
+    fn render<'e>(&'e self, renderer: &mut Traversion<'e, ()>) -> io::Result<String> {
         let mut temp = vec![];
-        renderer.run_vec(self, settings, &mut temp)?;
+        renderer.run_vec(self, (), &mut temp)?;
         Ok(String::from_utf8(temp).unwrap())
     }
 }
@@ -342,13 +342,15 @@ pub fn load_media_meta(name: &[Element], settings: &Settings) -> MediaMeta {
     let mut file_path = build_media_path(name, settings);
     let mut filename = file_path
         .file_name()
-        .expect(&format!("no file component in {:?}!", &file_path))
+        .unwrap_or_else(|| panic!("no file component in {:?}!", &file_path))
         .to_os_string();
     filename.push(".meta");
     file_path.set_file_name(filename);
 
-    let file = File::open(&file_path).expect(&format!("could not open {:?}!", &file_path));
-    serde_json::from_reader(&file).expect(&format!("could not deserialize {:?}!", &file_path))
+    let file =
+        File::open(&file_path).unwrap_or_else(|_| panic!("could not open {:?}!", &file_path));
+    serde_json::from_reader(&file)
+        .unwrap_or_else(|_| panic!("could not deserialize {:?}!", &file_path))
 }
 
 /// Get the target-specific version of a file extension.
@@ -396,19 +398,15 @@ pub fn build_media_path(name: &[Element], settings: &Settings) -> PathBuf {
     let name_str = extract_plain_text(name);
     let mut trimmed = name_str.trim();
 
-    for prefix in &settings.general.file_prefixes {
+    for prefix in &settings.file_prefixes {
         trimmed = trim_prefix(trimmed, prefix);
     }
 
     let name_path = filename_to_make(trimmed.trim());
-    PathBuf::from(&settings.general.media_path).join(&name_path)
+    PathBuf::from(&settings.media_path).join(&name_path)
 }
 
 pub fn is_file(iref: &InternalReference, settings: &Settings) -> bool {
     let plain = extract_plain_text(&iref.target).trim().to_lowercase();
-    settings
-        .general
-        .file_prefixes
-        .iter()
-        .any(|p| plain.starts_with(p))
+    settings.file_prefixes.iter().any(|p| plain.starts_with(p))
 }

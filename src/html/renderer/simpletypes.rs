@@ -4,78 +4,48 @@ use super::HtmlRenderer;
 use mediawiki_parser::MarkupType;
 use preamble::*;
 
-impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
-    pub fn heading(
-        &mut self,
-        root: &'e Heading,
-        settings: &'s Settings,
-        out: &mut io::Write,
-    ) -> io::Result<bool> {
+impl<'e, 's: 'e, 't: 'e, 'a> HtmlRenderer<'e, 't, 's, 'a> {
+    pub fn heading(&mut self, root: &'e Heading, out: &mut io::Write) -> io::Result<bool> {
         write!(
             out,
             "<h{} class=\"article-heading-{}\">",
             &root.depth, &root.depth
         )?;
-        self.run_vec(&root.caption, settings, out)?;
+        self.run_vec(&root.caption, (), out)?;
         writeln!(out, "</h{}>", &root.depth)?;
-        self.run_vec(&root.content, settings, out)?;
+        self.run_vec(&root.content, (), out)?;
         Ok(false)
     }
 
-    pub fn text(
-        &mut self,
-        root: &'e Text,
-        _: &'s Settings,
-        out: &mut io::Write,
-    ) -> io::Result<bool> {
+    pub fn text(&mut self, root: &'e Text, out: &mut io::Write) -> io::Result<bool> {
         write!(out, "{}", escape_html(&root.text))?;
         Ok(false)
     }
 
-    pub fn paragraph(
-        &mut self,
-        root: &'e Paragraph,
-        settings: &'s Settings,
-        out: &mut io::Write,
-    ) -> io::Result<bool> {
+    pub fn paragraph(&mut self, root: &'e Paragraph, out: &mut io::Write) -> io::Result<bool> {
         write!(out, "<div class=\"paragraph\">")?;
-        self.run_vec(&root.content, settings, out)?;
+        self.run_vec(&root.content, (), out)?;
         writeln!(out, "</div>")?;
         Ok(false)
     }
 
-    pub fn comment(
-        &mut self,
-        root: &'e Comment,
-        _: &'s Settings,
-        out: &mut io::Write,
-    ) -> io::Result<bool> {
+    pub fn comment(&mut self, root: &'e Comment, out: &mut io::Write) -> io::Result<bool> {
         writeln!(out, "<!-- {} -->", escape_html(&root.text))?;
         Ok(false)
     }
 
-    pub fn href(
-        &mut self,
-        root: &'e ExternalReference,
-        settings: &'s Settings,
-        out: &mut io::Write,
-    ) -> io::Result<bool> {
+    pub fn href(&mut self, root: &'e ExternalReference, out: &mut io::Write) -> io::Result<bool> {
         write!(
             out,
             "<a class=\"link\" href=\"{}\">",
             urlencode(&root.target)
         )?;
-        self.run_vec(&root.caption, settings, out)?;
+        self.run_vec(&root.caption, (), out)?;
         writeln!(out, " </a>")?;
         Ok(false)
     }
 
-    pub fn formatted(
-        &mut self,
-        root: &'e Formatted,
-        settings: &'s Settings,
-        out: &mut io::Write,
-    ) -> io::Result<bool> {
+    pub fn formatted(&mut self, root: &'e Formatted, out: &mut io::Write) -> io::Result<bool> {
         //let mut a = false;
         match root.markup {
             MarkupType::NoWiki => {
@@ -88,7 +58,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                 write!(out, "<span class=\"italic\">")?;
             }
             MarkupType::Math => {
-                self.formel(root, settings, out)?;
+                self.formel(root, out)?;
                 return Ok(false);
             }
             MarkupType::StrikeThrough => {
@@ -102,7 +72,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                 self.write_error(&msg, out)?;
             }
         }
-        self.run_vec(&root.content, settings, out)?;
+        self.run_vec(&root.content, (), out)?;
         /*if a
         {
             write!(out, "\\)")?;
@@ -111,22 +81,17 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         Ok(false)
     }
 
-    pub fn htmltag(
-        &mut self,
-        root: &'e HtmlTag,
-        settings: &'s Settings,
-        out: &mut io::Write,
-    ) -> io::Result<bool> {
+    pub fn htmltag(&mut self, root: &'e HtmlTag, out: &mut io::Write) -> io::Result<bool> {
         match root.name.to_lowercase().trim() {
             "dfn" => {
                 write!(out, "<dfn>")?;
-                self.run_vec(&root.content, settings, out)?;
+                self.run_vec(&root.content, (), out)?;
                 write!(out, "</dfn>")?;
             }
             // TODO: proper footnotes
             "ref" => {
                 write!(out, "<sup>")?;
-                self.run_vec(&root.content, settings, out)?;
+                self.run_vec(&root.content, (), out)?;
                 write!(out, "</sup>")?;
             }
             "section" => (),
@@ -142,14 +107,9 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         Ok(false)
     }
 
-    pub fn formel(
-        &mut self,
-        root: &'e Formatted,
-        settings: &'s Settings,
-        out: &mut io::Write,
-    ) -> io::Result<bool> {
+    pub fn formel(&mut self, root: &'e Formatted, out: &mut io::Write) -> io::Result<bool> {
         write!(out, "<span class=\"math\">")?;
-        self.run_vec(&root.content, settings, out)?;
+        self.run_vec(&root.content, (), out)?;
         write!(out, "</span>")?;
         Ok(false)
     }

@@ -8,14 +8,9 @@ use preamble::*;
 
 use anchors::extract_template_anchor;
 
-impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
-    pub fn template(
-        &mut self,
-        root: &'e Template,
-        settings: &'s Settings,
-        out: &mut io::Write,
-    ) -> io::Result<bool> {
-        let doctitle = &settings.runtime.document_title;
+impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
+    pub fn template(&mut self, root: &'e Template, out: &mut io::Write) -> io::Result<bool> {
+        let doctitle = &self.args.document_title;
         let parsed = if let Some(parsed) = parse_template(&root) {
             parsed
         } else {
@@ -31,8 +26,8 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         };
 
         match parsed {
-            KnownTemplate::Formula(formula) => self.formula(&formula, settings, out)?,
-            KnownTemplate::Important(important) => self.important(settings, &important, out)?,
+            KnownTemplate::Formula(formula) => self.formula(&formula, out)?,
+            KnownTemplate::Important(important) => self.important(&important, out)?,
             KnownTemplate::Literature(literature) => self.literature(&literature, out)?,
             KnownTemplate::Definition(_)
             | KnownTemplate::Theorem(_)
@@ -44,17 +39,15 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
             | KnownTemplate::AlternativeProof(_)
             | KnownTemplate::ProofSummary(_)
             | KnownTemplate::Solution(_)
-            | KnownTemplate::SolutionProcess(_) => {
-                self.environment_template(settings, &parsed, out)?
-            }
-            KnownTemplate::GroupExercise(group) => self.group_exercise(&group, settings, out)?,
-            KnownTemplate::ProofStep(step) => self.proofstep(&step, settings, out)?,
-            KnownTemplate::Anchor(_) => self.anchor(&parsed, settings, out)?,
-            KnownTemplate::Mainarticle(article) => self.mainarticle(settings, &article, out)?,
+            | KnownTemplate::SolutionProcess(_) => self.environment_template(&parsed, out)?,
+            KnownTemplate::GroupExercise(group) => self.group_exercise(&group, out)?,
+            KnownTemplate::ProofStep(step) => self.proofstep(&step, out)?,
+            KnownTemplate::Anchor(_) => self.anchor(&parsed, out)?,
+            KnownTemplate::Mainarticle(article) => self.mainarticle(&article, out)?,
             KnownTemplate::Navigation(_) => (),
-            KnownTemplate::Question(question) => self.question(&question, settings, out)?,
-            KnownTemplate::ProofByCases(cases) => self.proof_by_cases(&cases, settings, out)?,
-            KnownTemplate::Induction(induction) => self.induction(&induction, settings, out)?,
+            KnownTemplate::Question(question) => self.question(&question, out)?,
+            KnownTemplate::ProofByCases(cases) => self.proof_by_cases(&cases, out)?,
+            KnownTemplate::Induction(induction) => self.induction(&induction, out)?,
             KnownTemplate::Smiley(smiley) => write!(
                 out,
                 "{}",
@@ -63,19 +56,14 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
             )?,
             // TODO: replace noprint with a sematic version, ignore for now.
             KnownTemplate::NoPrint(noprint) => if self.latex.with_todo {
-                self.run_vec(&noprint.content, settings, out)?
+                self.run_vec(&noprint.content, (), out)?
             },
-            KnownTemplate::Todo(todo) => self.todo(&todo, settings, out)?,
+            KnownTemplate::Todo(todo) => self.todo(&todo, out)?,
         };
         Ok(false)
     }
 
-    fn formula(
-        &self,
-        formula: &Formula,
-        settings: &Settings,
-        out: &mut io::Write,
-    ) -> io::Result<()> {
+    fn formula(&self, formula: &Formula, out: &mut io::Write) -> io::Result<()> {
         // propagate errors
         let error = formula
             .formula
@@ -89,7 +77,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
             }).next();
 
         if let Some(err) = error {
-            self.error(err, settings, out)?;
+            self.error(err, out)?;
             return Ok(());
         }
 
@@ -100,31 +88,21 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         self.environment(MATH_ENV!(), &[], trimmed, out)
     }
 
-    fn proofstep(
-        &mut self,
-        step: &ProofStep<'e>,
-        settings: &'s Settings,
-        out: &mut io::Write,
-    ) -> io::Result<()> {
+    fn proofstep(&mut self, step: &ProofStep<'e>, out: &mut io::Write) -> io::Result<()> {
         let name = match step.name {
-            Some(name) => name.render(self, settings)?,
+            Some(name) => name.render(self)?,
             None => "Beweisschritt".into(),
         };
-        let goal = step.goal.render(self, settings)?;
-        let step = step.step.render(self, settings)?;
+        let goal = step.goal.render(self)?;
+        let step = step.step.render(self)?;
         let sep = &self.latex.paragraph_separator;
         let body = format!("{}{}\n{}", goal.trim(), sep, step);
         self.environment(PROOF_STEP_ENV!(), &[name.trim()], body.trim(), out)
     }
 
-    fn todo(
-        &mut self,
-        todo: &Todo<'e>,
-        settings: &'s Settings,
-        out: &mut io::Write,
-    ) -> io::Result<()> {
+    fn todo(&mut self, todo: &Todo<'e>, out: &mut io::Write) -> io::Result<()> {
         if self.latex.with_todo {
-            let text = todo.todo.render(self, settings)?;
+            let text = todo.todo.render(self)?;
             self.environment("todo", &[], &format!("{}\n", text.trim()), out)?;
         }
         Ok(())
@@ -165,18 +143,13 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         write!(out, "{}", lit)
     }
 
-    fn question(
-        &mut self,
-        question: &Question<'e>,
-        settings: &'s Settings,
-        out: &mut io::Write,
-    ) -> io::Result<()> {
+    fn question(&mut self, question: &Question<'e>, out: &mut io::Write) -> io::Result<()> {
         let title = match question.kind {
-            Some(e) => e.render(self, settings)?,
+            Some(e) => e.render(self)?,
             None => String::new(),
         };
-        let question_text = question.question.render(self, settings)?;
-        let answer = question.answer.render(self, settings)?;
+        let question_text = question.question.render(self)?;
+        let answer = question.answer.render(self)?;
         let sep = &self.latex.paragraph_separator;
         self.environment(
             "question",
@@ -186,12 +159,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         )
     }
 
-    fn proof_by_cases(
-        &mut self,
-        cases: &ProofByCases<'e>,
-        settings: &'s Settings,
-        out: &mut io::Write,
-    ) -> io::Result<()> {
+    fn proof_by_cases(&mut self, cases: &ProofByCases<'e>, out: &mut io::Write) -> io::Result<()> {
         let attrs = [
             (Some(cases.case1), Some(cases.proof1)),
             (Some(cases.case2), Some(cases.proof2)),
@@ -202,8 +170,8 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         ];
         for (index, tuple) in attrs.iter().enumerate() {
             if let (Some(case), Some(proof)) = tuple {
-                let goal = case.render(self, settings)?;
-                let proof = proof.render(self, settings)?;
+                let goal = case.render(self)?;
+                let proof = proof.render(self)?;
                 let name = format!("Fall {}", index + 1);
                 let sep = &self.latex.paragraph_separator;
                 let content = format!("{}{}\n{}", goal.trim(), sep, proof.trim());
@@ -213,13 +181,8 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         Ok(())
     }
 
-    fn group_exercise(
-        &mut self,
-        group: &GroupExercise<'e>,
-        settings: &'s Settings,
-        out: &mut io::Write,
-    ) -> io::Result<()> {
-        let title = group.title.unwrap_or(&[]).render(self, settings)?;
+    fn group_exercise(&mut self, group: &GroupExercise<'e>, out: &mut io::Write) -> io::Result<()> {
+        let title = group.title.unwrap_or(&[]).render(self)?;
 
         let tasks;
         let solutions;
@@ -239,7 +202,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                         let mut s = "\\item ".to_string();
                         s.push_str(
                             &a.value
-                                .render(self, settings)
+                                .render(self)
                                 .expect("unexpected error during latex rendering!")
                                 .trim(),
                         );
@@ -254,14 +217,14 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         }
 
         let mut exercise = if let Some(exercise_raw) = group.exercise {
-            let exercise = exercise_raw.render(self, settings)?;
+            let exercise = exercise_raw.render(self)?;
             format!(EXERCISE_TASKLIST!(), exercise.trim(), tasks.trim())
         } else {
             String::new()
         };
 
         if let Some(explanation) = group.explanation {
-            let exp = explanation.render(self, settings)?;
+            let exp = explanation.render(self)?;
             exercise = format!(EXERCISE_EXPLANATION!(), exercise.trim(), exp.trim());
         }
 
@@ -270,22 +233,17 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         Ok(())
     }
 
-    fn induction(
-        &mut self,
-        induction: &Induction<'e>,
-        settings: &'s Settings,
-        out: &mut io::Write,
-    ) -> io::Result<()> {
+    fn induction(&mut self, induction: &Induction<'e>, out: &mut io::Write) -> io::Result<()> {
         let basic = if let Some(e) = induction.basic_set {
-            e.render(self, settings)?
+            e.render(self)?
         } else {
             INDUCTION_SET_DEFAULT!().to_string()
         };
-        let statement = induction.statement.render(self, settings)?;
-        let base_case = induction.base_case.render(self, settings)?;
-        let hypothesis = induction.induction_hypothesis.render(self, settings)?;
-        let step_case_goal = induction.step_case_goal.render(self, settings)?;
-        let step_case = induction.step_case.render(self, settings)?;
+        let statement = induction.statement.render(self)?;
+        let base_case = induction.base_case.render(self)?;
+        let hypothesis = induction.induction_hypothesis.render(self)?;
+        let step_case_goal = induction.step_case_goal.render(self)?;
+        let step_case = induction.step_case.render(self)?;
         writeln!(
             out,
             INDUCTION!(),
@@ -298,23 +256,13 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         )
     }
 
-    fn important(
-        &mut self,
-        settings: &'s Settings,
-        template: &Important<'e>,
-        out: &mut io::Write,
-    ) -> io::Result<()> {
-        let content = template.content.render(self, settings)?;
+    fn important(&mut self, template: &Important<'e>, out: &mut io::Write) -> io::Result<()> {
+        let content = template.content.render(self)?;
         self.environment(IMPORTANT_ENV!(), &[], content.trim(), out)
     }
 
-    fn anchor(
-        &self,
-        root: &'e KnownTemplate,
-        settings: &'s Settings,
-        out: &mut io::Write,
-    ) -> io::Result<()> {
-        let doctitle = &settings.runtime.document_title;
+    fn anchor(&self, root: &'e KnownTemplate, out: &mut io::Write) -> io::Result<()> {
+        let doctitle = &self.args.document_title;
         if let Some(anchor) = extract_template_anchor(root, doctitle) {
             write!(out, LABEL!(), base64::encode(&anchor))?;
         } else {
@@ -323,18 +271,13 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         Ok(())
     }
 
-    fn mainarticle(
-        &mut self,
-        settings: &'s Settings,
-        template: &Mainarticle<'e>,
-        out: &mut io::Write,
-    ) -> io::Result<()> {
+    fn mainarticle(&mut self, template: &Mainarticle<'e>, out: &mut io::Write) -> io::Result<()> {
         write!(out, MAINARTICLE!())?;
         let caption = extract_plain_text(&template.article);
         let mut target = "Mathe für Nicht-Freaks: ".to_string();
         target.push_str(&caption);
 
-        self.internal_link(&target, &caption, settings, out)?;
+        self.internal_link(&target, &caption, out)?;
         writeln!(out, "\n");
         Ok(())
     }
@@ -342,22 +285,20 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
     pub fn template_arg(
         &mut self,
         root: &'e TemplateArgument,
-        settings: &'s Settings,
         out: &mut io::Write,
     ) -> io::Result<bool> {
-        self.run_vec(&root.value, settings, out)?;
+        self.run_vec(&root.value, (), out)?;
         Ok(false)
     }
 
     pub fn environment_template(
         &mut self,
-        settings: &'s Settings,
         template: &KnownTemplate<'e>,
         out: &mut io::Write,
     ) -> io::Result<()> {
         let title = template.find("title").map(|a| a.value).unwrap_or(&[]);
-        let title_text = title.render(self, settings)?;
-        let doctitle = &settings.runtime.document_title;
+        let title_text = title.render(self)?;
+        let doctitle = &self.args.document_title;
 
         if let Some(anchor) = extract_template_anchor(template, doctitle) {
             write!(out, LABEL!(), base64::encode(&anchor))?;
@@ -369,7 +310,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                 continue;
             }
 
-            let content = attribute.value.render(self, settings)?;
+            let content = attribute.value.render(self)?;
             self.environment(&attribute.name, &[title_text.trim()], content.trim(), out)?;
         }
         Ok(())

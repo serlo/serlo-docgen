@@ -44,6 +44,7 @@ impl<'a> Target<&'a SectionsArgs, ()> for SectionsTarget {
                 &args.section
             ),
         };
-        Ok(serde_json::to_writer(out, &inter).expect("could not serialize section!"))
+        serde_json::to_writer(out, &inter).expect("could not serialize section!");
+        Ok(())
     }
 }

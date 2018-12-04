@@ -2,20 +2,15 @@ use super::LatexRenderer;
 use mediawiki_parser::*;
 use preamble::*;
 
-impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
-    pub fn htmltag(
-        &mut self,
-        root: &'e HtmlTag,
-        settings: &'s Settings,
-        out: &mut io::Write,
-    ) -> io::Result<bool> {
+impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
+    pub fn htmltag(&mut self, root: &'e HtmlTag, out: &mut io::Write) -> io::Result<bool> {
         match root.name.to_lowercase().trim() {
             "dfn" => {
-                let content = root.content.render(self, settings)?;
+                let content = root.content.render(self)?;
                 write!(out, HTML_ITALIC!(), &content)?;
             }
             "ref" => {
-                let content = root.content.render(self, settings)?;
+                let content = root.content.render(self)?;
                 write!(out, HTML_REF!(), &content)?;
             }
             "section" => (),

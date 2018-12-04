@@ -2,13 +2,8 @@ use super::HtmlRenderer;
 use mediawiki_parser::*;
 use preamble::*;
 
-impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
-    pub fn list(
-        &mut self,
-        root: &'e List,
-        settings: &'s Settings,
-        out: &mut io::Write,
-    ) -> io::Result<bool> {
+impl<'e, 's: 'e, 't: 'e, 'a> HtmlRenderer<'e, 't, 's, 'a> {
+    pub fn list(&mut self, root: &'e List, out: &mut io::Write) -> io::Result<bool> {
         let kind = if let Some(&Element::ListItem(ref li)) = root.content.first() {
             li.kind
         } else {
@@ -25,7 +20,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                 for child in &root.content {
                     if let Element::ListItem(ref li) = *child {
                         write!(out, "<li>")?;
-                        self.run_vec(&li.content, settings, out)?;
+                        self.run_vec(&li.content, (), out)?;
                         write!(out, "</li>")?;
                     }
                 }
@@ -36,7 +31,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                 for child in &root.content {
                     if let Element::ListItem(ref li) = *child {
                         write!(out, "<li>")?;
-                        self.run_vec(&li.content, settings, out)?;
+                        self.run_vec(&li.content, (), out)?;
                         write!(out, "</li>")?;
                     }
                 }
@@ -49,12 +44,12 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                         match li.kind {
                             ListItemKind::Definition => {
                                 write!(out, "<dd class=\"definition\">")?;
-                                self.run_vec(&li.content, settings, out)?;
+                                self.run_vec(&li.content, (), out)?;
                                 write!(out, "</dd>")?;
                             }
                             ListItemKind::DefinitionTerm => {
                                 write!(out, "<dt class=\"definitionterm\">")?;
-                                self.run_vec(&li.content, settings, out)?;
+                                self.run_vec(&li.content, (), out)?;
                                 write!(out, "</dt>")?;
                             }
                             _ => {

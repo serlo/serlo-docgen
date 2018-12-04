@@ -7,14 +7,9 @@ use preamble::*;
 
 use anchors::{extract_document_anchor, extract_heading_anchor};
 
-impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
-    pub fn paragraph(
-        &mut self,
-        root: &'e Paragraph,
-        settings: &'s Settings,
-        out: &mut io::Write,
-    ) -> io::Result<bool> {
-        let content = root.content.render(self, settings)?;
+impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
+    pub fn paragraph(&mut self, root: &'e Paragraph, out: &mut io::Write) -> io::Result<bool> {
+        let content = root.content.render(self)?;
         if self.flatten_paragraphs {
             write!(out, "{}", content.trim())?;
         } else {
@@ -23,22 +18,17 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         Ok(false)
     }
 
-    pub fn heading(
-        &mut self,
-        root: &'e Heading,
-        settings: &'s Settings,
-        out: &mut io::Write,
-    ) -> io::Result<bool> {
+    pub fn heading(&mut self, root: &'e Heading, out: &mut io::Write) -> io::Result<bool> {
         let line_width = self.latex.max_line_width;
         let indent = self.latex.indentation_depth;
 
-        let caption = root.caption.render(self, settings)?;
-        let content = root.content.render(self, settings)?;
+        let caption = root.caption.render(self)?;
+        let content = root.content.render(self)?;
 
         let content = indent_and_trim(&content, indent, line_width);
         let depth_string = "sub".repeat(root.depth - 1);
 
-        let anchor = extract_heading_anchor(root, &settings.runtime.document_title);
+        let anchor = extract_heading_anchor(root, &self.args.document_title);
 
         writeln!(out, SECTION!(), depth_string, caption.trim())?;
         write!(out, "{}", " ".repeat(indent))?;
@@ -48,26 +38,16 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         Ok(false)
     }
 
-    pub fn document(
-        &mut self,
-        _root: &'e Document,
-        settings: &'s Settings,
-        out: &mut io::Write,
-    ) -> io::Result<bool> {
+    pub fn document(&mut self, _root: &'e Document, out: &mut io::Write) -> io::Result<bool> {
         writeln!(
             out,
             LABEL!(),
-            base64::encode(&extract_document_anchor(&settings.runtime.document_title))
+            base64::encode(&extract_document_anchor(&self.args.document_title))
         )?;
         Ok(true)
     }
 
-    pub fn comment(
-        &mut self,
-        root: &'e Comment,
-        _: &'s Settings,
-        out: &mut io::Write,
-    ) -> io::Result<bool> {
+    pub fn comment(&mut self, root: &'e Comment, out: &mut io::Write) -> io::Result<bool> {
         // TODO: Comments can currently cause errors with flattened paragraphs,
         // eating up following LaTeX.
         if !self.flatten_paragraphs {
@@ -76,23 +56,13 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         Ok(false)
     }
 
-    pub fn text(
-        &mut self,
-        root: &'e Text,
-        _: &'s Settings,
-        out: &mut io::Write,
-    ) -> io::Result<bool> {
+    pub fn text(&mut self, root: &'e Text, out: &mut io::Write) -> io::Result<bool> {
         write!(out, "{}", &escape_latex(&root.text))?;
         Ok(false)
     }
 
-    pub fn formatted(
-        &mut self,
-        root: &'e Formatted,
-        settings: &'s Settings,
-        out: &mut io::Write,
-    ) -> io::Result<bool> {
-        let inner = root.content.render(self, settings)?;
+    pub fn formatted(&mut self, root: &'e Formatted, out: &mut io::Write) -> io::Result<bool> {
+        let inner = root.content.render(self)?;
 
         match root.markup {
             MarkupType::NoWiki => {
@@ -125,13 +95,8 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         Ok(false)
     }
 
-    pub fn href(
-        &mut self,
-        root: &'e ExternalReference,
-        settings: &'s Settings,
-        out: &mut io::Write,
-    ) -> io::Result<bool> {
-        let mut caption = root.caption.render(self, settings)?;
+    pub fn href(&mut self, root: &'e ExternalReference, out: &mut io::Write) -> io::Result<bool> {
+        let mut caption = root.caption.render(self)?;
         if caption.is_empty() {
             caption = escape_latex(&root.target);
         }

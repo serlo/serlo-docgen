@@ -4,9 +4,9 @@ use mwparser_utils::*;
 use preamble::*;
 
 macro_rules! tag_wrapper {
-    ($self:ident, $content:expr, $settings:ident, $out:ident, $tag:expr, $class:expr) => {
+    ($self:ident, $content:expr, $out:ident, $tag:expr, $class:expr) => {
         write!($out, "<{} class=\"{}\">", $tag, $class)?;
-        $self.run_vec($content, $settings, $out)?;
+        $self.run_vec($content, (), $out)?;
         write!($out, "</{}>", $tag)?;
     };
 }
@@ -26,18 +26,13 @@ macro_rules! tag_str {
 }
 
 macro_rules! div_wrapper {
-    ($self:ident, $content:expr, $settings:ident, $out:ident, $class:expr) => {
-        tag_wrapper!($self, $content, $settings, $out, "div", $class)
+    ($self:ident, $content:expr, $out:ident, $class:expr) => {
+        tag_wrapper!($self, $content, $out, "div", $class)
     };
 }
 
-impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
-    pub fn template(
-        &mut self,
-        root: &'e Template,
-        settings: &'s Settings,
-        out: &mut io::Write,
-    ) -> io::Result<bool> {
+impl<'e, 's: 'e, 't: 'e, 'a> HtmlRenderer<'e, 't, 's, 'a> {
+    pub fn template(&mut self, root: &'e Template, out: &mut io::Write) -> io::Result<bool> {
         let parsed = if let Some(parsed) = parse_template(&root) {
             parsed
         } else {
@@ -53,19 +48,19 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         };
 
         match parsed {
-            KnownTemplate::Formula(formula) => self.formula(&formula, settings, out)?,
-            KnownTemplate::Induction(induction) => self.induction(&induction, settings, out)?,
-            KnownTemplate::Question(question) => self.question(&question, settings, out)?,
-            KnownTemplate::ProofStep(step) => self.proofstep(&step, settings, out)?,
-            KnownTemplate::ProofByCases(cases) => self.proof_by_cases(&cases, settings, out)?,
-            KnownTemplate::GroupExercise(group) => self.group_exercise(&group, settings, out)?,
+            KnownTemplate::Formula(formula) => self.formula(&formula, out)?,
+            KnownTemplate::Induction(induction) => self.induction(&induction, out)?,
+            KnownTemplate::Question(question) => self.question(&question, out)?,
+            KnownTemplate::ProofStep(step) => self.proofstep(&step, out)?,
+            KnownTemplate::ProofByCases(cases) => self.proof_by_cases(&cases, out)?,
+            KnownTemplate::GroupExercise(group) => self.group_exercise(&group, out)?,
             KnownTemplate::NoPrint(noprint) => {
-                self.run_vec(&noprint.content, settings, out)?;
+                self.run_vec(&noprint.content, (), out)?;
                 false
             }
             KnownTemplate::Navigation(_) => false,
-            KnownTemplate::Important(important) => self.important(settings, &important, out)?,
-            KnownTemplate::Todo(todo) => self.todo(settings, &todo, out)?,
+            KnownTemplate::Important(important) => self.important(&important, out)?,
+            KnownTemplate::Todo(todo) => self.todo(&todo, out)?,
             KnownTemplate::Theorem(_)
             | KnownTemplate::Definition(_)
             | KnownTemplate::SolutionProcess(_)
@@ -77,9 +72,9 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
             | KnownTemplate::Exercise(_)
             | KnownTemplate::Hint(_) => {
                 let class = parsed.identifier().to_lowercase();
-                self.environment_template(&parsed, settings, out, &class)?
+                self.environment_template(&parsed, out, &class)?
             }
-            KnownTemplate::Solution(solution) => self.solution(&solution, settings, out)?,
+            KnownTemplate::Solution(solution) => self.solution(&solution, out)?,
             KnownTemplate::Smiley(smiley) => {
                 let text = extract_plain_text(&smiley.name.unwrap_or(&[]));
                 let unicode = smiley_to_unicode(&text).unwrap_or('\u{01f603}');
@@ -106,7 +101,6 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
     fn proof_by_cases(
         &mut self,
         cases: &ProofByCases<'e>,
-        settings: &'s Settings,
         out: &mut io::Write,
     ) -> io::Result<bool> {
         let attrs = [
@@ -125,27 +119,17 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                     self.html.strings.proofcase_caption,
                     index + 1
                 )?;
-                div_wrapper!(self, &case, settings, out, "proofcase-case");
-                div_wrapper!(self, &proof, settings, out, "proofcase-proof");
+                div_wrapper!(self, &case, out, "proofcase-case");
+                div_wrapper!(self, &proof, out, "proofcase-proof");
             }
         }
         Ok(false)
     }
-    fn important(
-        &mut self,
-        settings: &'s Settings,
-        template: &Important<'e>,
-        out: &mut io::Write,
-    ) -> io::Result<bool> {
-        div_wrapper!(self, &template.content, settings, out, "important");
+    fn important(&mut self, template: &Important<'e>, out: &mut io::Write) -> io::Result<bool> {
+        div_wrapper!(self, &template.content, out, "important");
         Ok(false)
     }
-    fn todo(
-        &mut self,
-        settings: &'s Settings,
-        template: &Todo<'e>,
-        out: &mut io::Write,
-    ) -> io::Result<bool> {
+    fn todo(&mut self, template: &Todo<'e>, out: &mut io::Write) -> io::Result<bool> {
         if self.html.with_todo {
             tag_stmt!(
                 {
@@ -153,7 +137,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                     write!(out, "<summary class =\"todo\">")?;
                     write!(out, "TODO: ")?;
                     write!(out, "</summary>")?;
-                    self.run_vec(&template.todo, settings, out)?;
+                    self.run_vec(&template.todo, (), out)?;
                     write!(out, "</details>")?;
                 },
                 out,
@@ -163,12 +147,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         }
         Ok(false)
     }
-    fn formula(
-        &mut self,
-        formula: &Formula<'e>,
-        settings: &'s Settings,
-        out: &mut io::Write,
-    ) -> io::Result<bool> {
+    fn formula(&mut self, formula: &Formula<'e>, out: &mut io::Write) -> io::Result<bool> {
         let error = formula
             .formula
             .iter()
@@ -190,7 +169,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                 match refs[..] {
                     [&Element::Formatted(ref root)] => {
                         if let MarkupType::Math = root.markup {
-                            self.formel(root, settings, out)?;
+                            self.formel(root, out)?;
                         } else {
                             let msg = format!(
                                 "the first element of the content of \"formula\" \
@@ -217,18 +196,13 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         Ok(false)
     }
 
-    pub fn question(
-        &mut self,
-        question: &Question<'e>,
-        settings: &'s Settings,
-        out: &mut io::Write,
-    ) -> io::Result<bool> {
+    pub fn question(&mut self, question: &Question<'e>, out: &mut io::Write) -> io::Result<bool> {
         write!(out, "<details>")?;
         write!(out, "<summary class =\"question\">")?;
         if let Some(kind) = question.kind {
             tag_stmt!(
                 {
-                    self.run_vec(&kind, settings, out)?;
+                    self.run_vec(&kind, (), out)?;
                     write!(out, ": ")?;
                 },
                 out,
@@ -239,38 +213,26 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
             let caption = format!("{}: ", &self.html.strings.question_caption);
             tag_str!(&caption, out, "span", "question-caption");
         }
-        tag_wrapper!(
-            self,
-            &question.question,
-            settings,
-            out,
-            "span",
-            "question-text"
-        );
+        tag_wrapper!(self, &question.question, out, "span", "question-text");
         write!(out, "</summary>")?;
-        div_wrapper!(self, &question.answer, settings, out, "answer");
+        div_wrapper!(self, &question.answer, out, "answer");
         write!(out, "</details>")?;
         Ok(false)
     } //it is impportant to specify in css: display: inline, otherwise weird line break
 
-    pub fn proofstep(
-        &mut self,
-        step: &ProofStep<'e>,
-        settings: &'s Settings,
-        out: &mut io::Write,
-    ) -> io::Result<bool> {
+    pub fn proofstep(&mut self, step: &ProofStep<'e>, out: &mut io::Write) -> io::Result<bool> {
         write!(out, "<details open>")?;
         tag_stmt!(
             {
                 let caption = format!("{}: ", &self.html.strings.proofstep_caption);
                 tag_str!(&caption, out, "span", "proofstep-caption");
-                tag_wrapper!(self, &step.goal, settings, out, "span", "proofstep-goal");
+                tag_wrapper!(self, &step.goal, out, "span", "proofstep-goal");
             },
             out,
             "summary",
             "proofstep"
         );
-        div_wrapper!(self, &step.step, settings, out, "proofstep");
+        div_wrapper!(self, &step.step, out, "proofstep");
         write!(out, "</details>")?;
         Ok(false)
     }
@@ -278,7 +240,6 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
     pub fn environment_template(
         &mut self,
         template: &KnownTemplate<'e>,
-        settings: &'s Settings,
         out: &mut io::Write,
         class: &str,
     ) -> io::Result<bool> {
@@ -302,14 +263,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
 
         let title = template.find("title");
         if let Some(render_title) = title {
-            tag_wrapper!(
-                self,
-                &render_title.value,
-                settings,
-                out,
-                "span",
-                "environment-title"
-            );
+            tag_wrapper!(self, &render_title.value, out, "span", "environment-title");
         }
         for attribute in template.present() {
             if attribute.name == "title" {
@@ -328,16 +282,16 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
             };
             tag_stmt!(
                 {
-                    if attribute.name.to_string() == class.to_string() {
+                    if attribute.name == class {
                         tag_str!(&attribute_name, out, "span", &class_title);
-                        self.run_vec(&attribute.value, settings, out)?;
+                        self.run_vec(&attribute.value, (), out)?;
                     }
                     //catches the case, that the attribute has the same name as the type and so that the icon is rendered two times
                     else {
                         tag_stmt!(
                             {
                                 tag_str!(&attribute_name, out, "span", &class_title);
-                                self.run_vec(&attribute.value, settings, out)?;
+                                self.run_vec(&attribute.value, (), out)?;
                             },
                             out,
                             "div",
@@ -357,19 +311,18 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
     fn group_exercise(
         &mut self,
         group: &GroupExercise<'e>,
-        settings: &'s Settings,
         out: &mut io::Write,
     ) -> io::Result<bool> {
         tag_stmt!(
             {
                 if let Some(render_title) = &group.title {
-                    div_wrapper!(self, &render_title, settings, out, "exercise-title");
+                    div_wrapper!(self, &render_title, out, "exercise-title");
                 };
                 if let Some(exercise) = &group.exercise {
-                    div_wrapper!(self, &exercise, settings, out, "exercise-content");
+                    div_wrapper!(self, &exercise, out, "exercise-content");
                 };
                 if let Some(explanation) = &group.explanation {
-                    div_wrapper!(self, &explanation, settings, out, "exercise-explanation");
+                    div_wrapper!(self, &explanation, out, "exercise-explanation");
                 };
                 let subtaskts = [
                     group.subtask1,
@@ -392,7 +345,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                         let caption =
                             format!("{} {}: ", &self.html.strings.exercise_caption, index + 1);
                         tag_str!(&caption, out, "span", "exercise-exercise-caption");
-                        div_wrapper!(self, &subtask, settings, out, "exercise-exercise");
+                        div_wrapper!(self, &subtask, out, "exercise-exercise");
                     }
                 }
                 write!(out, "<details open class =\"exercise-solution-container\">")?;
@@ -411,7 +364,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                             index + 1
                         );
                         tag_str!(&caption, out, "span", "exercise-solution-caption");
-                        div_wrapper!(self, &solution, settings, out, "exercise-solution");
+                        div_wrapper!(self, &solution, out, "exercise-solution");
                     }
                 }
                 write!(out, "</details>")?;
@@ -423,12 +376,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         Ok(false)
     }
 
-    pub fn solution(
-        &mut self,
-        solution: &Solution<'e>,
-        settings: &'s Settings,
-        out: &mut io::Write,
-    ) -> io::Result<bool> {
+    pub fn solution(&mut self, solution: &Solution<'e>, out: &mut io::Write) -> io::Result<bool> {
         tag_stmt!(
             {
                 tag_stmt!(
@@ -438,14 +386,14 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                                 let caption = format!("{}: ", &self.html.strings.solution_caption);
                                 tag_str!(&caption, out, "span", "solution-caption");
                                 if let Some(render_title) = &solution.title {
-                                    self.run_vec(&render_title, settings, out)?;
+                                    self.run_vec(&render_title, (), out)?;
                                 }
                             },
                             out,
                             "summary",
                             "solution-summary"
                         );
-                        self.run_vec(&solution.solution, settings, out)?;
+                        self.run_vec(&solution.solution, (), out)?;
                     },
                     out,
                     "details",
@@ -459,17 +407,12 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
         Ok(false)
     }
 
-    fn induction(
-        &mut self,
-        induction: &Induction<'e>,
-        settings: &'s Settings,
-        out: &mut io::Write,
-    ) -> io::Result<bool> {
+    fn induction(&mut self, induction: &Induction<'e>, out: &mut io::Write) -> io::Result<bool> {
         let strings = &self.html.strings;
 
         write!(out, "<div class=\"induction\">")?;
         if let Some(e) = induction.basic_set {
-            let set = e.render(self, settings)?;
+            let set = e.render(self)?;
             let msg = str::replace(&strings.induction_intro_basicset, "{}", &set);
             tag_str!(&msg, out, "span", "induction-intro");
         } else {
@@ -480,7 +423,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                 "induction-intro"
             );
         };
-        self.run_vec(&induction.statement, settings, out)?;
+        self.run_vec(&induction.statement, (), out)?;
 
         tag_stmt!(
             {
@@ -492,7 +435,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                     "induction-base-caption"
                 );
                 write!(out, "</summary>")?;
-                self.run_vec(&induction.base_case, settings, out)?;
+                self.run_vec(&induction.base_case, (), out)?;
                 write!(out, "</details></li>")?;
 
                 write!(out, "<li><details open><summary>")?;
@@ -514,7 +457,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                             "induction-hypothesis-caption"
                         );
                         write!(out, "</summary>")?;
-                        self.run_vec(&induction.induction_hypothesis, settings, out)?;
+                        self.run_vec(&induction.induction_hypothesis, (), out)?;
                         write!(out, "</details></li>")?;
 
                         write!(out, "<li><details open><summary>")?;
@@ -525,7 +468,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                             "induction-step-goal-caption"
                         );
                         write!(out, "</summary>")?;
-                        self.run_vec(&induction.step_case_goal, settings, out)?;
+                        self.run_vec(&induction.step_case_goal, (), out)?;
                         write!(out, "</details></li>")?;
 
                         write!(out, "<li><details open><summary>")?;
@@ -536,7 +479,7 @@ impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
                             "induction-step-proof-caption"
                         );
                         write!(out, "</summary>")?;
-                        self.run_vec(&induction.step_case, settings, out)?;
+                        self.run_vec(&induction.step_case, (), out)?;
                         write!(out, "</details></li>")?;
                     },
                     out,

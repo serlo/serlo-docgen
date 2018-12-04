@@ -1,7 +1,7 @@
 use preamble::*;
 
+use std::collections::HashSet;
 use std::io;
-use std::path::PathBuf;
 use transformations;
 mod renderer;
 
@@ -13,8 +13,8 @@ pub struct HTMLArgs {
     document_title: String,
 
     /// Path to a list of link targets (anchors) available in the export.
-    #[structopt(parse(from_os_str))]
-    available_anchors: PathBuf,
+    #[structopt(parse(try_from_str = "load_anchor_set"))]
+    available_anchors: HashSet<String>,
 }
 
 /// serialize to html
@@ -107,13 +107,13 @@ impl<'a, 's> Target<&'a HTMLArgs, &'s Settings> for HTMLTarget {
         out: &mut io::Write,
     ) -> io::Result<()> {
         let mut root = root.clone();
-        let mut renderer = renderer::HtmlRenderer::new(self);
+        let mut renderer = renderer::HtmlRenderer::new(self, &settings, &args);
 
         if self.hoist_thumbnails {
             root =
                 transformations::hoist_thumbnails(root, ()).expect("could not hoist thumbnails!");
         }
 
-        renderer.run(&root, settings, out)
+        renderer.run(&root, (), out)
     }
 }

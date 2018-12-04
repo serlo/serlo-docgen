@@ -3,21 +3,16 @@
 use super::LatexRenderer;
 use preamble::*;
 
-impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
-    pub fn gallery(
-        &mut self,
-        root: &'e Gallery,
-        settings: &'s Settings,
-        out: &mut io::Write,
-    ) -> io::Result<bool> {
-        let doctitle = &settings.runtime.document_title;
+impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
+    pub fn gallery(&mut self, root: &'e Gallery, out: &mut io::Write) -> io::Result<bool> {
+        let doctitle = &self.args.document_title;
 
         let mut rendered_images = vec![];
 
         for image in &root.content {
             if let Element::InternalReference(ref iref) = *image {
-                let path = mapped_media_path(self.latex.target_type(), &iref.target, settings);
-                let caption = iref.caption.render(self, settings)?;
+                let path = mapped_media_path(self.latex.target_type(), &iref.target, self.settings);
+                let caption = iref.caption.render(self)?;
 
                 // collect image options
                 let mut image_options = vec![];
@@ -25,7 +20,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                     image_options.push(extract_plain_text(option).trim().to_string());
                 }
 
-                let license_text = match self.get_license_text(iref, settings, out)? {
+                let license_text = match self.get_license_text(iref)? {
                     Some(s) => s,
                     None => return Ok(false),
                 };
@@ -39,9 +34,6 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
                     &path.to_string_lossy(),
                     &caption
                 );
-
-                let indent = self.latex.indentation_depth;
-                let line_width = self.latex.max_line_width;
                 rendered_images.push(inner);
             }
         }
@@ -57,7 +49,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
             table_rows.push(row);
         }
 
-        writeln!(out, "")?;
+        writeln!(out)?;
         self.write_def_location(&root.position, doctitle, out)?;
         let sep = &self.latex.paragraph_separator;
         writeln!(out, "{}{}\n", table_rows.join("\\\\\n"), sep)?;

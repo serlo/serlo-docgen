@@ -13,44 +13,45 @@ mod simple;
 mod table;
 mod template;
 
+use super::LatexArgs;
+
 /// Recursively renders a syntax tree to latex.
-pub struct LatexRenderer<'e, 't> {
+pub struct LatexRenderer<'e, 't, 's: 'e, 'a> {
     pub path: Vec<&'e Element>,
     pub latex: &'t LatexTarget,
+
+    pub settings: &'s Settings,
+    pub args: &'a LatexArgs,
+
     /// Render paragraphs as normal text, without newline.
     pub flatten_paragraphs: bool,
 }
 
-impl<'e, 's: 'e, 't: 'e> Traversion<'e, &'s Settings> for LatexRenderer<'e, 't> {
+impl<'e, 's: 'e, 't: 'e, 'a> Traversion<'e, ()> for LatexRenderer<'e, 't, 's, 'a> {
     path_methods!('e);
 
-    fn work(
-        &mut self,
-        root: &'e Element,
-        settings: &'s Settings,
-        out: &mut io::Write,
-    ) -> io::Result<bool> {
+    fn work(&mut self, root: &'e Element, _: (), out: &mut io::Write) -> io::Result<bool> {
         Ok(match *root {
             // Node elements
-            Element::Document(ref root) => self.document(root, settings, out)?,
-            Element::Heading(ref root) => self.heading(root, settings, out)?,
-            Element::Formatted(ref root) => self.formatted(root, settings, out)?,
-            Element::Paragraph(ref root) => self.paragraph(root, settings, out)?,
-            Element::Template(ref root) => self.template(root, settings, out)?,
-            Element::TemplateArgument(ref root) => self.template_arg(root, settings, out)?,
-            Element::InternalReference(ref root) => self.internal_ref(root, settings, out)?,
-            Element::List(ref root) => self.list(root, settings, out)?,
-            Element::HtmlTag(ref root) => self.htmltag(root, settings, out)?,
-            Element::Gallery(ref root) => self.gallery(root, settings, out)?,
-            Element::ExternalReference(ref root) => self.href(root, settings, out)?,
-            Element::Table(ref root) => self.table(root, settings, out)?,
-            Element::TableRow(ref root) => self.table_row(root, settings, out)?,
-            Element::TableCell(ref root) => self.table_cell(root, settings, out)?,
+            Element::Document(ref root) => self.document(root, out)?,
+            Element::Heading(ref root) => self.heading(root, out)?,
+            Element::Formatted(ref root) => self.formatted(root, out)?,
+            Element::Paragraph(ref root) => self.paragraph(root, out)?,
+            Element::Template(ref root) => self.template(root, out)?,
+            Element::TemplateArgument(ref root) => self.template_arg(root, out)?,
+            Element::InternalReference(ref root) => self.internal_ref(root, out)?,
+            Element::List(ref root) => self.list(root, out)?,
+            Element::HtmlTag(ref root) => self.htmltag(root, out)?,
+            Element::Gallery(ref root) => self.gallery(root, out)?,
+            Element::ExternalReference(ref root) => self.href(root, out)?,
+            Element::Table(ref root) => self.table(root, out)?,
+            Element::TableRow(ref root) => self.table_row(root, out)?,
+            Element::TableCell(ref root) => self.table_cell(root, out)?,
 
             // Leaf Elements
-            Element::Text(ref root) => self.text(root, settings, out)?,
-            Element::Comment(ref root) => self.comment(root, settings, out)?,
-            Element::Error(ref root) => self.error(root, settings, out)?,
+            Element::Text(ref root) => self.text(root, out)?,
+            Element::Comment(ref root) => self.comment(root, out)?,
+            Element::Error(ref root) => self.error(root, out)?,
             _ => {
                 self.write_error(
                     &format!(
@@ -65,12 +66,7 @@ impl<'e, 's: 'e, 't: 'e> Traversion<'e, &'s Settings> for LatexRenderer<'e, 't> 
     }
 
     /// Handle paragraph line breaks correctly.
-    fn work_vec(
-        &mut self,
-        vec: &'e [Element],
-        settings: &'s Settings,
-        out: &mut io::Write,
-    ) -> io::Result<bool> {
+    fn work_vec(&mut self, vec: &'e [Element], _: (), out: &mut io::Write) -> io::Result<bool> {
         let mut iter = vec.iter();
         let mut current = iter.next();
         while current.is_some() {
@@ -81,20 +77,20 @@ impl<'e, 's: 'e, 't: 'e> Traversion<'e, &'s Settings> for LatexRenderer<'e, 't> 
                 Some(Element::Paragraph(_))
                 | Some(Element::Text(_))
                 | Some(Element::Formatted(_)) => true,
-                _ => false
+                _ => false,
             };
             let current_is_par = match inner {
                 Element::Paragraph(_) => true,
-                _ => false
+                _ => false,
             };
 
             // separate paragraphs only when a paragraph (or text) follows a paragraph
             if current_is_par && next_is_text {
-                let content = inner.render(self, settings)?;
+                let content = inner.render(self)?;
                 let sep = &self.latex.paragraph_separator;
                 writeln!(out, "{}{}\n", &content.trim_right(), sep)?;
             } else {
-                self.run(inner, settings, out)?;
+                self.run(inner, (), out)?;
             }
             current = next;
         }
@@ -102,39 +98,26 @@ impl<'e, 's: 'e, 't: 'e> Traversion<'e, &'s Settings> for LatexRenderer<'e, 't> 
     }
 }
 
-impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
-    pub fn new(target: &LatexTarget) -> LatexRenderer {
+impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
+    pub fn new(
+        target: &'t LatexTarget,
+        settings: &'s Settings,
+        args: &'a LatexArgs,
+    ) -> LatexRenderer<'e, 't, 's, 'a> {
         LatexRenderer {
             flatten_paragraphs: false,
             path: vec![],
             latex: target,
+            settings,
+            args,
         }
     }
 
-    /// Render an element with flat paragraphs.
-    fn run_nopar(
-        &mut self,
-        root: &'e Element,
-        settings: &'s Settings,
-        out: &mut io::Write,
-    ) -> io::Result<()> {
-        let old_par_state = self.flatten_paragraphs;
-        self.flatten_paragraphs = true;
-        self.run(root, settings, out)?;
-        self.flatten_paragraphs = old_par_state;
-        Ok(())
-    }
-
     /// Render elements with flat paragraphs.
-    fn run_vec_nopar(
-        &mut self,
-        root: &'e [Element],
-        settings: &'s Settings,
-        out: &mut io::Write,
-    ) -> io::Result<()> {
+    fn run_vec_nopar(&mut self, root: &'e [Element], out: &mut io::Write) -> io::Result<()> {
         let old_par_state = self.flatten_paragraphs;
         self.flatten_paragraphs = true;
-        self.run_vec(root, settings, out)?;
+        self.run_vec(root, (), out)?;
         self.flatten_paragraphs = old_par_state;
         Ok(())
     }
@@ -154,7 +137,7 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         let is_exception = self
             .latex
             .environment_numbers_exceptions
-            .contains(&name.trim_right_matches("*").trim().to_string());
+            .contains(&name.trim_right_matches('*').trim().to_string());
 
         let name = if self.latex.environment_numbers || is_exception {
             name.to_string()
@@ -182,8 +165,8 @@ impl<'e, 's: 'e, 't: 'e> LatexRenderer<'e, 't> {
         )
     }
 
-    fn error(&self, root: &Error, settings: &Settings, out: &mut io::Write) -> io::Result<bool> {
-        self.write_def_location(&root.position, &settings.runtime.document_title, out)?;
+    fn error(&self, root: &Error, out: &mut io::Write) -> io::Result<bool> {
+        self.write_def_location(&root.position, &self.args.document_title, out)?;
         self.write_error(&root.message, out)?;
         Ok(true)
     }

@@ -85,15 +85,11 @@ enum Commands {
 
 macro_rules! find_target {
     ($var:path, $settings:ident, $args:ident) => {{
-        if let Some(Some(t)) = $settings
-            .general
-            .targets
-            .get(&$args.configuration)
-            .map(|targets| {
-                targets
-                    .iter()
-                    .find_map(|c| if let $var(t) = c { Some(t) } else { None })
-            }) {
+        if let Some(Some(t)) = $settings.targets.get(&$args.configuration).map(|targets| {
+            targets
+                .iter()
+                .find_map(|c| if let $var(t) = c { Some(t) } else { None })
+        }) {
             t
         } else {
             panic!(
@@ -107,29 +103,16 @@ macro_rules! find_target {
 fn main() -> Result<(), std::io::Error> {
     let args = Args::from_args();
 
-    let mut settings = Settings::default();
-    settings.general = if let Some(path) = args.config_file {
+    let mut settings = if let Some(path) = args.config_file {
         let file = fs::File::open(&path)?;
         serde_yaml::from_reader(&file).expect("Error reading settings:")
     } else {
-        GeneralSettings::default()
+        Settings::default()
     };
 
     if let Some(media_path) = args.media_path {
-        settings.general.media_path = media_path
+        settings.media_path = media_path
     }
-
-    /*
-    if let Some(path) = args.available_anchors {
-        let mut file = fs::File::open(&path)?;
-        let mut content = String::new();
-        file.read_to_string(&mut content)?;
-        settings.runtime.available_anchors = content
-            .split("\n")
-            .map(|s| s.trim().to_string())
-            .filter(|s| !s.is_empty())
-            .collect::<HashSet<String>>();
-    }*/
 
     let root: Element = if let Some(path) = args.input_file {
         let file = fs::File::open(&path)?;
@@ -141,8 +124,7 @@ fn main() -> Result<(), std::io::Error> {
     match &args.cmd {
         Commands::DumpConfig => println!(
             "{}",
-            serde_yaml::to_string(&settings.general)
-                .expect("could not serialize default settings!")
+            serde_yaml::to_string(&settings).expect("could not serialize default settings!")
         ),
         Commands::Anchors(ref target_args) => find_target!(Targets::Anchors, settings, args)
             .export(&root, (), target_args, &mut io::stdout())?,
@@ -167,7 +149,7 @@ fn main() -> Result<(), std::io::Error> {
         )?,
         Commands::PDF(ref target_args) => find_target!(Targets::PDF, settings, args).export(
             &root,
-            &settings,
+            (),
             target_args,
             &mut io::stdout(),
         )?,

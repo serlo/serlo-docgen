@@ -2,7 +2,6 @@ use preamble::*;
 
 use serde_json;
 use std::io;
-use std::path::PathBuf;
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
@@ -10,9 +9,8 @@ pub struct PDFArgs {
     /// Title of the document beeing processed.
     document_title: String,
 
-    /// Path to a list of link targets (anchors) available in the export.
-    #[structopt(parse(from_os_str))]
-    available_anchors: PathBuf,
+    /// Revision of the document beeing processed.
+    document_revision: String,
 }
 
 /// Dump pdf settings to stdout as json.
@@ -49,22 +47,16 @@ impl Default for PDFTarget {
     }
 }
 
-impl<'a, 's> Target<&'a PDFArgs, &'s Settings> for PDFTarget {
+impl<'a> Target<&'a PDFArgs, ()> for PDFTarget {
     fn target_type(&self) -> TargetType {
         TargetType::PDF
     }
-    fn export(
-        &self,
-        _: &Element,
-        settings: &'s Settings,
-        args: &'a PDFArgs,
-        out: &mut io::Write,
-    ) -> io::Result<()> {
+    fn export(&self, _: &Element, _: (), args: &'a PDFArgs, out: &mut io::Write) -> io::Result<()> {
         let mut data_table =
             serde_json::to_value(self).expect("could not construct value from PDFTarget!");
 
-        let title = &settings.runtime.document_title;
-        let revision = &settings.runtime.document_revision;
+        let title = &args.document_title;
+        let revision = &args.document_revision;
         if let serde_json::Value::Object(ref mut m) = data_table {
             m.insert("document_title".into(), title.clone().into());
             m.insert("document_revision".into(), revision.clone().into());

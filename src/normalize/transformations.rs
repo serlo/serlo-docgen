@@ -68,9 +68,8 @@ pub fn resolve_interwiki_links(root: Element, settings: &Settings) -> TResult {
         let text = extract_plain_text(&iref.target);
         if let Some(position) = text.find(':') {
             let interlink_result = settings
-                .general
                 .interwiki_link_mapping
-                .get(text[0..position + 1].to_lowercase().trim());
+                .get(text[0..=position].to_lowercase().trim());
 
             if let Some(replacement) = interlink_result {
                 let reference = ExternalReference {
@@ -91,7 +90,7 @@ pub fn resolve_interwiki_links(root: Element, settings: &Settings) -> TResult {
 
 /// Strip trailing whitespace elements from containers.
 pub fn remove_whitespace_trailers(mut root: Element, _: ()) -> TResult {
-    fn rstrip<'a>(root_content: &mut Vec<Element>) {
+    fn rstrip(root_content: &mut Vec<Element>) {
         loop {
             let last = root_content.pop();
             if let Some(Element::Text(ref text)) = last {

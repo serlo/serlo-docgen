@@ -7,38 +7,38 @@ mod simpletypes;
 mod table;
 mod template;
 
-pub struct HtmlRenderer<'e, 't> {
+use super::HTMLArgs;
+
+pub struct HtmlRenderer<'e, 't, 's, 'a> {
     pub path: Vec<&'e Element>,
     pub html: &'t HTMLTarget,
+
+    pub settings: &'s Settings,
+    pub args: &'a HTMLArgs,
 }
 
-impl<'e, 's: 'e, 't: 'e> Traversion<'e, &'s Settings> for HtmlRenderer<'e, 't> {
+impl<'e, 's: 'e, 't: 'e, 'a> Traversion<'e, ()> for HtmlRenderer<'e, 't, 's, 'a> {
     path_methods!('e);
 
-    fn work(
-        &mut self,
-        root: &'e Element,
-        settings: &'s Settings,
-        out: &mut io::Write,
-    ) -> io::Result<bool> {
+    fn work(&mut self, root: &'e Element, _: (), out: &mut io::Write) -> io::Result<bool> {
         //writeln!(out, "{}", root.get_variant_name())?;
         Ok(match *root {
             // Node elements
             Element::Document(_) => true,
-            Element::Heading(ref root) => self.heading(root, settings, out)?,
-            Element::Text(ref root) => self.text(root, settings, out)?,
-            Element::Paragraph(ref root) => self.paragraph(root, settings, out)?,
-            Element::Comment(ref root) => self.comment(root, settings, out)?,
-            Element::ExternalReference(ref root) => self.href(root, settings, out)?,
-            Element::Formatted(ref root) => self.formatted(root, settings, out)?,
-            Element::Table(ref root) => self.table(root, settings, out)?,
-            Element::TableRow(ref root) => self.table_row(root, settings, out)?,
-            Element::TableCell(ref root) => self.table_cell(root, settings, out)?,
-            Element::HtmlTag(ref root) => self.htmltag(root, settings, out)?,
-            Element::Template(ref root) => self.template(root, settings, out)?,
-            Element::List(ref root) => self.list(root, settings, out)?,
-            Element::InternalReference(ref root) => self.internal_ref(root, settings, out)?,
-            Element::Gallery(ref root) => self.gallery(root, settings, out)?,
+            Element::Heading(ref root) => self.heading(root, out)?,
+            Element::Text(ref root) => self.text(root, out)?,
+            Element::Paragraph(ref root) => self.paragraph(root, out)?,
+            Element::Comment(ref root) => self.comment(root, out)?,
+            Element::ExternalReference(ref root) => self.href(root, out)?,
+            Element::Formatted(ref root) => self.formatted(root, out)?,
+            Element::Table(ref root) => self.table(root, out)?,
+            Element::TableRow(ref root) => self.table_row(root, out)?,
+            Element::TableCell(ref root) => self.table_cell(root, out)?,
+            Element::HtmlTag(ref root) => self.htmltag(root, out)?,
+            Element::Template(ref root) => self.template(root, out)?,
+            Element::List(ref root) => self.list(root, out)?,
+            Element::InternalReference(ref root) => self.internal_ref(root, out)?,
+            Element::Gallery(ref root) => self.gallery(root, out)?,
             _ => {
                 writeln!(out, "all other types")?;
                 true
@@ -46,11 +46,17 @@ impl<'e, 's: 'e, 't: 'e> Traversion<'e, &'s Settings> for HtmlRenderer<'e, 't> {
         })
     }
 }
-impl<'e, 's: 'e, 't: 'e> HtmlRenderer<'e, 't> {
-    pub fn new(target: &HTMLTarget) -> HtmlRenderer {
+impl<'e, 's: 'e, 't: 'e, 'a> HtmlRenderer<'e, 't, 's, 'a> {
+    pub fn new(
+        target: &'t HTMLTarget,
+        settings: &'s Settings,
+        args: &'a HTMLArgs,
+    ) -> HtmlRenderer<'e, 't, 's, 'a> {
         HtmlRenderer {
             path: vec![],
             html: target,
+            settings,
+            args,
         }
     }
 

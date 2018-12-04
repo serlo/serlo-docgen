@@ -5,7 +5,6 @@ use std::collections::{HashMap, HashSet};
 
 use serde_json;
 use std::io;
-use std::path::PathBuf;
 use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
@@ -14,8 +13,8 @@ pub struct StatsArgs {
     document_title: String,
 
     /// Path to a list of link targets (anchors) available in the export.
-    #[structopt(parse(from_os_str))]
-    available_anchors: PathBuf,
+    #[structopt(parse(try_from_str = "load_anchor_set"))]
+    available_anchors: HashSet<String>,
 }
 
 /// Dump stats to stdout as json.
@@ -44,31 +43,31 @@ struct Stats<'e> {
     pub unresolved_references: HashSet<String>,
 }
 
-impl<'e, 's: 'e> Traversion<'e, &'s Settings> for Stats<'e> {
+impl<'e, 's: 'e, 'a> Traversion<'e, (&'s Settings, &'a StatsArgs)> for Stats<'e> {
     path_methods!('e);
 
     fn work(
         &mut self,
         root: &Element,
-        settings: &'s Settings,
+        params: (&'s Settings, &'a StatsArgs),
         _out: &mut io::Write,
     ) -> io::Result<bool> {
+        let (settings, args) = params;
         match root {
             Element::InternalReference(ref iref) => {
                 if is_file(iref, settings) {
                     self.image_count += 1
                 } else {
                     let target = extract_plain_text(&iref.target);
-                    let target = target.trim().trim_left_matches(":").to_string();
+                    let target = target.trim().trim_left_matches(':').to_string();
 
                     self.reference_targets.insert(target.clone());
-                    let anchor = matching_anchor(&target, &settings.runtime.available_anchors);
-                    if !anchor.is_some() {
+                    let anchor = matching_anchor(&target, &args.available_anchors);
+                    if anchor.is_none() {
                         let enc_target = mw_enc(&target);
                         // if a prefix exists, the target should exist as well,
                         // otherwise this reference is unresolved
-                        let article_exists = settings
-                            .runtime
+                        let article_exists = args
                             .available_anchors
                             .iter()
                             .any(|anchor| enc_target.starts_with(anchor));
@@ -103,7 +102,7 @@ impl<'a, 's> Target<&'a StatsArgs, &'s Settings> for StatsTarget {
         let mut stats = Stats::default();
 
         stats.line_count = root.get_position().end.line - 1;
-        stats.run(root, settings, out)?;
+        stats.run(root, (settings, args), out)?;
 
         writeln!(
             out,

@@ -4,8 +4,7 @@
 //! LaTeX boilerplate like preamble or document tags have to be added afterwards.
 
 use preamble::*;
-use std::collections::HashMap;
-use std::path::PathBuf;
+use std::collections::{HashMap, HashSet};
 use transformations;
 
 mod renderer;
@@ -20,8 +19,8 @@ pub struct LatexArgs {
     document_title: String,
 
     /// Path to a list of link targets (anchors) available in the export.
-    #[structopt(parse(from_os_str))]
-    available_anchors: PathBuf,
+    #[structopt(parse(try_from_str = "load_anchor_set"))]
+    available_anchors: HashSet<String>,
 }
 
 /// Data for LaTeX export.
@@ -121,7 +120,7 @@ impl<'a, 's> Target<&'a LatexArgs, &'s Settings> for LatexTarget {
         latex_tree = transformations::hoist_thumbnails(latex_tree, ())
             .expect("Error in thumbnail hoisting!");
 
-        let mut renderer = LatexRenderer::new(self);
-        renderer.run(&latex_tree, settings, out)
+        let mut renderer = LatexRenderer::new(self, &settings, &args);
+        renderer.run(&latex_tree, (), out)
     }
 }
