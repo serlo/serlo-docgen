@@ -1,21 +1,25 @@
+use latex::LatexArgs;
 use preamble::*;
 use serde_yaml;
+use structopt::StructOpt;
+use Targets;
 
 macro_rules! test_case {
-    ($target:expr, $name:ident, $ast:expr, $result:expr) => {
+    ($target:path, $name:ident, $ast:expr, $result:expr) => {
         #[test]
         fn $name() {
             let root = serde_yaml::from_str($ast).expect("could not parse test input!");
             let settings = Settings::default();
-            let target = settings
-                .general
-                .targets
-                .get($target)
-                .expect("unknown target!")
-                .get_target();
             let mut res = vec![];
-            target
-                .export(&root, &settings, &[], &mut res)
+            let args = LatexArgs::from_iter(["test", "test_doc", "src/test/test.anchors"].iter());
+            settings
+                .targets
+                .get("default")
+                .expect("no default configuration!")
+                .iter()
+                .find_map(|c| if let $target(t) = c { Some(t) } else { None })
+                .expect("could not find target!")
+                .export(&root, &settings, &args, &mut res)
                 .expect("export failed!");
             assert_eq!(&String::from_utf8_lossy(&res), $result);
         }
@@ -23,7 +27,7 @@ macro_rules! test_case {
 }
 
 test_case!(
-    "latex",
+    Targets::Latex,
     simple_text,
     "
 type: text
@@ -33,7 +37,7 @@ text: simple plain text äüöß",
 );
 
 test_case!(
-    "latex",
+    Targets::Latex,
     paragraph,
     "
 type: paragraph
@@ -47,7 +51,7 @@ content:
 );
 
 test_case!(
-    "latex",
+    Targets::Latex,
     paragraph_bold,
     "
 type: paragraph
@@ -71,7 +75,7 @@ content:
 );
 
 test_case!(
-    "latex",
+    Targets::Latex,
     italic_text,
     "
 type: formatted
@@ -85,7 +89,7 @@ content:
 );
 
 test_case!(
-    "latex",
+    Targets::Latex,
     bold_text,
     "
 type: formatted
@@ -99,7 +103,7 @@ content:
 );
 
 test_case!(
-    "latex",
+    Targets::Latex,
     nowiki_text,
     "
 type: formatted
@@ -113,7 +117,7 @@ content:
 );
 
 test_case!(
-    "latex",
+    Targets::Latex,
     simple_heading,
     "
 type: heading
@@ -128,14 +132,14 @@ content:
       position: {}
       text: some text",
     "\\section{heading caption}
-    \\label{JTNDbm9fZG9jdW1lbnRfbmFtZV9zcGVjaWZpZWQlM0UjaGVhZGluZ19jYXB0aW9u}
+    \\label{dGVzdF9kb2MjaGVhZGluZ19jYXB0aW9u}
 
     some text
 "
 );
 
 test_case!(
-    "latex",
+    Targets::Latex,
     simple_ulist,
     "
 type: list
@@ -156,7 +160,7 @@ content:
 );
 
 test_case!(
-    "latex",
+    Targets::Latex,
     simple_olist,
     "
 type: list
