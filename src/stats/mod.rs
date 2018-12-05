@@ -101,7 +101,7 @@ impl<'a, 's> Target<&'a StatsArgs, &'s Settings> for StatsTarget {
     ) -> io::Result<()> {
         let mut stats = Stats::default();
 
-        stats.line_count = root.get_position().end.line - 1;
+        stats.line_count = root.get_position().end.line;
         stats.run(root, (settings, args), out)?;
 
         writeln!(
