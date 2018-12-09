@@ -1,13 +1,11 @@
-use html::HTMLTarget;
-use preamble::*;
+use super::{HTMLArgs, HTMLTarget};
+use crate::preamble::*;
 
 mod list;
 mod media;
 mod simpletypes;
 mod table;
 mod template;
-
-use super::HTMLArgs;
 
 pub struct HtmlRenderer<'e, 't, 's, 'a> {
     pub path: Vec<&'e Element>,

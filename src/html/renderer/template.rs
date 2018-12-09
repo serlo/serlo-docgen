@@ -1,7 +1,7 @@
 use super::HtmlRenderer;
+use crate::preamble::*;
 use mfnf_template_spec::*;
 use mwparser_utils::*;
-use preamble::*;
 
 macro_rules! tag_wrapper {
     ($self:ident, $content:expr, $out:ident, $tag:expr, $class:expr) => {
@@ -157,7 +157,8 @@ impl<'e, 's: 'e, 't: 'e, 'a> HtmlRenderer<'e, 't, 's, 'a> {
                 } else {
                     None
                 }
-            }).next();
+            })
+            .next();
 
         if let Some(err) = error {
             self.error(err, out)?;

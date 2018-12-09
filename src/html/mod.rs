@@ -1,8 +1,7 @@
-use preamble::*;
-
+use crate::preamble::*;
+use crate::transformations;
 use std::collections::HashSet;
 use std::io;
-use transformations;
 mod renderer;
 
 use structopt::StructOpt;

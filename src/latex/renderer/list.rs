@@ -1,8 +1,8 @@
 //! Render mediawiki lists.
 
 use super::LatexRenderer;
+use crate::preamble::*;
 use mediawiki_parser::*;
-use preamble::*;
 
 impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
     pub fn list(&mut self, root: &'e List, out: &mut io::Write) -> io::Result<bool> {

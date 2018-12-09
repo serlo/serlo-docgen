@@ -1,16 +1,3 @@
-extern crate mediawiki_parser;
-extern crate mfnf_sitemap;
-extern crate mfnf_template_spec;
-extern crate mwparser_utils;
-extern crate serde;
-#[macro_use]
-extern crate serde_derive;
-extern crate base64;
-extern crate serde_json;
-#[cfg(test)]
-extern crate serde_yaml;
-extern crate structopt;
-
 mod meta;
 #[macro_use]
 mod util;
@@ -32,29 +19,31 @@ mod test;
 
 // common includes for submodules
 mod preamble {
+    pub use crate::settings::Settings;
+    pub use crate::util::*;
+    pub use crate::Target;
+    pub use crate::TargetType;
     pub use mediawiki_parser::Traversion;
     pub use mediawiki_parser::*;
-    pub use settings::Settings;
+    pub use serde_derive::{Deserialize, Serialize};
     pub use std::io;
-    pub use util::*;
-    pub use Target;
-    pub use TargetType;
 }
 
-// public exports
-pub use settings::Settings;
+use serde_derive::{Deserialize, Serialize};
 use std::fmt;
 use std::io;
 
-pub use anchors::{AnchorsArgs, AnchorsTarget};
-pub use compose::{ComposeArgs, ComposeTarget};
-pub use deps::{MediaDepArgs, MediaDepTarget, SectionDepArgs, SectionDepTarget};
-pub use html::{HTMLArgs, HTMLTarget};
-pub use latex::{LatexArgs, LatexTarget};
-pub use normalize::{NormalizeArgs, NormalizeTarget};
-pub use pdf::{PDFArgs, PDFTarget};
-pub use sections::{SectionsArgs, SectionsTarget};
-pub use stats::{StatsArgs, StatsTarget};
+// public exports
+pub use crate::anchors::{AnchorsArgs, AnchorsTarget};
+pub use crate::compose::{ComposeArgs, ComposeTarget};
+pub use crate::deps::{MediaDepArgs, MediaDepTarget, SectionDepArgs, SectionDepTarget};
+pub use crate::html::{HTMLArgs, HTMLTarget};
+pub use crate::latex::{LatexArgs, LatexTarget};
+pub use crate::normalize::{NormalizeArgs, NormalizeTarget};
+pub use crate::pdf::{PDFArgs, PDFTarget};
+pub use crate::sections::{SectionsArgs, SectionsTarget};
+pub use crate::settings::Settings;
+pub use crate::stats::{StatsArgs, StatsTarget};
 
 /// Marks an exportable target type.
 pub trait Target<A, S> {

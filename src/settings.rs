@@ -1,3 +1,4 @@
+use serde_derive::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::PathBuf;
 
@@ -69,9 +70,9 @@ impl Default for Settings {
                 ("v:", "https://de.wikiversity.org/wiki/"),
                 ("wikt:", "https://de.wiktionary.org/wiki/"),
             ]
-                .iter()
-                .map(|e| (e.0.to_string(), e.1.to_string()))
-                .collect(),
+            .iter()
+            .map(|e| (e.0.to_string(), e.1.to_string()))
+            .collect(),
             file_prefixes: string_vec!["file:", "datei:", "bild:"],
             media_path: "media".into(),
             article_url_base: "https://de.wikibooks.org/wiki/".into(),

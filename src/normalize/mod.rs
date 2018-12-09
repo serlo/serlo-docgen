@@ -5,8 +5,8 @@
 
 mod transformations;
 
+use crate::preamble::*;
 use mediawiki_parser::transformations::TResult;
-use preamble::*;
 use std::path::PathBuf;
 use std::process;
 

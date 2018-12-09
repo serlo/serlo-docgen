@@ -1,4 +1,5 @@
 /// Structure definition of meta data for various objects.
+use serde_derive::{Deserialize, Serialize};
 
 /// Meta data for a media file.
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]

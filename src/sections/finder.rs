@@ -1,7 +1,7 @@
 //! Implements helpters for the sections target related to finding
 //! things in the ast structure.
 
-use preamble::*;
+use crate::preamble::*;
 
 /// Return a path to the start / end of a section
 #[derive(Default)]

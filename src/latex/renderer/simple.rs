@@ -1,11 +1,10 @@
 //! LaTeX renderer implemenation for simple node types.
 
 use super::LatexRenderer;
+use crate::anchors::{extract_document_anchor, extract_heading_anchor};
+use crate::preamble::*;
 use base64;
 use mediawiki_parser::MarkupType;
-use preamble::*;
-
-use anchors::{extract_document_anchor, extract_heading_anchor};
 
 impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
     pub fn paragraph(&mut self, root: &'e Paragraph, out: &mut io::Write) -> io::Result<bool> {

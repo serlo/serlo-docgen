@@ -1,9 +1,8 @@
+use crate::preamble::*;
 use mediawiki_parser::transformations::*;
 use mediawiki_parser::*;
-use preamble::*;
 use std::fs::File;
 use std::path::PathBuf;
-use util::SECTION_INCLUSION_PREFIX;
 
 pub fn include_sections(root: Element, section_path: &PathBuf) -> TResult {
     recurse_inplace_template(&include_sections, root, section_path, &include_sections_vec)
@@ -16,7 +15,7 @@ pub fn include_sections_vec<'a>(
 ) -> TListResult {
     // search for section inclusion in children
     let mut result = vec![];
-    for mut child in root_content.drain(..) {
+    for child in root_content.drain(..) {
         if let Element::Template(ref template) = child {
             let prefix = SECTION_INCLUSION_PREFIX;
             let template_name = extract_plain_text(&template.name);

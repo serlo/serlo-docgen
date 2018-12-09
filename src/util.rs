@@ -2,18 +2,19 @@
 
 use mediawiki_parser::*;
 // re-export common util
-use meta::MediaMeta;
-pub use mwparser_utils::*;
+use crate::meta::MediaMeta;
+use crate::settings::Settings;
+use crate::TargetType;
+pub use mwparser_utils::{
+    extract_plain_text, filename_to_make, path_methods, CachedTexChecker, TexChecker,
+};
 use serde_json;
-use settings::Settings;
 use std::collections::HashSet;
 use std::fs::File;
 use std::io;
 use std::io::Read;
 use std::path::PathBuf;
 use std::process;
-
-use TargetType;
 
 pub const SECTION_INCLUSION_PREFIX: &str = "#lst:";
 
@@ -323,7 +324,8 @@ pub fn map_extension(target: TargetType, extension: &str) -> Option<String> {
                 "mp4" => "%.qr.pdf",
                 "pdf" => "plain.%",
                 _ => return None,
-            }.replace("%", &extension),
+            }
+            .replace("%", &extension),
         ),
         TargetType::PDF => None,
         TargetType::Stats => Some("dummy".to_string()),

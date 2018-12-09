@@ -1,5 +1,5 @@
 use super::HtmlRenderer;
-use preamble::*;
+use crate::preamble::*;
 
 impl<'e, 's: 'e, 't: 'e, 'a> HtmlRenderer<'e, 't, 's, 'a> {
     pub fn internal_ref(

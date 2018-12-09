@@ -5,13 +5,13 @@
 
 mod transformations;
 
+use crate::preamble::*;
+use crate::transformations::remove_exclusions;
 use mediawiki_parser::transformations::TResult;
 use mfnf_sitemap::Markers;
-use preamble::*;
 use std::fs;
 use std::path::PathBuf;
 use std::process;
-use transformations::remove_exclusions;
 
 use structopt::StructOpt;
 

@@ -1,8 +1,8 @@
-use latex::LatexArgs;
-use preamble::*;
+use crate::latex::LatexArgs;
+use crate::preamble::*;
+use crate::Targets;
 use serde_yaml;
 use structopt::StructOpt;
-use Targets;
 
 macro_rules! test_case {
     ($target:path, $name:ident, $ast:expr, $result:expr) => {

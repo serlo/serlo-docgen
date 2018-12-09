@@ -1,6 +1,6 @@
 use super::LatexRenderer;
+use crate::preamble::*;
 use mediawiki_parser::*;
-use preamble::*;
 
 impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
     pub fn htmltag(&mut self, root: &'e HtmlTag, out: &mut io::Write) -> io::Result<bool> {

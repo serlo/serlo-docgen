@@ -1,8 +1,8 @@
 //! Render internal references (embedded files, links, ...)
 
 use super::LatexRenderer;
+use crate::preamble::*;
 use base64;
-use preamble::*;
 use std::path;
 
 impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {

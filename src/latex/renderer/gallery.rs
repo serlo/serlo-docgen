@@ -1,7 +1,7 @@
 //! Render image galleries
 
 use super::LatexRenderer;
-use preamble::*;
+use crate::preamble::*;
 
 impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
     pub fn gallery(&mut self, root: &'e Gallery, out: &mut io::Write) -> io::Result<bool> {
@@ -25,7 +25,7 @@ impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
                     None => return Ok(false),
                 };
 
-                let mut inner = format!(
+                let inner = format!(
                     GALLERY_CONTENT!(),
                     &image_options,
                     0.9 / (self.latex.gallery_images_per_row as f64),

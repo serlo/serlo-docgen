@@ -1,8 +1,8 @@
 //! HTMl renderer for all simple types like in the latex-renderer
 
 use super::HtmlRenderer;
+use crate::preamble::*;
 use mediawiki_parser::MarkupType;
-use preamble::*;
 
 impl<'e, 's: 'e, 't: 'e, 'a> HtmlRenderer<'e, 't, 's, 'a> {
     pub fn heading(&mut self, root: &'e Heading, out: &mut io::Write) -> io::Result<bool> {

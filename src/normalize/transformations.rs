@@ -1,6 +1,6 @@
+use crate::preamble::*;
 use mediawiki_parser::transformations::*;
 use mediawiki_parser::*;
-use preamble::*;
 
 /// Convert template name paragraphs to lowercase text only.
 pub fn normalize_template_names(mut root: Element, _: ()) -> TResult {
@@ -153,7 +153,8 @@ pub fn remove_empty_arguments(mut root: Element, _: ()) -> TResult {
                 } else {
                     true
                 }
-            }).collect();
+            })
+            .collect();
         template.content = new_content;
     }
     recurse_inplace(&remove_empty_arguments, root, ())

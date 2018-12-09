@@ -4,8 +4,8 @@
 //! from an article. This allows to detect wether the target of a internal reference
 //! is available in the export or not.
 
+use crate::preamble::*;
 use mfnf_template_spec::{parse_template, KnownTemplate};
-use preamble::*;
 use structopt::StructOpt;
 
 const ANCHOR_CAPTION: &str = "Anker";

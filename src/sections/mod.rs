@@ -4,8 +4,7 @@
 //! parts of the document tree marked by `<section />` tags and writes them to a
 //! directory specified through the transformation settings in the YAML format.
 
-use preamble::*;
-
+use crate::preamble::*;
 use serde_json;
 use std::io;
 

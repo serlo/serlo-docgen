@@ -1,6 +1,6 @@
 use super::HtmlRenderer;
+use crate::preamble::*;
 use mediawiki_parser::*;
-use preamble::*;
 
 impl<'e, 's: 'e, 't: 'e, 'a> HtmlRenderer<'e, 't, 's, 'a> {
     pub fn table_cell(&mut self, root: &'e TableCell, out: &mut io::Write) -> io::Result<bool> {

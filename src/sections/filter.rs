@@ -1,8 +1,8 @@
 //! Helpers for the sections target related to extracting section content.
 
+use super::finder::SectionFinder;
+use crate::preamble::*;
 use mediawiki_parser::transformations::*;
-use preamble::*;
-use sections::finder::SectionFinder;
 
 /// Paramters for section filtering transformation.
 #[derive(Debug, Clone)]

@@ -1,7 +1,7 @@
+use crate::preamble::*;
 use mediawiki_parser::transformations::*;
 use mediawiki_parser::*;
 use mfnf_sitemap::{Markers, Subtarget};
-use preamble::*;
 
 fn remove_exclusions_vec<'a>(
     trans: &TFuncInplace<&'a Markers>,
@@ -205,7 +205,7 @@ fn hoist_thumbnails_vec(
     _: (),
 ) -> TListResult {
     let mut result = vec![];
-    for mut child in root_content.drain(..) {
+    for child in root_content.drain(..) {
         if let Element::InternalReference(iref) = child {
             if !is_thumb(&iref) {
                 result.push(trans(Element::InternalReference(iref), ())?);

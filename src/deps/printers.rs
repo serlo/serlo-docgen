@@ -1,9 +1,8 @@
 //! Helpers which look for certain things in the input ast and print
 //! them to a given output in `make` dependency format.
 
-use preamble::*;
+use crate::preamble::*;
 use std::path::PathBuf;
-use util::SECTION_INCLUSION_PREFIX;
 
 /// Prints paths of the sections included in a document.
 #[derive(Default)]

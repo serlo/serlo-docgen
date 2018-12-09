@@ -1,7 +1,7 @@
 //! Definition of the LaTeX renderer. Subfunctions are implemented in other files.
 
-use latex::LatexTarget;
-use preamble::*;
+use super::LatexTarget;
+use crate::preamble::*;
 #[macro_use]
 mod blobs;
 

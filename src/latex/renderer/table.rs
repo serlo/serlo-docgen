@@ -1,7 +1,7 @@
 //! Render image galleries
 
 use super::LatexRenderer;
-use preamble::*;
+use crate::preamble::*;
 
 #[derive(Debug)]
 struct TableInfo<'e> {

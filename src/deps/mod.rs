@@ -6,15 +6,15 @@
 //! while others (e.g. tepmlate name translation, image prefix removal) are applied before
 //! this target is executed.
 
-use preamble::*;
+use crate::preamble::*;
 use std::fs;
 use std::path::PathBuf;
 
 mod printers;
 
 use self::printers::*;
+use crate::transformations;
 use structopt::StructOpt;
-use transformations;
 
 #[derive(Debug, StructOpt)]
 pub struct SectionDepArgs {

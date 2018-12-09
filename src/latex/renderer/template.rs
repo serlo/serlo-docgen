@@ -1,12 +1,11 @@
 //! Implements template rendering for latex.
 
 use super::LatexRenderer;
+use crate::anchors::extract_template_anchor;
+use crate::preamble::*;
 use base64;
 use mfnf_template_spec::*;
 use mwparser_utils::*;
-use preamble::*;
-
-use anchors::extract_template_anchor;
 
 impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
     pub fn template(&mut self, root: &'e Template, out: &mut io::Write) -> io::Result<bool> {
@@ -55,9 +54,11 @@ impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
                     .unwrap_or('\u{01f603}')
             )?,
             // TODO: replace noprint with a sematic version, ignore for now.
-            KnownTemplate::NoPrint(noprint) => if self.latex.with_todo {
-                self.run_vec(&noprint.content, (), out)?
-            },
+            KnownTemplate::NoPrint(noprint) => {
+                if self.latex.with_todo {
+                    self.run_vec(&noprint.content, (), out)?
+                }
+            }
             KnownTemplate::Todo(todo) => self.todo(&todo, out)?,
         };
         Ok(false)
@@ -74,7 +75,8 @@ impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
                 } else {
                     None
                 }
-            }).next();
+            })
+            .next();
 
         if let Some(err) = error {
             self.error(err, out)?;
@@ -198,7 +200,8 @@ impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
                             } else {
                                 !a.name.ends_with("solution")
                             })
-                    }).map(|a| {
+                    })
+                    .map(|a| {
                         let mut s = "\\item ".to_string();
                         s.push_str(
                             &a.value
@@ -207,7 +210,8 @@ impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
                                 .trim(),
                         );
                         s
-                    }).collect()
+                    })
+                    .collect()
             };
 
             let task_list = build_items(false);
@@ -278,8 +282,7 @@ impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
         target.push_str(&caption);
 
         self.internal_link(&target, &caption, out)?;
-        writeln!(out, "\n");
-        Ok(())
+        writeln!(out, "\n")
     }
 
     pub fn template_arg(

@@ -3,9 +3,9 @@
 //! This target renders the final syntax tree to a LaTeX document body.
 //! LaTeX boilerplate like preamble or document tags have to be added afterwards.
 
-use preamble::*;
+use crate::preamble::*;
+use crate::transformations;
 use std::collections::{HashMap, HashSet};
-use transformations;
 
 mod renderer;
 

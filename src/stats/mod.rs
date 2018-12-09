@@ -1,9 +1,8 @@
 //! Implements the `stats` target which extracts various statistical
 //! information from the document tree.
-use preamble::*;
-use std::collections::{HashMap, HashSet};
-
+use crate::preamble::*;
 use serde_json;
+use std::collections::{HashMap, HashSet};
 use std::io;
 use structopt::StructOpt;
 
