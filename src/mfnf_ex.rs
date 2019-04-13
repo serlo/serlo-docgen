@@ -76,6 +76,11 @@ enum Commands {
     #[structopt(name = "serlo", about = "export document as serlo document.")]
     Serlo(SerloArgs),
     #[structopt(
+        name = "formulae",
+        about = "dump base64-encoded formulae of the document"
+    )]
+    Formula(FormulaArgs),
+    #[structopt(
         name = "dump-config",
         about = "dump the current configuration to stdout."
     )]
@@ -166,6 +171,12 @@ fn main() -> Result<(), std::io::Error> {
             &mut io::stdout(),
         )?,
         Commands::Serlo(ref target_args) => find_target!(Targets::Serlo, settings, args).export(
+            &root,
+            &settings,
+            target_args,
+            &mut io::stdout(),
+        )?,
+        Commands::Formula(ref target_args) => find_target!(Targets::Formula, settings, args).export(
             &root,
             &settings,
             target_args,

@@ -3,8 +3,9 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 
 use crate::{
-    AnchorsTarget, ComposeTarget, HTMLTarget, LatexTarget, MediaDepTarget, NormalizeTarget,
-    PDFTarget, SectionDepTarget, SectionsTarget, SerloTarget, StatsTarget, Targets,
+    AnchorsTarget, ComposeTarget, FormulaTarget, HTMLTarget, LatexTarget, MediaDepTarget,
+    NormalizeTarget, PDFTarget, SectionDepTarget, SectionsTarget, SerloTarget, StatsTarget,
+    Targets,
 };
 
 macro_rules! string_vec {
@@ -59,6 +60,7 @@ impl Default for Settings {
                         Targets::Stats(StatsTarget::default()),
                         Targets::HTML(HTMLTarget::default()),
                         Targets::Serlo(SerloTarget::default()),
+                        Targets::Formula(FormulaTarget::default()),
                     ],
                 );
                 tmap

@@ -6,6 +6,7 @@ mod settings;
 mod anchors;
 mod compose;
 mod deps;
+mod formula;
 mod html;
 mod latex;
 mod normalize;
@@ -38,14 +39,15 @@ use std::io;
 pub use crate::anchors::{AnchorsArgs, AnchorsTarget};
 pub use crate::compose::{ComposeArgs, ComposeTarget};
 pub use crate::deps::{MediaDepArgs, MediaDepTarget, SectionDepArgs, SectionDepTarget};
+pub use crate::formula::{FormulaArgs, FormulaTarget};
 pub use crate::html::{HTMLArgs, HTMLTarget};
 pub use crate::latex::{LatexArgs, LatexTarget};
 pub use crate::normalize::{NormalizeArgs, NormalizeTarget};
 pub use crate::pdf::{PDFArgs, PDFTarget};
 pub use crate::sections::{SectionsArgs, SectionsTarget};
+pub use crate::serlo::{SerloArgs, SerloTarget};
 pub use crate::settings::Settings;
 pub use crate::stats::{StatsArgs, StatsTarget};
-pub use crate::serlo::{SerloArgs, SerloTarget};
 
 /// Marks an exportable target type.
 pub trait Target<A, S> {
@@ -77,6 +79,7 @@ pub enum TargetType {
     #[serde(rename = "html")]
     HTML,
     Serlo,
+    Formula,
 }
 
 /// Possible target configuration structs.
@@ -93,6 +96,7 @@ pub enum Targets {
     Stats(StatsTarget),
     HTML(HTMLTarget),
     Serlo(SerloTarget),
+    Formula(FormulaTarget),
 }
 
 impl std::str::FromStr for TargetType {
