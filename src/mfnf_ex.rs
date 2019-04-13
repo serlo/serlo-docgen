@@ -58,10 +58,7 @@ enum Commands {
         about = "generate a makefile declaring included media as prerequisites of `base_file`."
     )]
     MediaDeps(MediaDepArgs),
-    #[structopt(
-        name = "sections",
-        about = "extract a section from a document."
-    )]
+    #[structopt(name = "sections", about = "extract a section from a document.")]
     Sections(SectionsArgs),
     #[structopt(
         name = "anchors",
@@ -76,6 +73,8 @@ enum Commands {
     PDF(PDFArgs),
     #[structopt(name = "stats", about = "export document statistics.")]
     Stats(StatsArgs),
+    #[structopt(name = "serlo", about = "export document as serlo document.")]
+    Serlo(SerloArgs),
     #[structopt(
         name = "dump-config",
         about = "dump the current configuration to stdout."
@@ -134,7 +133,8 @@ fn main() -> Result<(), std::io::Error> {
             Targets::SectionDeps,
             settings,
             args
-        ).export(&root, (), target_args, &mut io::stdout())?,
+        )
+        .export(&root, (), target_args, &mut io::stdout())?,
         Commands::MediaDeps(ref target_args) => find_target!(Targets::MediaDeps, settings, args)
             .export(&root, &settings, target_args, &mut io::stdout())?,
         Commands::Normalize(ref target_args) => find_target!(Targets::Normalize, settings, args)
@@ -160,6 +160,12 @@ fn main() -> Result<(), std::io::Error> {
             &mut io::stdout(),
         )?,
         Commands::HTML(ref target_args) => find_target!(Targets::HTML, settings, args).export(
+            &root,
+            &settings,
+            target_args,
+            &mut io::stdout(),
+        )?,
+        Commands::Serlo(ref target_args) => find_target!(Targets::Serlo, settings, args).export(
             &root,
             &settings,
             target_args,

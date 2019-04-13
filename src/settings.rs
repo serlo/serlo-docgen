@@ -4,7 +4,7 @@ use std::path::PathBuf;
 
 use crate::{
     AnchorsTarget, ComposeTarget, HTMLTarget, LatexTarget, MediaDepTarget, NormalizeTarget,
-    PDFTarget, SectionDepTarget, SectionsTarget, StatsTarget, Targets,
+    PDFTarget, SectionDepTarget, SectionsTarget, SerloTarget, StatsTarget, Targets,
 };
 
 macro_rules! string_vec {
@@ -58,6 +58,7 @@ impl Default for Settings {
                         Targets::PDF(PDFTarget::default()),
                         Targets::Stats(StatsTarget::default()),
                         Targets::HTML(HTMLTarget::default()),
+                        Targets::Serlo(SerloTarget::default()),
                     ],
                 );
                 tmap

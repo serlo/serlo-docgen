@@ -11,6 +11,7 @@ mod latex;
 mod normalize;
 mod pdf;
 mod sections;
+mod serlo;
 mod stats;
 mod transformations;
 
@@ -44,6 +45,7 @@ pub use crate::pdf::{PDFArgs, PDFTarget};
 pub use crate::sections::{SectionsArgs, SectionsTarget};
 pub use crate::settings::Settings;
 pub use crate::stats::{StatsArgs, StatsTarget};
+pub use crate::serlo::{SerloArgs, SerloTarget};
 
 /// Marks an exportable target type.
 pub trait Target<A, S> {
@@ -74,6 +76,7 @@ pub enum TargetType {
     Stats,
     #[serde(rename = "html")]
     HTML,
+    Serlo,
 }
 
 /// Possible target configuration structs.
@@ -89,6 +92,7 @@ pub enum Targets {
     PDF(PDFTarget),
     Stats(StatsTarget),
     HTML(HTMLTarget),
+    Serlo(SerloTarget),
 }
 
 impl std::str::FromStr for TargetType {
