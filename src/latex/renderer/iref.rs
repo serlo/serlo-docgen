@@ -27,7 +27,7 @@ impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
     pub fn internal_ref(
         &mut self,
         root: &'e InternalReference,
-        out: &mut io::Write,
+        out: &mut dyn io::Write,
     ) -> io::Result<bool> {
         let target_str = extract_plain_text(&root.target);
 
@@ -99,9 +99,9 @@ impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
         &mut self,
         target: &str,
         caption: &str,
-        out: &mut io::Write,
+        out: &mut dyn io::Write,
     ) -> io::Result<bool> {
-        let target = target.trim().trim_left_matches(':').to_string();
+        let target = target.trim().trim_start_matches(':').to_string();
 
         // internal references contained in the book.
         let anchor = matching_anchor(&target, &self.args.available_anchors);

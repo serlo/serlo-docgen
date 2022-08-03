@@ -7,7 +7,7 @@ use base64;
 use mediawiki_parser::MarkupType;
 
 impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
-    pub fn paragraph(&mut self, root: &'e Paragraph, out: &mut io::Write) -> io::Result<bool> {
+    pub fn paragraph(&mut self, root: &'e Paragraph, out: &mut dyn io::Write) -> io::Result<bool> {
         let content = root.content.render(self)?;
         if self.flatten_paragraphs {
             write!(out, "{}", content.trim())?;
@@ -17,7 +17,7 @@ impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
         Ok(false)
     }
 
-    pub fn heading(&mut self, root: &'e Heading, out: &mut io::Write) -> io::Result<bool> {
+    pub fn heading(&mut self, root: &'e Heading, out: &mut dyn io::Write) -> io::Result<bool> {
         let line_width = self.latex.max_line_width;
         let indent = self.latex.indentation_depth;
 
@@ -33,11 +33,11 @@ impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
         write!(out, "{}", " ".repeat(indent))?;
         write!(out, LABEL!(), base64::encode(&anchor))?;
         writeln!(out, "{}", &self.latex.post_heading_space)?;
-        writeln!(out, "{}", &content.trim_right())?;
+        writeln!(out, "{}", &content.trim_end())?;
         Ok(false)
     }
 
-    pub fn document(&mut self, _root: &'e Document, out: &mut io::Write) -> io::Result<bool> {
+    pub fn document(&mut self, _root: &'e Document, out: &mut dyn io::Write) -> io::Result<bool> {
         writeln!(
             out,
             LABEL!(),
@@ -46,7 +46,7 @@ impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
         Ok(true)
     }
 
-    pub fn comment(&mut self, root: &'e Comment, out: &mut io::Write) -> io::Result<bool> {
+    pub fn comment(&mut self, root: &'e Comment, out: &mut dyn io::Write) -> io::Result<bool> {
         // TODO: Comments can currently cause errors with flattened paragraphs,
         // eating up following LaTeX.
         if !self.flatten_paragraphs {
@@ -55,12 +55,12 @@ impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
         Ok(false)
     }
 
-    pub fn text(&mut self, root: &'e Text, out: &mut io::Write) -> io::Result<bool> {
+    pub fn text(&mut self, root: &'e Text, out: &mut dyn io::Write) -> io::Result<bool> {
         write!(out, "{}", &Self::escape_latex(&root.text))?;
         Ok(false)
     }
 
-    pub fn formatted(&mut self, root: &'e Formatted, out: &mut io::Write) -> io::Result<bool> {
+    pub fn formatted(&mut self, root: &'e Formatted, out: &mut dyn io::Write) -> io::Result<bool> {
         let inner = root.content.render(self)?;
 
         match root.markup {
@@ -94,7 +94,11 @@ impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
         Ok(false)
     }
 
-    pub fn href(&mut self, root: &'e ExternalReference, out: &mut io::Write) -> io::Result<bool> {
+    pub fn href(
+        &mut self,
+        root: &'e ExternalReference,
+        out: &mut dyn io::Write,
+    ) -> io::Result<bool> {
         let mut caption = root.caption.render(self)?;
         if caption.is_empty() {
             caption = Self::escape_latex(&root.target);

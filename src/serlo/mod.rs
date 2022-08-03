@@ -2,7 +2,7 @@
 //! mfnf articles to serlo articles.
 use crate::preamble::*;
 use serde_json;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::io;
 use structopt::StructOpt;
 
@@ -34,7 +34,7 @@ impl<'a, 's> Target<&'a SerloArgs, &'s Settings> for SerloTarget {
         root: &Element,
         settings: &'s Settings,
         args: &'a SerloArgs,
-        out: &mut io::Write,
+        out: &mut dyn io::Write,
     ) -> io::Result<()> {
         let mut renderer = SerloRenderer::new(self, settings, args);
         let result = renderer.run(root);

@@ -1,6 +1,6 @@
 use super::{SerloArgs, SerloTarget};
-use serlo_he_spec::*;
 use crate::preamble::*;
+use serlo_he_spec::*;
 use uuid;
 
 pub struct SerloRenderer<'t, 's, 'a> {
@@ -22,9 +22,11 @@ impl<'s, 't, 'a> SerloRenderer<'s, 't, 'a> {
             Element::Document(doc) => {
                 let variant: Plugins = self.document(doc).into();
                 variant.into()
-            },
+            }
             _ => {
-                let variant: Plugins = self.markdown_from(&format!("Not implemented: {}", root.get_variant_name())).into();
+                let variant: Plugins = self
+                    .markdown_from(&format!("Not implemented: {}", root.get_variant_name()))
+                    .into();
                 variant.into()
             }
         }
@@ -34,29 +36,34 @@ impl<'s, 't, 'a> SerloRenderer<'s, 't, 'a> {
         HeHeading {
             id: self.uuid(),
             caption: self.title_from(&self.args.document_title).into(),
-            content: doc.content.iter().map(|elem| self.dispatch_plugin(elem)).collect()
+            content: doc
+                .content
+                .iter()
+                .map(|elem| self.dispatch_plugin(elem))
+                .collect(),
         }
     }
 
     pub fn title_from(&mut self, content: &str) -> HeTitle {
         HeTitle {
             id: self.uuid(),
-            content: TitleText::from_str(content)
-        }.into()
+            content: TitleText::from_str(content),
+        }
+        .into()
     }
 
     pub fn markdown_from(&mut self, content: &str) -> HeMarkdown {
         HeMarkdown {
             id: self.uuid(),
-            content: MarkdownText::from_str(content)
-        }.into()
+            content: MarkdownText::from_str(content),
+        }
+        .into()
     }
 
     pub fn run(&mut self, root: &Element) -> HEPluginInstance<Plugins> {
         self.dispatch_plugin(root)
     }
 }
-
 
 impl<'s, 't, 'a> SerloRenderer<'t, 's, 'a> {
     pub fn new(

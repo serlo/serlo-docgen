@@ -11,13 +11,13 @@ struct TableInfo<'e> {
 }
 
 impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
-    pub fn table_cell(&mut self, root: &'e TableCell, out: &mut io::Write) -> io::Result<bool> {
+    pub fn table_cell(&mut self, root: &'e TableCell, out: &mut dyn io::Write) -> io::Result<bool> {
         // paragraphs in tables do not translate well for latex
         self.run_vec_nopar(&root.content, out)?;
         Ok(false)
     }
 
-    pub fn table_row(&mut self, root: &'e TableRow, out: &mut io::Write) -> io::Result<bool> {
+    pub fn table_row(&mut self, root: &'e TableRow, out: &mut dyn io::Write) -> io::Result<bool> {
         for (index, cell) in root.cells.iter().enumerate() {
             if index > 0 {
                 write!(out, " & ")?;
@@ -31,7 +31,7 @@ impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
     fn get_table_params(
         &mut self,
         rows: &'e [Element],
-        out: &mut io::Write,
+        out: &mut dyn io::Write,
     ) -> io::Result<Option<TableInfo<'e>>> {
         let mut table_width = None;
         let mut last_header_position = None;
@@ -79,7 +79,7 @@ impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
         }))
     }
 
-    pub fn table(&mut self, root: &'e Table, out: &mut io::Write) -> io::Result<bool> {
+    pub fn table(&mut self, root: &'e Table, out: &mut dyn io::Write) -> io::Result<bool> {
         self.write_def_location(&root.position, &self.args.document_title, out)?;
         let table_info = if let Some(info) = self.get_table_params(&root.rows, out)? {
             info

@@ -103,7 +103,7 @@ impl<'a, 's> Target<&'a HTMLArgs, &'s Settings> for HTMLTarget {
         root: &Element,
         settings: &'s Settings,
         args: &'a HTMLArgs,
-        out: &mut io::Write,
+        out: &mut dyn io::Write,
     ) -> io::Result<()> {
         let mut root = root.clone();
         let mut renderer = renderer::HtmlRenderer::new(self, &settings, &args);

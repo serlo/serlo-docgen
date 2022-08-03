@@ -58,7 +58,7 @@ pub trait Target<A, S> {
         root: &mediawiki_parser::Element,
         settings: S,
         args: A,
-        out: &mut io::Write,
+        out: &mut dyn io::Write,
     ) -> io::Result<()>;
 }
 

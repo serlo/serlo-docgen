@@ -3,7 +3,7 @@ use crate::preamble::*;
 use mediawiki_parser::*;
 
 impl<'e, 's: 'e, 't: 'e, 'a> HtmlRenderer<'e, 't, 's, 'a> {
-    pub fn table_cell(&mut self, root: &'e TableCell, out: &mut io::Write) -> io::Result<bool> {
+    pub fn table_cell(&mut self, root: &'e TableCell, out: &mut dyn io::Write) -> io::Result<bool> {
         if root.header {
             write!(out, "<th")?;
             for attribute in &root.attributes {
@@ -34,7 +34,7 @@ impl<'e, 's: 'e, 't: 'e, 'a> HtmlRenderer<'e, 't, 's, 'a> {
         Ok(false)
     }
 
-    pub fn table_row(&mut self, root: &'e TableRow, out: &mut io::Write) -> io::Result<bool> {
+    pub fn table_row(&mut self, root: &'e TableRow, out: &mut dyn io::Write) -> io::Result<bool> {
         writeln!(out, "<tr")?;
         for attribute in &root.attributes {
             write!(
@@ -62,7 +62,7 @@ impl<'e, 's: 'e, 't: 'e, 'a> HtmlRenderer<'e, 't, 's, 'a> {
         writeln!(out, "</tr>")?;
         Ok(false)
     }
-    pub fn table(&mut self, root: &'e Table, out: &mut io::Write) -> io::Result<bool> {
+    pub fn table(&mut self, root: &'e Table, out: &mut dyn io::Write) -> io::Result<bool> {
         write!(out, "<table")?;
         for attribute in &root.attributes {
             write!(

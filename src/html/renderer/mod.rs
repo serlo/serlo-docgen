@@ -18,7 +18,7 @@ pub struct HtmlRenderer<'e, 't, 's, 'a> {
 impl<'e, 's: 'e, 't: 'e, 'a> Traversion<'e, ()> for HtmlRenderer<'e, 't, 's, 'a> {
     path_methods!('e);
 
-    fn work(&mut self, root: &'e Element, _: (), out: &mut io::Write) -> io::Result<bool> {
+    fn work(&mut self, root: &'e Element, _: (), out: &mut dyn io::Write) -> io::Result<bool> {
         //writeln!(out, "{}", root.get_variant_name())?;
         Ok(match *root {
             // Node elements
@@ -78,12 +78,12 @@ impl<'e, 's: 'e, 't: 'e, 'a> HtmlRenderer<'e, 't, 's, 'a> {
     }
 
     //error-handling
-    fn write_error(&self, message: &str, out: &mut io::Write) -> io::Result<bool> {
+    fn write_error(&self, message: &str, out: &mut dyn io::Write) -> io::Result<bool> {
         let message = Self::escape_html(&(message.to_string()));
         writeln!(out, "error: {}", message)?;
         Ok(true)
     }
-    fn error(&self, root: &Error, out: &mut io::Write) -> io::Result<bool> {
+    fn error(&self, root: &Error, out: &mut dyn io::Write) -> io::Result<bool> {
         self.write_error(&root.message, out)?;
         Ok(true)
     }

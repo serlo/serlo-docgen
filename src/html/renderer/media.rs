@@ -5,7 +5,7 @@ impl<'e, 's: 'e, 't: 'e, 'a> HtmlRenderer<'e, 't, 's, 'a> {
     pub fn internal_ref(
         &mut self,
         root: &'e InternalReference,
-        out: &mut io::Write,
+        out: &mut dyn io::Write,
     ) -> io::Result<bool> {
         // embedded (media) files
         if is_file(root, self.settings) {
@@ -47,7 +47,7 @@ impl<'e, 's: 'e, 't: 'e, 'a> HtmlRenderer<'e, 't, 's, 'a> {
         Ok(false)
     }
 
-    pub fn gallery(&mut self, _root: &'e Gallery, out: &mut io::Write) -> io::Result<bool> {
+    pub fn gallery(&mut self, _root: &'e Gallery, out: &mut dyn io::Write) -> io::Result<bool> {
         self.write_error("galleries not implemented, yet!", out)?;
         Ok(false)
     }

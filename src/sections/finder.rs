@@ -18,7 +18,7 @@ pub struct SectionFinder<'e, 'a> {
 impl<'e, 'a> Traversion<'e, ()> for SectionFinder<'e, 'a> {
     path_methods!('e);
 
-    fn work(&mut self, root: &'e Element, _: (), _: &mut io::Write) -> io::Result<bool> {
+    fn work(&mut self, root: &'e Element, _: (), _: &mut dyn io::Write) -> io::Result<bool> {
         // end recursion if result is found
         if self.result.is_some() {
             return Ok(false);

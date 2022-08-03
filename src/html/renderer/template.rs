@@ -32,7 +32,7 @@ macro_rules! div_wrapper {
 }
 
 impl<'e, 's: 'e, 't: 'e, 'a> HtmlRenderer<'e, 't, 's, 'a> {
-    pub fn template(&mut self, root: &'e Template, out: &mut io::Write) -> io::Result<bool> {
+    pub fn template(&mut self, root: &'e Template, out: &mut dyn io::Write) -> io::Result<bool> {
         let parsed = if let Some(parsed) = parse_template(&root) {
             parsed
         } else {
@@ -101,7 +101,7 @@ impl<'e, 's: 'e, 't: 'e, 'a> HtmlRenderer<'e, 't, 's, 'a> {
     fn proof_by_cases(
         &mut self,
         cases: &ProofByCases<'e>,
-        out: &mut io::Write,
+        out: &mut dyn io::Write,
     ) -> io::Result<bool> {
         let attrs = [
             (Some(cases.case1), Some(cases.proof1)),
@@ -125,11 +125,11 @@ impl<'e, 's: 'e, 't: 'e, 'a> HtmlRenderer<'e, 't, 's, 'a> {
         }
         Ok(false)
     }
-    fn important(&mut self, template: &Important<'e>, out: &mut io::Write) -> io::Result<bool> {
+    fn important(&mut self, template: &Important<'e>, out: &mut dyn io::Write) -> io::Result<bool> {
         div_wrapper!(self, &template.content, out, "important");
         Ok(false)
     }
-    fn todo(&mut self, template: &Todo<'e>, out: &mut io::Write) -> io::Result<bool> {
+    fn todo(&mut self, template: &Todo<'e>, out: &mut dyn io::Write) -> io::Result<bool> {
         if self.html.with_todo {
             tag_stmt!(
                 {
@@ -147,7 +147,7 @@ impl<'e, 's: 'e, 't: 'e, 'a> HtmlRenderer<'e, 't, 's, 'a> {
         }
         Ok(false)
     }
-    fn formula(&mut self, formula: &Formula<'e>, out: &mut io::Write) -> io::Result<bool> {
+    fn formula(&mut self, formula: &Formula<'e>, out: &mut dyn io::Write) -> io::Result<bool> {
         let error = formula
             .formula
             .iter()
@@ -197,7 +197,11 @@ impl<'e, 's: 'e, 't: 'e, 'a> HtmlRenderer<'e, 't, 's, 'a> {
         Ok(false)
     }
 
-    pub fn question(&mut self, question: &Question<'e>, out: &mut io::Write) -> io::Result<bool> {
+    pub fn question(
+        &mut self,
+        question: &Question<'e>,
+        out: &mut dyn io::Write,
+    ) -> io::Result<bool> {
         write!(out, "<details>")?;
         write!(out, "<summary class =\"question\">")?;
         if let Some(kind) = question.kind {
@@ -221,7 +225,7 @@ impl<'e, 's: 'e, 't: 'e, 'a> HtmlRenderer<'e, 't, 's, 'a> {
         Ok(false)
     } //it is impportant to specify in css: display: inline, otherwise weird line break
 
-    pub fn proofstep(&mut self, step: &ProofStep<'e>, out: &mut io::Write) -> io::Result<bool> {
+    pub fn proofstep(&mut self, step: &ProofStep<'e>, out: &mut dyn io::Write) -> io::Result<bool> {
         write!(out, "<details open>")?;
         tag_stmt!(
             {
@@ -241,7 +245,7 @@ impl<'e, 's: 'e, 't: 'e, 'a> HtmlRenderer<'e, 't, 's, 'a> {
     pub fn environment_template(
         &mut self,
         template: &KnownTemplate<'e>,
-        out: &mut io::Write,
+        out: &mut dyn io::Write,
         class: &str,
     ) -> io::Result<bool> {
         write!(out, "<div class=\"{} environment\">", class)?;
@@ -312,7 +316,7 @@ impl<'e, 's: 'e, 't: 'e, 'a> HtmlRenderer<'e, 't, 's, 'a> {
     fn group_exercise(
         &mut self,
         group: &GroupExercise<'e>,
-        out: &mut io::Write,
+        out: &mut dyn io::Write,
     ) -> io::Result<bool> {
         tag_stmt!(
             {
@@ -377,7 +381,11 @@ impl<'e, 's: 'e, 't: 'e, 'a> HtmlRenderer<'e, 't, 's, 'a> {
         Ok(false)
     }
 
-    pub fn solution(&mut self, solution: &Solution<'e>, out: &mut io::Write) -> io::Result<bool> {
+    pub fn solution(
+        &mut self,
+        solution: &Solution<'e>,
+        out: &mut dyn io::Write,
+    ) -> io::Result<bool> {
         tag_stmt!(
             {
                 tag_stmt!(
@@ -408,7 +416,11 @@ impl<'e, 's: 'e, 't: 'e, 'a> HtmlRenderer<'e, 't, 's, 'a> {
         Ok(false)
     }
 
-    fn induction(&mut self, induction: &Induction<'e>, out: &mut io::Write) -> io::Result<bool> {
+    fn induction(
+        &mut self,
+        induction: &Induction<'e>,
+        out: &mut dyn io::Write,
+    ) -> io::Result<bool> {
         let strings = &self.html.strings;
 
         write!(out, "<div class=\"induction\">")?;

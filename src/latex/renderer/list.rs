@@ -5,7 +5,7 @@ use crate::preamble::*;
 use mediawiki_parser::*;
 
 impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
-    pub fn list(&mut self, root: &'e List, out: &mut io::Write) -> io::Result<bool> {
+    pub fn list(&mut self, root: &'e List, out: &mut dyn io::Write) -> io::Result<bool> {
         let kind = if let Some(&Element::ListItem(ref li)) = root.content.first() {
             li.kind
         } else {

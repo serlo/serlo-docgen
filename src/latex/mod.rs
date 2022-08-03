@@ -113,7 +113,7 @@ impl<'a, 's> Target<&'a LatexArgs, &'s Settings> for LatexTarget {
         root: &Element,
         settings: &'s Settings,
         args: &'a LatexArgs,
-        out: &mut io::Write,
+        out: &mut dyn io::Write,
     ) -> io::Result<()> {
         // apply latex-specific transformations
         let mut latex_tree = root.clone();

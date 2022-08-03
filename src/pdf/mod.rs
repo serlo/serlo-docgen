@@ -50,7 +50,13 @@ impl<'a> Target<&'a PDFArgs, ()> for PDFTarget {
     fn target_type(&self) -> TargetType {
         TargetType::PDF
     }
-    fn export(&self, _: &Element, _: (), args: &'a PDFArgs, out: &mut io::Write) -> io::Result<()> {
+    fn export(
+        &self,
+        _: &Element,
+        _: (),
+        args: &'a PDFArgs,
+        out: &mut dyn io::Write,
+    ) -> io::Result<()> {
         let mut data_table =
             serde_json::to_value(self).expect("could not construct value from PDFTarget!");
 

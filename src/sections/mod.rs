@@ -34,7 +34,7 @@ impl<'a> Target<&'a SectionsArgs, ()> for SectionsTarget {
         root: &Element,
         _: (),
         args: &'a SectionsArgs,
-        out: &mut io::Write,
+        out: &mut dyn io::Write,
     ) -> io::Result<()> {
         let inter = match filter::SectionFilter::extract(&args.section, root) {
             Some(inter) => inter,

@@ -32,7 +32,7 @@ impl<'a> Target<&'a AnchorsArgs, ()> for AnchorsTarget {
         root: &'e Element,
         _: (),
         args: &'a AnchorsArgs,
-        out: &mut io::Write,
+        out: &mut dyn io::Write,
     ) -> io::Result<()> {
         let mut printer = AnchorPrinter::default();
         printer.run(root, &args.doc_title, out)?;
@@ -53,7 +53,7 @@ impl<'a, 'b: 'a> Traversion<'a, &'b str> for AnchorPrinter<'a> {
         &mut self,
         root: &Element,
         doc_title: &'b str,
-        out: &mut io::Write,
+        out: &mut dyn io::Write,
     ) -> io::Result<bool> {
         if let Some(anchor) = extract_anchor(root, doc_title) {
             writeln!(out, "{}", anchor)?;
@@ -71,7 +71,7 @@ pub fn extract_template_anchor(template: &KnownTemplate, doc_title: &str) -> Opt
             &mw_enc(ANCHOR_CAPTION),
             &mw_enc(name),
         )
-    };
+    }
     match template {
         KnownTemplate::Anchor(ref anchor) => {
             Some(format_url(&extract_plain_text(&anchor.ref1), doc_title))

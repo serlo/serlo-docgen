@@ -30,7 +30,7 @@ pub struct LatexRenderer<'e, 't, 's: 'e, 'a> {
 impl<'e, 's: 'e, 't: 'e, 'a> Traversion<'e, ()> for LatexRenderer<'e, 't, 's, 'a> {
     path_methods!('e);
 
-    fn work(&mut self, root: &'e Element, _: (), out: &mut io::Write) -> io::Result<bool> {
+    fn work(&mut self, root: &'e Element, _: (), out: &mut dyn io::Write) -> io::Result<bool> {
         Ok(match *root {
             // Node elements
             Element::Document(ref root) => self.document(root, out)?,
@@ -66,7 +66,7 @@ impl<'e, 's: 'e, 't: 'e, 'a> Traversion<'e, ()> for LatexRenderer<'e, 't, 's, 'a
     }
 
     /// Handle paragraph line breaks correctly.
-    fn work_vec(&mut self, vec: &'e [Element], _: (), out: &mut io::Write) -> io::Result<bool> {
+    fn work_vec(&mut self, vec: &'e [Element], _: (), out: &mut dyn io::Write) -> io::Result<bool> {
         let mut iter = vec.iter();
         let mut current = iter.next();
         while current.is_some() {
@@ -88,7 +88,7 @@ impl<'e, 's: 'e, 't: 'e, 'a> Traversion<'e, ()> for LatexRenderer<'e, 't, 's, 'a
             if current_is_par && next_is_text {
                 let content = inner.render(self)?;
                 let sep = &self.latex.paragraph_separator;
-                writeln!(out, "{}{}\n", &content.trim_right(), sep)?;
+                writeln!(out, "{}{}\n", &content.trim_end(), sep)?;
             } else {
                 self.run(inner, (), out)?;
             }
@@ -147,7 +147,7 @@ impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
     }
 
     /// Render elements with flat paragraphs.
-    fn run_vec_nopar(&mut self, root: &'e [Element], out: &mut io::Write) -> io::Result<()> {
+    fn run_vec_nopar(&mut self, root: &'e [Element], out: &mut dyn io::Write) -> io::Result<()> {
         let old_par_state = self.flatten_paragraphs;
         self.flatten_paragraphs = true;
         self.run_vec(root, (), out)?;
@@ -160,7 +160,7 @@ impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
         name: &str,
         args: &[&str],
         content: &str,
-        out: &mut io::Write,
+        out: &mut dyn io::Write,
     ) -> io::Result<()> {
         let indent = self.latex.indentation_depth;
         let line_width = self.latex.max_line_width;
@@ -170,7 +170,7 @@ impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
         let is_exception = self
             .latex
             .environment_numbers_exceptions
-            .contains(&name.trim_right_matches('*').trim().to_string());
+            .contains(&name.trim_end_matches('*').trim().to_string());
 
         let name = if self.latex.environment_numbers || is_exception {
             name.to_string()
@@ -180,7 +180,7 @@ impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
         writeln!(out, GENERIC_ENV!(), &name, &arg_string, content, name)
     }
 
-    fn write_error(&self, message: &str, out: &mut io::Write) -> io::Result<()> {
+    fn write_error(&self, message: &str, out: &mut dyn io::Write) -> io::Result<()> {
         let message = Self::escape_latex(message);
         self.environment("error", &[], &message, out)
     }
@@ -189,7 +189,7 @@ impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
         &self,
         pos: &Span,
         doctitle: &str,
-        out: &mut io::Write,
+        out: &mut dyn io::Write,
     ) -> io::Result<()> {
         writeln!(
             out,
@@ -198,7 +198,7 @@ impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
         )
     }
 
-    fn error(&self, root: &Error, out: &mut io::Write) -> io::Result<bool> {
+    fn error(&self, root: &Error, out: &mut dyn io::Write) -> io::Result<bool> {
         self.write_def_location(&root.position, &self.args.document_title, out)?;
         self.write_error(&root.message, out)?;
         Ok(true)

@@ -176,12 +176,8 @@ fn main() -> Result<(), std::io::Error> {
             target_args,
             &mut io::stdout(),
         )?,
-        Commands::Formula(ref target_args) => find_target!(Targets::Formula, settings, args).export(
-            &root,
-            &settings,
-            target_args,
-            &mut io::stdout(),
-        )?,
+        Commands::Formula(ref target_args) => find_target!(Targets::Formula, settings, args)
+            .export(&root, &settings, target_args, &mut io::stdout())?,
     }
     Ok(())
 }

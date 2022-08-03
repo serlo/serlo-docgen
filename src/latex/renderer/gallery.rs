@@ -4,7 +4,7 @@ use super::LatexRenderer;
 use crate::preamble::*;
 
 impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
-    pub fn gallery(&mut self, root: &'e Gallery, out: &mut io::Write) -> io::Result<bool> {
+    pub fn gallery(&mut self, root: &'e Gallery, out: &mut dyn io::Write) -> io::Result<bool> {
         let doctitle = &self.args.document_title;
 
         let mut rendered_images = vec![];

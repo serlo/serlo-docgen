@@ -17,7 +17,7 @@ impl<'a, 'b: 'a> Traversion<'a, &'b PathBuf> for InclusionPrinter<'a> {
         &mut self,
         root: &Element,
         section_path: &'b PathBuf,
-        out: &mut io::Write,
+        out: &mut dyn io::Write,
     ) -> io::Result<bool> {
         if let Element::Template(ref template) = *root {
             let prefix = SECTION_INCLUSION_PREFIX;
@@ -55,7 +55,7 @@ impl<'e, 's: 'e> Traversion<'e, &'s Settings> for FilesPrinter<'e> {
         &mut self,
         root: &Element,
         settings: &'s Settings,
-        out: &mut io::Write,
+        out: &mut dyn io::Write,
     ) -> io::Result<bool> {
         if let Element::InternalReference(ref iref) = *root {
             if !is_file(iref, settings) {

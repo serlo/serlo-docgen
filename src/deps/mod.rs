@@ -45,7 +45,7 @@ impl<'a> Target<&'a SectionDepArgs, ()> for SectionDepTarget {
         root: &Element,
         _: (),
         args: &'a SectionDepArgs,
-        out: &mut io::Write,
+        out: &mut dyn io::Write,
     ) -> io::Result<()> {
         let markers = {
             let file = fs::File::open(&args.marker_path)?;
@@ -94,7 +94,7 @@ impl<'a, 's> Target<&'a MediaDepArgs, &'s Settings> for MediaDepTarget {
         root: &Element,
         settings: &'s Settings,
         args: &'a MediaDepArgs,
-        out: &mut io::Write,
+        out: &mut dyn io::Write,
     ) -> io::Result<()> {
         writeln!(out, "# dependencies for {}", &args.target_type)?;
         write!(out, "{}: ", &args.base_file)?;

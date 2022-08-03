@@ -49,7 +49,7 @@ impl<'e, 's: 'e, 'a> Traversion<'e, (&'s Settings, &'a StatsArgs)> for Stats<'e>
         &mut self,
         root: &Element,
         params: (&'s Settings, &'a StatsArgs),
-        _out: &mut io::Write,
+        _out: &mut dyn io::Write,
     ) -> io::Result<bool> {
         let (settings, args) = params;
         match root {
@@ -58,7 +58,7 @@ impl<'e, 's: 'e, 'a> Traversion<'e, (&'s Settings, &'a StatsArgs)> for Stats<'e>
                     self.image_count += 1
                 } else {
                     let target = extract_plain_text(&iref.target);
-                    let target = target.trim().trim_left_matches(':').to_string();
+                    let target = target.trim().trim_start_matches(':').to_string();
 
                     self.reference_targets.insert(target.clone());
                     let anchor = matching_anchor(&target, &args.available_anchors);
@@ -96,7 +96,7 @@ impl<'a, 's> Target<&'a StatsArgs, &'s Settings> for StatsTarget {
         root: &Element,
         settings: &'s Settings,
         args: &'a StatsArgs,
-        out: &mut io::Write,
+        out: &mut dyn io::Write,
     ) -> io::Result<()> {
         let mut stats = Stats::default();
 

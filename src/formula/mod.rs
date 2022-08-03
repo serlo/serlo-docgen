@@ -3,8 +3,8 @@
 
 use crate::preamble::*;
 use base64;
-use serde_json;
-use std::collections::{HashMap, HashSet};
+
+use std::collections::HashSet;
 use std::io;
 use structopt::StructOpt;
 
@@ -28,7 +28,7 @@ struct FormulaCollector<'e> {
 impl<'e, 's: 'e, 'a> Traversion<'e, ((), ())> for FormulaCollector<'e> {
     path_methods!('e);
 
-    fn work(&mut self, root: &Element, _: ((), ()), _out: &mut io::Write) -> io::Result<bool> {
+    fn work(&mut self, root: &Element, _: ((), ()), _out: &mut dyn io::Write) -> io::Result<bool> {
         match root {
             Element::Formatted(ref formatted) if formatted.markup == MarkupType::Math => {
                 self.formulae.insert(extract_plain_text(&formatted.content));
@@ -46,9 +46,9 @@ impl<'a, 's> Target<&'a FormulaArgs, &'s Settings> for FormulaTarget {
     fn export(
         &self,
         root: &Element,
-        settings: &'s Settings,
-        args: &'a FormulaArgs,
-        out: &mut io::Write,
+        _settings: &'s Settings,
+        _args: &'a FormulaArgs,
+        out: &mut dyn io::Write,
     ) -> io::Result<()> {
         let mut collector = FormulaCollector::default();
         collector.run(root, ((), ()), out)?;

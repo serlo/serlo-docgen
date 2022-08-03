@@ -131,7 +131,7 @@ pub struct ThumbCollector<'e> {
 impl<'e, 's: 'e> Traversion<'e, &'s ()> for ThumbCollector<'e> {
     path_methods!('e);
 
-    fn work(&mut self, root: &'e Element, _: &'s (), _: &mut io::Write) -> io::Result<bool> {
+    fn work(&mut self, root: &'e Element, _: &'s (), _: &mut dyn io::Write) -> io::Result<bool> {
         match *root {
             Element::InternalReference(ref iref) => {
                 if is_thumb(iref) {

@@ -35,7 +35,7 @@ pub fn urlencode(data: &str) -> String {
     for b in data.as_bytes().iter() {
         match *b as char {
             // Accepted characters
-            'A'...'Z' | 'a'...'z' | '0'...'9' | '/' | ':' | '-' | '_' | '.' | '~' | '#' => {
+            'A'..='Z' | 'a'..='z' | '0'..='9' | '/' | ':' | '-' | '_' | '.' | '~' | '#' => {
                 escaped.push(*b as char)
             }
 
@@ -54,7 +54,7 @@ pub fn mw_enc(input: &str) -> String {
 /// Checks if a internal reference target is available,
 /// returns the anchor if found.
 pub fn matching_anchor<'o>(target: &str, anchors: &'o HashSet<String>) -> Option<&'o String> {
-    anchors.get(&mw_enc(target.trim().trim_left_matches(':')))
+    anchors.get(&mw_enc(target.trim().trim_start_matches(':')))
 }
 
 /// Returns a unicode character for a smiley description.
@@ -106,7 +106,7 @@ pub fn indent_and_trim(input: &str, depth: usize, max_line_width: usize) -> Stri
     for line in input.split('\n') {
         let trimmed = line.trim();
         let comment = trimmed.starts_with(COMMENT_PREFIX.trim());
-        let line_depth = depth + line.len() - line.trim_left().len();
+        let line_depth = depth + line.len() - line.trim_start().len();
         let start_string = format!("{:depth$}", "", depth = line_depth);
 
         let mut new_line = start_string.clone();
@@ -138,13 +138,13 @@ pub fn indent_and_trim(input: &str, depth: usize, max_line_width: usize) -> Stri
 struct TreeMatcher<'e, 'c> {
     pub result: bool,
     pub path: Vec<&'e Element>,
-    pub predicate: &'c Fn(&Element) -> bool,
+    pub predicate: &'c dyn Fn(&Element) -> bool,
 }
 
 impl<'e, 'c> Traversion<'e, ()> for TreeMatcher<'e, 'c> {
     path_methods!('e);
 
-    fn work(&mut self, root: &Element, _: (), _: &mut io::Write) -> io::Result<bool> {
+    fn work(&mut self, root: &Element, _: (), _: &mut dyn io::Write) -> io::Result<bool> {
         if (self.predicate)(root) {
             self.result = true;
             Ok(false)
@@ -155,7 +155,7 @@ impl<'e, 'c> Traversion<'e, ()> for TreeMatcher<'e, 'c> {
 }
 
 /// recursively tests a predicate for a AST.
-pub fn tree_contains(tree: &Element, predicate: &Fn(&Element) -> bool) -> bool {
+pub fn tree_contains(tree: &Element, predicate: &dyn Fn(&Element) -> bool) -> bool {
     let mut matcher = TreeMatcher {
         result: false,
         path: vec![],
@@ -228,11 +228,11 @@ pub fn get_section_path(article: &str, section: &str, section_path: &PathBuf) ->
 
 /// This object can be rendered by a traversion with the unit type as settings.
 pub trait Renderable {
-    fn render<'e>(&'e self, renderer: &mut Traversion<'e, ()>) -> io::Result<String>;
+    fn render<'e>(&'e self, renderer: &mut dyn Traversion<'e, ()>) -> io::Result<String>;
 }
 
 impl Renderable for Element {
-    fn render<'e>(&'e self, renderer: &mut Traversion<'e, ()>) -> io::Result<String> {
+    fn render<'e>(&'e self, renderer: &mut dyn Traversion<'e, ()>) -> io::Result<String> {
         let mut temp = vec![];
         renderer.run(self, (), &mut temp)?;
         Ok(String::from_utf8(temp).unwrap())
@@ -240,7 +240,7 @@ impl Renderable for Element {
 }
 
 impl Renderable for [Element] {
-    fn render<'e>(&'e self, renderer: &mut Traversion<'e, ()>) -> io::Result<String> {
+    fn render<'e>(&'e self, renderer: &mut dyn Traversion<'e, ()>) -> io::Result<String> {
         let mut temp = vec![];
         renderer.run_vec(self, (), &mut temp)?;
         Ok(String::from_utf8(temp).unwrap())

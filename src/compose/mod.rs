@@ -47,7 +47,7 @@ impl<'a> Target<&'a ComposeArgs, ()> for ComposeTarget {
         root: &Element,
         _: (),
         args: &'a ComposeArgs,
-        out: &mut io::Write,
+        out: &mut dyn io::Write,
     ) -> io::Result<()> {
         let markers = {
             let file = fs::File::open(&args.marker_path)?;

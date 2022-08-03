@@ -8,7 +8,7 @@ use mfnf_template_spec::*;
 use mwparser_utils::*;
 
 impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
-    pub fn template(&mut self, root: &'e Template, out: &mut io::Write) -> io::Result<bool> {
+    pub fn template(&mut self, root: &'e Template, out: &mut dyn io::Write) -> io::Result<bool> {
         let doctitle = &self.args.document_title;
         let parsed = if let Some(parsed) = parse_template(&root) {
             parsed
@@ -64,7 +64,7 @@ impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
         Ok(false)
     }
 
-    fn formula(&self, formula: &Formula, out: &mut io::Write) -> io::Result<()> {
+    fn formula(&self, formula: &Formula, out: &mut dyn io::Write) -> io::Result<()> {
         // propagate errors
         let error = formula
             .formula
@@ -90,7 +90,7 @@ impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
         self.environment(MATH_ENV!(), &[], trimmed, out)
     }
 
-    fn proofstep(&mut self, step: &ProofStep<'e>, out: &mut io::Write) -> io::Result<()> {
+    fn proofstep(&mut self, step: &ProofStep<'e>, out: &mut dyn io::Write) -> io::Result<()> {
         let name = match step.name {
             Some(name) => name.render(self)?,
             None => "Beweisschritt".into(),
@@ -102,7 +102,7 @@ impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
         self.environment(PROOF_STEP_ENV!(), &[name.trim()], body.trim(), out)
     }
 
-    fn todo(&mut self, todo: &Todo<'e>, out: &mut io::Write) -> io::Result<()> {
+    fn todo(&mut self, todo: &Todo<'e>, out: &mut dyn io::Write) -> io::Result<()> {
         if self.latex.with_todo {
             let text = todo.todo.render(self)?;
             self.environment("todo", &[], &format!("{}\n", text.trim()), out)?;
@@ -110,7 +110,11 @@ impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
         Ok(())
     }
 
-    fn literature(&mut self, literature: &Literature<'e>, out: &mut io::Write) -> io::Result<()> {
+    fn literature(
+        &mut self,
+        literature: &Literature<'e>,
+        out: &mut dyn io::Write,
+    ) -> io::Result<()> {
         let mut lit = String::new();
         if let Some(author) = literature.author {
             lit.push_str(&extract_plain_text(author));
@@ -145,7 +149,7 @@ impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
         write!(out, "{}", lit)
     }
 
-    fn question(&mut self, question: &Question<'e>, out: &mut io::Write) -> io::Result<()> {
+    fn question(&mut self, question: &Question<'e>, out: &mut dyn io::Write) -> io::Result<()> {
         let title = match question.kind {
             Some(e) => e.render(self)?,
             None => String::new(),
@@ -161,7 +165,11 @@ impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
         )
     }
 
-    fn proof_by_cases(&mut self, cases: &ProofByCases<'e>, out: &mut io::Write) -> io::Result<()> {
+    fn proof_by_cases(
+        &mut self,
+        cases: &ProofByCases<'e>,
+        out: &mut dyn io::Write,
+    ) -> io::Result<()> {
         let attrs = [
             (Some(cases.case1), Some(cases.proof1)),
             (Some(cases.case2), Some(cases.proof2)),
@@ -183,7 +191,11 @@ impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
         Ok(())
     }
 
-    fn group_exercise(&mut self, group: &GroupExercise<'e>, out: &mut io::Write) -> io::Result<()> {
+    fn group_exercise(
+        &mut self,
+        group: &GroupExercise<'e>,
+        out: &mut dyn io::Write,
+    ) -> io::Result<()> {
         let title = group.title.unwrap_or(&[]).render(self)?;
 
         let tasks;
@@ -237,7 +249,7 @@ impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
         Ok(())
     }
 
-    fn induction(&mut self, induction: &Induction<'e>, out: &mut io::Write) -> io::Result<()> {
+    fn induction(&mut self, induction: &Induction<'e>, out: &mut dyn io::Write) -> io::Result<()> {
         let basic = if let Some(e) = induction.basic_set {
             e.render(self)?
         } else {
@@ -260,12 +272,12 @@ impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
         )
     }
 
-    fn important(&mut self, template: &Important<'e>, out: &mut io::Write) -> io::Result<()> {
+    fn important(&mut self, template: &Important<'e>, out: &mut dyn io::Write) -> io::Result<()> {
         let content = template.content.render(self)?;
         self.environment(IMPORTANT_ENV!(), &[], content.trim(), out)
     }
 
-    fn anchor(&self, root: &'e KnownTemplate, out: &mut io::Write) -> io::Result<()> {
+    fn anchor(&self, root: &'e KnownTemplate, out: &mut dyn io::Write) -> io::Result<()> {
         let doctitle = &self.args.document_title;
         if let Some(anchor) = extract_template_anchor(root, doctitle) {
             write!(out, LABEL!(), base64::encode(&anchor))?;
@@ -275,7 +287,11 @@ impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
         Ok(())
     }
 
-    fn mainarticle(&mut self, template: &Mainarticle<'e>, out: &mut io::Write) -> io::Result<()> {
+    fn mainarticle(
+        &mut self,
+        template: &Mainarticle<'e>,
+        out: &mut dyn io::Write,
+    ) -> io::Result<()> {
         write!(out, MAINARTICLE!())?;
         let caption = extract_plain_text(&template.article);
         let mut target = "Mathe für Nicht-Freaks: ".to_string();
@@ -288,7 +304,7 @@ impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
     pub fn template_arg(
         &mut self,
         root: &'e TemplateArgument,
-        out: &mut io::Write,
+        out: &mut dyn io::Write,
     ) -> io::Result<bool> {
         self.run_vec(&root.value, (), out)?;
         Ok(false)
@@ -297,7 +313,7 @@ impl<'e, 's: 'e, 't: 'e, 'a> LatexRenderer<'e, 't, 's, 'a> {
     pub fn environment_template(
         &mut self,
         template: &KnownTemplate<'e>,
-        out: &mut io::Write,
+        out: &mut dyn io::Write,
     ) -> io::Result<()> {
         let title = template.find("title").map(|a| a.value).unwrap_or(&[]);
         let title_text = title.render(self)?;

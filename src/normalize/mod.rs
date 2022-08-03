@@ -46,7 +46,7 @@ impl<'a, 's> Target<&'a NormalizeArgs, &'s Settings> for NormalizeTarget {
         root: &Element,
         settings: &'s Settings,
         args: &'a NormalizeArgs,
-        out: &mut io::Write,
+        out: &mut dyn io::Write,
     ) -> io::Result<()> {
         let root = root.clone();
 
