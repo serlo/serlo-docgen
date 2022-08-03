@@ -156,6 +156,25 @@ impl<'e> StateBuilder<'e> {
         .into()])
     }
 
+    fn make_error_box(&self, err: String) -> EdtrPlugin {
+        EdtrBox {
+            box_type: EdtrBoxType::Attention,
+            anchor_id: "box-1".to_owned(),
+            title: Box::new(text_plugin_from("Export Error".into())),
+            content: Box::new(
+                vec![EdtrText::NestedText(EdtrMarkupText::Paragraph {
+                    children: vec![EdtrText::SimpleText {
+                        text: err,
+                        em: false,
+                        strong: false,
+                    }],
+                })]
+                .into(),
+            ),
+        }
+        .into()
+    }
+
     fn build_template_box(
         &mut self,
         template: &KnownTemplate<'_>,
@@ -212,7 +231,20 @@ impl<'e> StateBuilder<'e> {
             KnownTemplate::SolutionProcess(_) => {
                 self.build_template_box(&parsed, EdtrBoxType::Approach)
             }
-            _ => Ok(text_plugin_from(
+            KnownTemplate::Anchor(_) => {
+                Ok(text_plugin_from("anchor not implemented, yet".to_owned()))
+            }
+            KnownTemplate::Smiley(_) => {
+                Ok(text_plugin_from("smiley not implemented, yet".to_owned()))
+            }
+            KnownTemplate::Todo(_) => Ok(text_plugin_from("todo not implemented, yet".to_owned())),
+            KnownTemplate::Formula(_) => {
+                Ok(text_plugin_from("formula not implemented, yet".to_owned()))
+            }
+            KnownTemplate::NoPrint(_) => {
+                Ok(text_plugin_from("noprint not implemented, yet".to_owned()))
+            }
+            _ => Ok(self.make_error_box(
                 format! {"unimplemented plugin: {}", extract_plain_text(&template.name)},
             )),
         }
