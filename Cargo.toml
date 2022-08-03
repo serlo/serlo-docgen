@@ -15,6 +15,7 @@ mwparser_utils = { git = "https://github.com/serlo/mediawiki-parser-utils" }
 mfnf_template_spec = { git = "https://github.com/serlo/mfnf-template-spec" }
 mfnf-sitemap-parser = { git = "https://github.com/serlo/mfnf-sitemap-parser" }
 serlo_he_spec = { git = "https://github.com/serlo/serlo-he-spec" }
+edtr-types-rust = { git = "https://github.com/serlo/edtr-types-rust" }
 serde = "1.0"
 serde_derive = "1.0"
 serde_json = "1.0"
@@ -23,3 +24,4 @@ colored = "1.6"
 structopt = "0.2"
 base64 = "0.9"
 uuid = { version = "0.7", features = ["serde", "v5"] }
+thiserror = "1.0"

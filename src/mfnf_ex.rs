@@ -85,6 +85,8 @@ enum Commands {
         about = "dump the current configuration to stdout."
     )]
     DumpConfig,
+    #[structopt(name = "edtr", about = "Edtr.io state for serlo.org")]
+    Edtr(EdtrArgs),
 }
 
 macro_rules! find_target {
@@ -178,6 +180,12 @@ fn main() -> Result<(), std::io::Error> {
         )?,
         Commands::Formula(ref target_args) => find_target!(Targets::Formula, settings, args)
             .export(&root, &settings, target_args, &mut io::stdout())?,
+        Commands::Edtr(ref target_args) => find_target!(Targets::Edtr, settings, args).export(
+            &root,
+            &settings,
+            target_args,
+            &mut io::stdout(),
+        )?,
     }
     Ok(())
 }

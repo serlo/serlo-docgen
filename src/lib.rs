@@ -6,6 +6,7 @@ mod settings;
 mod anchors;
 mod compose;
 mod deps;
+mod edtr;
 mod formula;
 mod html;
 mod latex;
@@ -39,6 +40,7 @@ use std::io;
 pub use crate::anchors::{AnchorsArgs, AnchorsTarget};
 pub use crate::compose::{ComposeArgs, ComposeTarget};
 pub use crate::deps::{MediaDepArgs, MediaDepTarget, SectionDepArgs, SectionDepTarget};
+pub use crate::edtr::{EdtrArgs, EdtrTarget};
 pub use crate::formula::{FormulaArgs, FormulaTarget};
 pub use crate::html::{HTMLArgs, HTMLTarget};
 pub use crate::latex::{LatexArgs, LatexTarget};
@@ -97,6 +99,7 @@ pub enum Targets {
     HTML(HTMLTarget),
     Serlo(SerloTarget),
     Formula(FormulaTarget),
+    Edtr(EdtrTarget),
 }
 
 impl std::str::FromStr for TargetType {
