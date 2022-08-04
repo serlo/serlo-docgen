@@ -68,6 +68,13 @@ struct StateBuilder<'e> {
     pub path: Vec<&'e Element>,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+struct TextFlags {
+    em: bool,
+    strong: bool,
+    code: bool,
+}
+
 impl StateBuilder<'_> {
     pub fn new(document_title: String) -> Self {
         StateBuilder {
@@ -108,6 +115,37 @@ impl<'e> StateBuilder<'e> {
         })
     }
 
+    fn propagate_text_flags(&self, input: &mut [EdtrText], flags: &TextFlags) {
+        for t in input.iter_mut() {
+            match t {
+                EdtrText::SimpleText {
+                    ref mut strong,
+                    ref mut em,
+                    ref mut code,
+                    ..
+                } => {
+                    *strong = *strong || flags.strong;
+                    *em = *em || flags.em;
+                    *code = *code || flags.code;
+                }
+                EdtrText::NestedText(EdtrMarkupText::Heading {
+                    ref mut children, ..
+                })
+                | EdtrText::NestedText(EdtrMarkupText::Paragraph { ref mut children })
+                | EdtrText::NestedText(EdtrMarkupText::UnorderedList { ref mut children })
+                | EdtrText::NestedText(EdtrMarkupText::OrderedList { ref mut children })
+                | EdtrText::NestedText(EdtrMarkupText::ListItem { ref mut children })
+                | EdtrText::NestedText(EdtrMarkupText::ListItemChild { ref mut children })
+                | EdtrText::NestedText(EdtrMarkupText::Hyperlink {
+                    ref mut children, ..
+                })
+                | EdtrText::NestedText(EdtrMarkupText::Math {
+                    ref mut children, ..
+                }) => self.propagate_text_flags(children, flags),
+                EdtrText::Empty {} => (),
+            }
+        }
+    }
     /// export a vector of elements that may only be text
     fn export_text_vec(&mut self, input: &[Element]) -> EdtrResult<Vec<EdtrText>> {
         let mut result = vec![];
@@ -134,17 +172,49 @@ impl<'e> StateBuilder<'e> {
         Ok(elems)
     }
 
-    // FIXME: must markup be flattened?
     fn export_formatted_text(&mut self, text: &Formatted) -> EdtrResult<Vec<EdtrPlugin>> {
         let main = match text.markup {
-            MarkupType::Math => EdtrText::NestedText(EdtrMarkupText::Math {
-                src: extract_plain_text(&text.content),
-                inline: true,
-                children: vec![EdtrText::from(extract_plain_text(&text.content))],
-            }),
-            _ => EdtrText::from("unimplemented markup!".to_owned()),
+            MarkupType::Math => {
+                EdtrPlugin::Text(vec![EdtrText::NestedText(EdtrMarkupText::Math {
+                    src: extract_plain_text(&text.content),
+                    inline: true,
+                    children: vec![EdtrText::from(extract_plain_text(&text.content))],
+                })])
+            }
+            MarkupType::Italic => {
+                let mut content = self.export_text_vec(&text.content)?;
+                let flags = TextFlags {
+                    em: true,
+                    strong: false,
+                    code: false,
+                };
+                self.propagate_text_flags(&mut content, &flags);
+                content.into()
+            }
+            MarkupType::Bold => {
+                let mut content = self.export_text_vec(&text.content)?;
+                let flags = TextFlags {
+                    em: false,
+                    strong: true,
+                    code: false,
+                };
+                self.propagate_text_flags(&mut content, &flags);
+                content.into()
+            }
+            MarkupType::Code | MarkupType::Preformatted | MarkupType::NoWiki => {
+                let mut content = self.export_text_vec(&text.content)?;
+                let flags = TextFlags {
+                    em: false,
+                    strong: true,
+                    code: false,
+                };
+                self.propagate_text_flags(&mut content, &flags);
+                content.into()
+            }
+
+            _ => EdtrPlugin::Text(vec![EdtrText::from("unimplemented markup!".to_owned())]),
         };
-        Ok(vec![vec![main].into()])
+        Ok(vec![main])
     }
 
     fn export_paragraph(&mut self, text: &Paragraph) -> EdtrResult<Vec<EdtrPlugin>> {
@@ -163,11 +233,7 @@ impl<'e> StateBuilder<'e> {
             title: Box::new(text_plugin_from("Export Error".into())),
             content: Box::new(
                 vec![EdtrText::NestedText(EdtrMarkupText::Paragraph {
-                    children: vec![EdtrText::SimpleText {
-                        text: err,
-                        em: false,
-                        strong: false,
-                    }],
+                    children: vec![err.into()],
                 })]
                 .into(),
             ),
@@ -228,6 +294,7 @@ impl<'e> StateBuilder<'e> {
             KnownTemplate::Proof(_) => self.build_template_box(&parsed, EdtrBoxType::Proof),
             KnownTemplate::Warning(_) => self.build_template_box(&parsed, EdtrBoxType::Attention),
             KnownTemplate::Hint(_) => self.build_template_box(&parsed, EdtrBoxType::Note),
+            KnownTemplate::Important(_) => self.build_template_box(&parsed, EdtrBoxType::Remember),
             KnownTemplate::SolutionProcess(_) => {
                 self.build_template_box(&parsed, EdtrBoxType::Approach)
             }
@@ -258,6 +325,73 @@ impl<'e> StateBuilder<'e> {
         Ok(result)
     }
 
+    fn export_list(&mut self, list: &List) -> EdtrResult<EdtrPlugin> {
+        let content = self.export_text_vec(&list.content)?;
+        let item_kinds: Vec<_> = list
+            .content
+            .iter()
+            .filter_map(|item| match item {
+                Element::ListItem(ListItem { kind, .. }) => Some(*kind),
+                _ => None,
+            })
+            .collect();
+        if item_kinds.contains(&ListItemKind::Definition) {
+            return Ok(text_plugin_from(
+                "definition lists not implemented, yet!".to_owned(),
+            ));
+        }
+        if item_kinds.contains(&ListItemKind::Ordered) {
+            Ok(vec![EdtrText::NestedText(EdtrMarkupText::OrderedList {
+                children: content,
+            })]
+            .into())
+        } else {
+            Ok(vec![EdtrText::NestedText(EdtrMarkupText::UnorderedList {
+                children: content,
+            })]
+            .into())
+        }
+    }
+
+    fn export_list_item(&mut self, item: &ListItem) -> EdtrResult<EdtrPlugin> {
+        Ok(vec![EdtrText::NestedText(EdtrMarkupText::ListItem {
+            children: vec![EdtrText::NestedText(EdtrMarkupText::ListItemChild {
+                children: self.export_text_vec(&item.content)?,
+            })],
+        })]
+        .into())
+    }
+
+    fn export_htmltag(&mut self, tag: &HtmlTag) -> EdtrResult<Vec<EdtrPlugin>> {
+        let mut content = self.export_text_vec(&tag.content)?;
+        match tag.name.to_lowercase().trim() {
+            "dfn" => {
+                let flags = TextFlags {
+                    em: true,
+                    strong: false,
+                    code: false,
+                };
+                self.propagate_text_flags(&mut content, &flags);
+                Ok(vec![content.into()])
+            }
+            "ref" => {
+                let msg = "references / sources not supported, yet!".to_owned();
+                let err = EdtrPlugin::Text(vec![msg.into()]);
+                Ok(vec![err])
+            }
+            "section" => Ok(vec![]),
+            _ => {
+                let msg = format!(
+                    "no export function defined \
+                     for html tag `{}`!",
+                    tag.name
+                );
+                let err = EdtrPlugin::Text(vec![msg.into()]);
+                Ok(vec![err])
+            }
+        }
+    }
+
     pub fn export(&mut self, node: &Element) -> EdtrResult<Vec<EdtrPlugin>> {
         Ok(match node {
             Element::Document(ref doc) => vec![self.export_doc_root(doc)?.into()],
@@ -266,7 +400,14 @@ impl<'e> StateBuilder<'e> {
             Element::Formatted(formatted) => self.export_formatted_text(formatted)?,
             Element::Paragraph(par) => self.export_paragraph(par)?,
             Element::Template(template) => vec![self.export_template(template)?],
-            _ => vec![text_plugin_from("unimplemented!".into())],
+            Element::List(list) => vec![self.export_list(list)?],
+            Element::ListItem(item) => vec![self.export_list_item(item)?],
+            Element::HtmlTag(tag) => self.export_htmltag(tag)?,
+            _ => vec![EdtrPlugin::Text(vec![EdtrText::NestedText(
+                EdtrMarkupText::Paragraph {
+                    children: vec![EdtrText::from("unimplemented element!".to_owned())],
+                },
+            )])],
         })
     }
 }
