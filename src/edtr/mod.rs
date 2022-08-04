@@ -29,6 +29,10 @@ fn text_plugin_from(input: String) -> EdtrPlugin {
     EdtrPlugin::Text(vec![EdtrText::from(input)])
 }
 
+fn wrap_paragraph(input: Vec<EdtrText>) -> EdtrText {
+    EdtrText::NestedText(EdtrMarkupText::Paragraph { children: input })
+}
+
 impl<'a, 's> Target<&'a EdtrArgs, &'s Settings> for EdtrTarget {
     fn target_type(&self) -> TargetType {
         TargetType::Formula
@@ -36,11 +40,11 @@ impl<'a, 's> Target<&'a EdtrArgs, &'s Settings> for EdtrTarget {
     fn export(
         &self,
         root: &Element,
-        _settings: &'s Settings,
+        settings: &'s Settings,
         args: &'a EdtrArgs,
         out: &mut dyn io::Write,
     ) -> io::Result<()> {
-        let mut builder = StateBuilder::new(args.document_title.clone());
+        let mut builder = StateBuilder::new(args.document_title.clone(), settings);
         let mut state = builder.export(root).expect("export error");
 
         // serialize the root element
@@ -60,11 +64,12 @@ pub enum EdtrExportError {
 
 type EdtrResult<T> = Result<T, EdtrExportError>;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-struct StateBuilder<'e> {
+#[derive(Debug, Clone)]
+struct StateBuilder<'e, 's> {
     pub document_title: String,
 
-    #[serde(skip)]
+    pub settings: &'s Settings,
+
     pub path: Vec<&'e Element>,
 }
 
@@ -75,16 +80,17 @@ struct TextFlags {
     code: bool,
 }
 
-impl StateBuilder<'_> {
-    pub fn new(document_title: String) -> Self {
+impl<'s> StateBuilder<'_, 's> {
+    pub fn new(document_title: String, settings: &'s Settings) -> Self {
         StateBuilder {
             document_title,
             path: vec![],
+            settings,
         }
     }
 }
 
-impl<'e> StateBuilder<'e> {
+impl<'e, 's> StateBuilder<'e, 's> {
     fn export_doc_root(&mut self, doc: &Document) -> EdtrResult<EdtrArticle> {
         Ok(EdtrArticle {
             introduction: Box::new(
@@ -218,12 +224,9 @@ impl<'e> StateBuilder<'e> {
     }
 
     fn export_paragraph(&mut self, text: &Paragraph) -> EdtrResult<Vec<EdtrPlugin>> {
-        Ok(vec![vec![EdtrText::NestedText(
-            EdtrMarkupText::Paragraph {
-                children: self.export_text_vec(&text.content)?,
-            },
-        )]
-        .into()])
+        Ok(vec![EdtrPlugin::Text(vec![wrap_paragraph(
+            self.export_text_vec(&text.content)?,
+        )])])
     }
 
     fn make_error_box(&self, err: String) -> EdtrPlugin {
@@ -231,12 +234,7 @@ impl<'e> StateBuilder<'e> {
             box_type: EdtrBoxType::Attention,
             anchor_id: "box-1".to_owned(),
             title: Box::new(text_plugin_from("Export Error".into())),
-            content: Box::new(
-                vec![EdtrText::NestedText(EdtrMarkupText::Paragraph {
-                    children: vec![err.into()],
-                })]
-                .into(),
-            ),
+            content: Box::new(vec![wrap_paragraph(vec![err.into()])].into()),
         }
         .into()
     }
@@ -392,6 +390,44 @@ impl<'e> StateBuilder<'e> {
         }
     }
 
+    pub fn export_internalref(&mut self, iref: &InternalReference) -> EdtrResult<Vec<EdtrPlugin>> {
+        let target_str = extract_plain_text(&iref.target);
+
+        // embedded files (images, videos, ...)
+        if is_file(iref, self.settings) {
+            let image_path = format!(
+                "https://www.mediawiki.org/w/index.php?title=Special:Redirect/file/{}",
+                target_str
+            );
+
+            // collect image options
+            let mut image_options = vec![];
+            for option in &iref.options {
+                image_options.push(extract_plain_text(option).trim().to_string());
+            }
+
+            let cap_content = wrap_paragraph(self.export_text_vec(&iref.caption)?);
+
+            if is_centered(iref) || is_thumb(iref) {
+                let image = EdtrImage {
+                    src: image_path,
+                    alt: Some(extract_plain_text(&iref.caption)),
+                    caption: Box::new(EdtrPlugin::Text(vec![cap_content])),
+                };
+                Ok(vec![EdtrPlugin::Image(image)])
+            } else {
+                Ok(vec![
+                    self.make_error_box("inline images not supported!".to_owned())
+                ])
+            }
+        // inline images
+        } else {
+            Ok(vec![self.make_error_box(
+                "this iref type is not supported, yet!".to_owned(),
+            )])
+        }
+    }
+
     pub fn export(&mut self, node: &Element) -> EdtrResult<Vec<EdtrPlugin>> {
         Ok(match node {
             Element::Document(ref doc) => vec![self.export_doc_root(doc)?.into()],
@@ -403,11 +439,10 @@ impl<'e> StateBuilder<'e> {
             Element::List(list) => vec![self.export_list(list)?],
             Element::ListItem(item) => vec![self.export_list_item(item)?],
             Element::HtmlTag(tag) => self.export_htmltag(tag)?,
-            _ => vec![EdtrPlugin::Text(vec![EdtrText::NestedText(
-                EdtrMarkupText::Paragraph {
-                    children: vec![EdtrText::from("unimplemented element!".to_owned())],
-                },
-            )])],
+            Element::InternalReference(iref) => self.export_internalref(iref)?,
+            _ => vec![EdtrPlugin::Text(vec![wrap_paragraph(vec![
+                EdtrText::from("unimplemented element!".to_owned()),
+            ])])],
         })
     }
 }
