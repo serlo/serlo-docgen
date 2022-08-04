@@ -332,6 +332,7 @@ pub fn map_extension(target: TargetType, extension: &str) -> Option<String> {
         TargetType::HTML => Some(extension.to_string()),
         TargetType::Serlo => None,
         TargetType::Formula => None,
+        TargetType::Edtr => None,
     }
 }
 

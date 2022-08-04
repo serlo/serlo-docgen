@@ -82,6 +82,7 @@ pub enum TargetType {
     HTML,
     Serlo,
     Formula,
+    Edtr,
 }
 
 /// Possible target configuration structs.

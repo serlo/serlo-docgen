@@ -35,7 +35,7 @@ fn wrap_paragraph(input: Vec<EdtrText>) -> EdtrText {
 
 impl<'a, 's> Target<&'a EdtrArgs, &'s Settings> for EdtrTarget {
     fn target_type(&self) -> TargetType {
-        TargetType::Formula
+        TargetType::Edtr
     }
     fn export(
         &self,
@@ -56,8 +56,8 @@ impl<'a, 's> Target<&'a EdtrArgs, &'s Settings> for EdtrTarget {
 
 #[derive(Error, Debug)]
 pub enum EdtrExportError {
-    #[error("Only text state is permitted here!")]
-    PluginInTextOnlyLocation,
+    #[error("Only text state is permitted here! {0:?}")]
+    PluginInTextOnlyLocation(Span),
     #[error("unknown export error")]
     Unknown,
 }
@@ -159,7 +159,11 @@ impl<'e, 's> StateBuilder<'e, 's> {
             for node in self.export(e)? {
                 match node {
                     EdtrPlugin::Text(t) => result.extend_from_slice(&t),
-                    _ => return Err(EdtrExportError::PluginInTextOnlyLocation),
+                    _ => {
+                        return Err(EdtrExportError::PluginInTextOnlyLocation(
+                            e.get_position().clone(),
+                        ))
+                    }
                 };
             }
         }
@@ -230,26 +234,46 @@ impl<'e, 's> StateBuilder<'e, 's> {
     }
 
     fn make_error_box(&self, err: String) -> EdtrPlugin {
-        EdtrBox {
-            box_type: EdtrBoxType::Attention,
-            anchor_id: "box-1".to_owned(),
-            title: Box::new(text_plugin_from("Export Error".into())),
-            content: Box::new(vec![wrap_paragraph(vec![err.into()])].into()),
-        }
-        .into()
+        vec![wrap_paragraph(vec![err.into()])].into()
+
+        //EdtrBox {
+        //    box_type: EdtrBoxType::Attention,
+        //    anchor_id: "box-1".to_owned(),
+        //    title: Box::new(text_plugin_from("Export Error".into())),
+        //    content: Box::new(EdtrPlugin::Rows(vec![vec![wrap_paragraph(vec![
+        //        err.into()
+        //    ])]
+        //    .into()])),
+        //}
+        //.into()
     }
 
-    fn build_template_box(
-        &mut self,
-        template: &KnownTemplate<'_>,
-        variant: EdtrBoxType,
-    ) -> EdtrResult<EdtrPlugin> {
-        let title = self.export_text_vec(template.find("title").map(|a| a.value).unwrap_or(&[]))?;
+    fn find_box_variant(template_name: &str, attrbute_name: &str) -> Option<EdtrBoxType> {
+        match attrbute_name {
+            "definition" => Some(EdtrBoxType::Definition),
+            "theorem" => Some(EdtrBoxType::Theorem),
+            "explanation" => Some(EdtrBoxType::Note),
+            "example" => Some(EdtrBoxType::Example),
+            "solutionprocess" => Some(EdtrBoxType::Approach),
+            "summary" => Some(EdtrBoxType::Remember),
+            "proof" => Some(EdtrBoxType::Proof),
+            "proof2" => Some(EdtrBoxType::Proof),
+            "hint" => Some(EdtrBoxType::Note),
+            "warning" => Some(EdtrBoxType::Attention),
+            "content" => match template_name {
+                "important" => Some(EdtrBoxType::Quote),
+                _ => None,
+            },
+            _ => None,
+        }
+    }
 
-        let mut content = vec![];
+    fn build_template_box(&mut self, template: &KnownTemplate<'_>) -> EdtrResult<Vec<EdtrPlugin>> {
+        let title = self.export_text_vec(template.find("title").map(|a| a.value).unwrap_or(&[]))?;
 
         // fixme: handle anchor
 
+        let mut boxes = vec![];
         for attribute in template.present() {
             if attribute.name == "title" {
                 continue;
@@ -260,19 +284,22 @@ impl<'e, 's> StateBuilder<'e, 's> {
                 position: Span::default(),
                 content: attribute.value.to_vec(),
             });
-            content.extend(self.export(&par)?)
+            boxes.push(
+                EdtrBox {
+                    box_type: Self::find_box_variant(&template.names()[0], &attribute.name)
+                        .unwrap_or(EdtrBoxType::Blank),
+                    anchor_id: "box26447".to_owned(),
+                    title: Box::new(vec![wrap_paragraph(title.clone())].into()),
+                    content: Box::new(EdtrPlugin::Rows(vec![self.export(&par)?.into()])),
+                }
+                .into(),
+            );
         }
 
-        Ok(EdtrBox {
-            box_type: variant,
-            anchor_id: "box-1".to_owned(),
-            title: Box::new(title.into()),
-            content: Box::new(content.into()),
-        }
-        .into())
+        Ok(boxes)
     }
 
-    fn export_template(&mut self, template: &Template) -> EdtrResult<EdtrPlugin> {
+    fn export_template(&mut self, template: &Template) -> EdtrResult<Vec<EdtrPlugin>> {
         let parsed = if let Some(parsed) = parse_template(&template) {
             parsed
         } else {
@@ -280,38 +307,36 @@ impl<'e, 's> StateBuilder<'e, 's> {
             let msg = format! {"template {} at {}:{} to {}:{} unknown or malformed!",
                 &extract_plain_text(&template.name).trim().to_lowercase(), pos.start.line, pos.start.col, pos.end.line, pos.end.col
             };
-            return Ok(text_plugin_from(msg));
+            return Ok(vec![text_plugin_from(msg)]);
         };
 
         match &parsed {
-            KnownTemplate::Definition(_) => {
-                self.build_template_box(&parsed, EdtrBoxType::Definition)
-            }
-            KnownTemplate::Theorem(_) => self.build_template_box(&parsed, EdtrBoxType::Theorem),
-            KnownTemplate::Example(_) => self.build_template_box(&parsed, EdtrBoxType::Example),
-            KnownTemplate::Proof(_) => self.build_template_box(&parsed, EdtrBoxType::Proof),
-            KnownTemplate::Warning(_) => self.build_template_box(&parsed, EdtrBoxType::Attention),
-            KnownTemplate::Hint(_) => self.build_template_box(&parsed, EdtrBoxType::Note),
-            KnownTemplate::Important(_) => self.build_template_box(&parsed, EdtrBoxType::Remember),
-            KnownTemplate::SolutionProcess(_) => {
-                self.build_template_box(&parsed, EdtrBoxType::Approach)
-            }
-            KnownTemplate::Anchor(_) => {
-                Ok(text_plugin_from("anchor not implemented, yet".to_owned()))
-            }
-            KnownTemplate::Smiley(_) => {
-                Ok(text_plugin_from("smiley not implemented, yet".to_owned()))
-            }
-            KnownTemplate::Todo(_) => Ok(text_plugin_from("todo not implemented, yet".to_owned())),
-            KnownTemplate::Formula(_) => {
-                Ok(text_plugin_from("formula not implemented, yet".to_owned()))
-            }
-            KnownTemplate::NoPrint(_) => {
-                Ok(text_plugin_from("noprint not implemented, yet".to_owned()))
-            }
-            _ => Ok(self.make_error_box(
+            KnownTemplate::Definition(_)
+            | KnownTemplate::Theorem(_)
+            | KnownTemplate::Example(_)
+            | KnownTemplate::Proof(_)
+            | KnownTemplate::Warning(_)
+            | KnownTemplate::Hint(_)
+            | KnownTemplate::Important(_)
+            | KnownTemplate::SolutionProcess(_) => self.build_template_box(&parsed),
+            KnownTemplate::Anchor(_) => Ok(vec![text_plugin_from(
+                "anchor not implemented, yet".to_owned(),
+            )]),
+            KnownTemplate::Smiley(_) => Ok(vec![text_plugin_from(
+                "smiley not implemented, yet".to_owned(),
+            )]),
+            KnownTemplate::Todo(_) => Ok(vec![text_plugin_from(
+                "todo not implemented, yet".to_owned(),
+            )]),
+            KnownTemplate::Formula(_) => Ok(vec![text_plugin_from(
+                "formula not implemented, yet".to_owned(),
+            )]),
+            KnownTemplate::NoPrint(_) => Ok(vec![text_plugin_from(
+                "noprint not implemented, yet".to_owned(),
+            )]),
+            _ => Ok(vec![self.make_error_box(
                 format! {"unimplemented plugin: {}", extract_plain_text(&template.name)},
-            )),
+            )]),
         }
     }
 
@@ -435,7 +460,7 @@ impl<'e, 's> StateBuilder<'e, 's> {
             Element::Text(Text { text, .. }) => vec![text_plugin_from(text.clone())],
             Element::Formatted(formatted) => self.export_formatted_text(formatted)?,
             Element::Paragraph(par) => self.export_paragraph(par)?,
-            Element::Template(template) => vec![self.export_template(template)?],
+            Element::Template(template) => self.export_template(template)?,
             Element::List(list) => vec![self.export_list(list)?],
             Element::ListItem(item) => vec![self.export_list_item(item)?],
             Element::HtmlTag(tag) => self.export_htmltag(tag)?,
