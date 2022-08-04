@@ -135,7 +135,7 @@ checksum = "56899898ce76aaf4a0f24d914c97ea6ed976d42fec6ad33fcbb0a1103e07b2b0"
 [[package]]
 name = "edtr-types-rust"
 version = "0.1.0"
-source = "git+https://github.com/serlo/edtr-types-rust#48d5312c3f43675941da3e2a987d4d63ce62009f"
+source = "git+https://github.com/serlo/edtr-types-rust#b2f98af6e36adf9fc60ff43bf22c517167b5395d"
 dependencies = [
  "clap_derive",
  "derive_more",

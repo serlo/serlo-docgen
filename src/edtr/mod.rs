@@ -65,12 +65,10 @@ pub enum EdtrExportError {
 type EdtrResult<T> = Result<T, EdtrExportError>;
 
 #[derive(Debug, Clone)]
-struct StateBuilder<'e, 's> {
+struct StateBuilder<'s> {
     pub document_title: String,
 
     pub settings: &'s Settings,
-
-    pub path: Vec<&'e Element>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -78,19 +76,19 @@ struct TextFlags {
     em: bool,
     strong: bool,
     code: bool,
+    color: usize,
 }
 
-impl<'s> StateBuilder<'_, 's> {
+impl<'s> StateBuilder<'s> {
     pub fn new(document_title: String, settings: &'s Settings) -> Self {
         StateBuilder {
             document_title,
-            path: vec![],
             settings,
         }
     }
 }
 
-impl<'e, 's> StateBuilder<'e, 's> {
+impl<'s> StateBuilder<'s> {
     fn export_doc_root(&mut self, doc: &Document) -> EdtrResult<EdtrArticle> {
         Ok(EdtrArticle {
             introduction: Box::new(
@@ -128,11 +126,15 @@ impl<'e, 's> StateBuilder<'e, 's> {
                     ref mut strong,
                     ref mut em,
                     ref mut code,
+                    ref mut color,
                     ..
                 } => {
                     *strong = *strong || flags.strong;
                     *em = *em || flags.em;
                     *code = *code || flags.code;
+                    if flags.color != 0 {
+                        *color = flags.color
+                    }
                 }
                 EdtrText::NestedText(EdtrMarkupText::Heading {
                     ref mut children, ..
@@ -182,21 +184,24 @@ impl<'e, 's> StateBuilder<'e, 's> {
         Ok(elems)
     }
 
+    fn math_from_string(latex: String, inline: bool) -> EdtrPlugin {
+        EdtrPlugin::Text(vec![EdtrText::NestedText(EdtrMarkupText::Math {
+            src: latex.clone(),
+            inline,
+            children: vec![EdtrText::from(latex)],
+        })])
+    }
+
     fn export_formatted_text(&mut self, text: &Formatted) -> EdtrResult<Vec<EdtrPlugin>> {
         let main = match text.markup {
-            MarkupType::Math => {
-                EdtrPlugin::Text(vec![EdtrText::NestedText(EdtrMarkupText::Math {
-                    src: extract_plain_text(&text.content),
-                    inline: true,
-                    children: vec![EdtrText::from(extract_plain_text(&text.content))],
-                })])
-            }
+            MarkupType::Math => Self::math_from_string(extract_plain_text(&text.content), true),
             MarkupType::Italic => {
                 let mut content = self.export_text_vec(&text.content)?;
                 let flags = TextFlags {
                     em: true,
                     strong: false,
                     code: false,
+                    color: 0,
                 };
                 self.propagate_text_flags(&mut content, &flags);
                 content.into()
@@ -207,6 +212,7 @@ impl<'e, 's> StateBuilder<'e, 's> {
                     em: false,
                     strong: true,
                     code: false,
+                    color: 0,
                 };
                 self.propagate_text_flags(&mut content, &flags);
                 content.into()
@@ -217,12 +223,13 @@ impl<'e, 's> StateBuilder<'e, 's> {
                     em: false,
                     strong: true,
                     code: false,
+                    color: 0,
                 };
                 self.propagate_text_flags(&mut content, &flags);
                 content.into()
             }
 
-            _ => EdtrPlugin::Text(vec![EdtrText::from("unimplemented markup!".to_owned())]),
+            _ => self.make_error_box("unimplemented markup!".to_owned(), true),
         };
         Ok(vec![main])
     }
@@ -233,8 +240,17 @@ impl<'e, 's> StateBuilder<'e, 's> {
         )])])
     }
 
-    fn make_error_box(&self, err: String) -> EdtrPlugin {
-        vec![wrap_paragraph(vec![err.into()])].into()
+    fn make_error_box(&self, err: String, inline: bool) -> EdtrPlugin {
+        let mut text = EdtrText::from(err);
+        match text {
+            EdtrText::SimpleText { ref mut color, .. } => *color = 2,
+            _ => (),
+        };
+        if inline {
+            vec![text].into()
+        } else {
+            vec![wrap_paragraph(vec![text])].into()
+        }
 
         //EdtrBox {
         //    box_type: EdtrBoxType::Attention,
@@ -319,23 +335,48 @@ impl<'e, 's> StateBuilder<'e, 's> {
             | KnownTemplate::Hint(_)
             | KnownTemplate::Important(_)
             | KnownTemplate::SolutionProcess(_) => self.build_template_box(&parsed),
-            KnownTemplate::Anchor(_) => Ok(vec![text_plugin_from(
-                "anchor not implemented, yet".to_owned(),
-            )]),
-            KnownTemplate::Smiley(_) => Ok(vec![text_plugin_from(
-                "smiley not implemented, yet".to_owned(),
-            )]),
-            KnownTemplate::Todo(_) => Ok(vec![text_plugin_from(
-                "todo not implemented, yet".to_owned(),
-            )]),
-            KnownTemplate::Formula(_) => Ok(vec![text_plugin_from(
-                "formula not implemented, yet".to_owned(),
-            )]),
-            KnownTemplate::NoPrint(_) => Ok(vec![text_plugin_from(
-                "noprint not implemented, yet".to_owned(),
-            )]),
+            KnownTemplate::Anchor(_) => {
+                Ok(vec![self.make_error_box(
+                    "anchor not implemented, yet".to_owned(),
+                    true,
+                )])
+            }
+            KnownTemplate::Smiley(_) => {
+                Ok(vec![self.make_error_box(
+                    "smiley not implemented, yet".to_owned(),
+                    true,
+                )])
+            }
+            KnownTemplate::Todo(_) => {
+                Ok(vec![self.make_error_box(
+                    "todo not implemented, yet".to_owned(),
+                    false,
+                )])
+            }
+            KnownTemplate::Formula(formula) => match formula.formula {
+                [Element::Formatted(ref root)] => {
+                    if MarkupType::Math == root.markup {
+                        let formula = extract_plain_text(&root.content);
+                        Ok(vec![Self::math_from_string(formula, false)])
+                    } else {
+                        Ok(vec![
+                            self.make_error_box("malformed formula".to_owned(), false)
+                        ])
+                    }
+                }
+                _ => Ok(vec![
+                    self.make_error_box("malformed formula".to_owned(), false)
+                ]),
+            },
+            KnownTemplate::NoPrint(_) => {
+                Ok(vec![self.make_error_box(
+                    "noprint not implemented, yet".to_owned(),
+                    false,
+                )])
+            }
             _ => Ok(vec![self.make_error_box(
                 format! {"unimplemented plugin: {}", extract_plain_text(&template.name)},
+                false,
             )]),
         }
     }
@@ -393,6 +434,7 @@ impl<'e, 's> StateBuilder<'e, 's> {
                     em: true,
                     strong: false,
                     code: false,
+                    color: 0,
                 };
                 self.propagate_text_flags(&mut content, &flags);
                 Ok(vec![content.into()])
@@ -440,15 +482,17 @@ impl<'e, 's> StateBuilder<'e, 's> {
                     caption: Box::new(EdtrPlugin::Text(vec![cap_content])),
                 };
                 Ok(vec![EdtrPlugin::Image(image)])
+            // inline images
             } else {
-                Ok(vec![
-                    self.make_error_box("inline images not supported!".to_owned())
-                ])
+                Ok(vec![self.make_error_box(
+                    "inline images not supported!".to_owned(),
+                    true,
+                )])
             }
-        // inline images
         } else {
             Ok(vec![self.make_error_box(
                 "this iref type is not supported, yet!".to_owned(),
+                true,
             )])
         }
     }
@@ -465,9 +509,7 @@ impl<'e, 's> StateBuilder<'e, 's> {
             Element::ListItem(item) => vec![self.export_list_item(item)?],
             Element::HtmlTag(tag) => self.export_htmltag(tag)?,
             Element::InternalReference(iref) => self.export_internalref(iref)?,
-            _ => vec![EdtrPlugin::Text(vec![wrap_paragraph(vec![
-                EdtrText::from("unimplemented element!".to_owned()),
-            ])])],
+            _ => vec![self.make_error_box("unimplemented element!".to_owned(), false)],
         })
     }
 }

@@ -148,18 +148,13 @@ impl<'e, 's: 'e, 't: 'e, 'a> HtmlRenderer<'e, 't, 's, 'a> {
         Ok(false)
     }
     fn formula(&mut self, formula: &Formula<'e>, out: &mut dyn io::Write) -> io::Result<bool> {
-        let error = formula
-            .formula
-            .iter()
-            .filter_map(|e| {
-                if let Element::Error(ref err) = e {
-                    Some(err)
-                } else {
-                    None
-                }
-            })
-            .next();
-
+        let error = formula.formula.iter().find_map(|e| {
+            if let Element::Error(ref err) = e {
+                Some(err)
+            } else {
+                None
+            }
+        });
         if let Some(err) = error {
             self.error(err, out)?;
             return Ok(false);
