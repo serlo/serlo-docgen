@@ -8,6 +8,8 @@ use mfnf_template_spec::*;
 use std::path::PathBuf;
 use thiserror::Error;
 
+use regex::Regex;
+use std::collections::HashMap;
 use std::io;
 use structopt::StructOpt;
 
@@ -184,11 +186,24 @@ impl<'s> StateBuilder<'s> {
         Ok(elems)
     }
 
+    fn resolve_math_macros(latex: String) -> String {
+        let replacements = HashMap::from([(r"\\sgn(?-u)\b", r"\mathrm{sgn}"),
+                                          (r"\\Q(?-u)\b", r"\mathbb{Q}"),
+                                          (r"\\begin\{align\}", r"\begin{aligned}"),
+                                          (r"\\end\{align\}", r"\end{aligned}")]);
+        let mut res = latex;
+        for (r#macro, replacement) in &replacements {
+            let re = Regex::new(r#macro).unwrap();
+            res = re.replace_all(&res, &**replacement).to_string();
+        }
+        res
+    }
+
     fn math_from_string(latex: String, inline: bool) -> EdtrPlugin {
         EdtrPlugin::Text(vec![EdtrText::NestedText(EdtrMarkupText::Math {
-            src: latex.clone(),
+            src: Self::resolve_math_macros(latex),
             inline,
-            children: vec![EdtrText::from(latex)],
+            children: vec![],
         })])
     }
 
