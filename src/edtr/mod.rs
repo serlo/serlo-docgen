@@ -505,8 +505,13 @@ impl<'s> StateBuilder<'s> {
                 )])
             }
         } else {
+            let mut options = vec![];
+            for option in &iref.options {
+                options.push(extract_plain_text(option).trim().to_string());
+            }
             Ok(vec![self.make_error_box(
-                "this iref type is not supported, yet!".to_owned(),
+                format!("[{}]<{:?}>({})", extract_plain_text(&iref.caption), options, target_str).to_owned(),
+                //"this iref type is not supported, yet!".to_owned(),
                 true,
             )])
         }
