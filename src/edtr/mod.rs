@@ -389,11 +389,54 @@ impl<'s> StateBuilder<'s> {
                     false,
                 )])
             }
+            KnownTemplate::Question(_) => self.export_question_as_spoiler(&parsed),
             _ => Ok(vec![self.make_error_box(
                 format! {"unimplemented plugin: {}", extract_plain_text(&template.name)},
                 false,
             )]),
         }
+    }
+
+    fn export_question_as_spoiler(&mut self, template: &KnownTemplate<'_>) -> EdtrResult<Vec<EdtrPlugin>> {
+        let title = extract_plain_text(template.find("question").map(|a| a.value).unwrap_or(&[]));
+        let mut boxes: Vec<EdtrPlugin> = vec![];
+        for attribute in template.present() {
+            // don't repeat title in body; ignore meta information
+            if attribute.name == "question" || attribute.name == "kind" || attribute.name == "indent_mode" {
+                continue;
+            }
+
+            // make sure the editor gets a consitent paragraph
+            let mut par = Element::Paragraph(Paragraph {
+                position: Span::default(),
+                content: attribute.value.to_vec(),
+            });
+            boxes.push(
+                match self.export(&par) {
+                    Ok(mut exported_par) => {
+                        // mark hints
+                        if attribute.name == "hint" {
+                            exported_par.insert(0, EdtrPlugin::Text(vec![EdtrText::SimpleText{
+                                text: "Hinweis".into(),
+                                strong: false,
+                                em: true,
+                                code: false,
+                                color: 0
+                            }]));
+                        }
+                        EdtrPlugin::Rows(exported_par)
+                    },
+                    _ => self.make_error_box(
+                        format!{"failed to export question attribute: {}", attribute.name}, true
+                    )
+                }
+            );
+        }
+        let spoiler = EdtrSpoiler{
+            title: title,
+            content: Box::new(EdtrPlugin::Rows(boxes))
+        };
+        Ok(vec![edtr_types::EdtrPlugin::Spoiler(spoiler)])
     }
 
     fn export_vec(&mut self, elems: &[Element]) -> EdtrResult<Vec<EdtrPlugin>> {
