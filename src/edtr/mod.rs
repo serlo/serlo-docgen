@@ -383,11 +383,8 @@ impl<'s> StateBuilder<'s> {
                     self.make_error_box("malformed formula".to_owned(), false)
                 ]),
             },
-            KnownTemplate::NoPrint(_) => {
-                Ok(vec![self.make_error_box(
-                    "noprint not implemented, yet".to_owned(),
-                    false,
-                )])
+            KnownTemplate::NoPrint(no_print) => {
+                Ok(vec![EdtrPlugin::Text(vec![wrap_paragraph(self.export_text_vec(&no_print.content)?)])])
             }
             KnownTemplate::Question(_) => self.export_question_as_spoiler(&parsed),
             _ => Ok(vec![self.make_error_box(
